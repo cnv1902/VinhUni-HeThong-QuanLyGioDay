@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     
     DATABASE_URL: str
     SECRET_KEY: str
+    BACKEND_CORS_ORIGINS: list[str] = ["*"]
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 
 
     class Config:
         env_file = ".env"
