@@ -4,8 +4,8 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "FastAPI Project"
     
-    # DATABASE_URL: str = "postgresql://user:password@localhost:5432/db_name"
-    # SECRET_KEY: str = "your-super-secret-key"
+    DATABASE_URL: str
+    SECRET_KEY: str
 
     class Config:
         env_file = ".env"
