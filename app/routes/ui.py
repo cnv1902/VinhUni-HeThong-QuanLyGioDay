@@ -17,3 +17,10 @@ async def quan_ly_nhom_lop(request: Request):
         request=request, 
         name="pages/quan_ly_nhom_lop_hoc_phan.html"
     )
+
+@router.get("/login", include_in_schema=False)
+async def login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/login.html"
+    )

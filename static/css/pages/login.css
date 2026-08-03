@@ -1,0 +1,257 @@
+/* static/css/pages/login.css */
+
+.auth-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background: var(--bg-panel);
+}
+
+.auth-banner {
+  flex: 1;
+  position: relative;
+  background-image: url('/static/images/background/auth-bg.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Gradient overlay mờ dần từ trái sang phải để fade vào cột form */
+.auth-banner::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 50%;
+  background: linear-gradient(to right, transparent, var(--bg-panel));
+  pointer-events: none;
+}
+
+.auth-form-wrapper {
+  flex: 0 0 500px; /* Độ rộng cố định cho form */
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.05); /* Đổ bóng rất nhẹ phân tách với ảnh (Tuỳ chọn) */
+  z-index: 10;
+}
+
+.auth-form-inner {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-logo {
+  height: 60px;
+  object-fit: contain;
+  margin-bottom: 24px;
+  align-self: center;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  text-align: center;
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin: 0 0 32px 0;
+  text-align: center;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.text-input {
+  width: 100%;
+  height: 38px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  transition: all 0.2s ease;
+}
+
+.text-input:focus {
+  outline: none;
+  border-color: var(--teal-600);
+  box-shadow: 0 0 0 3px var(--teal-50);
+}
+
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-wrapper .text-input {
+  padding-right: 40px; /* Tránh đè lên nút hiện/ẩn */
+}
+
+.btn-toggle-password {
+  position: absolute;
+  right: 8px;
+  background: none;
+  border: none;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.btn-toggle-password:hover {
+  background: var(--bg-subtle-2);
+  color: var(--text-secondary);
+}
+
+.btn-toggle-password svg {
+  width: 16px;
+  height: 16px;
+}
+
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: -4px;
+  margin-bottom: 8px;
+}
+
+.cb-remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.cb-remember input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.forgot-link {
+  font-size: 13px;
+  color: var(--brand-800);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot-link:hover {
+  text-decoration: underline;
+  color: var(--brand-700);
+}
+
+.btn-block {
+  width: 100%;
+  height: 40px;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: var(--brand-800);
+  color: #fff;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--brand-700);
+}
+
+.btn-primary:active {
+  background: var(--brand-900);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 24px 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--border);
+}
+
+.auth-divider span {
+  padding: 0 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.btn-work-mail {
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+}
+
+.btn-work-mail:hover {
+  background: var(--bg-subtle);
+  border-color: var(--teal-600);
+  color: var(--teal-700);
+}
+
+.btn-work-mail svg {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+}
+
+.auth-footer {
+  margin-top: 48px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.auth-footer p {
+  margin: 0;
+}
+
+/* Responsive cho màn hình nhỏ */
+@media (max-width: 900px) {
+  .auth-banner {
+    display: none; /* Ẩn ảnh banner trên mobile/tablet nhỏ */
+  }
+  .auth-form-wrapper {
+    flex: 1;
+    width: 100%;
+  }
+}
