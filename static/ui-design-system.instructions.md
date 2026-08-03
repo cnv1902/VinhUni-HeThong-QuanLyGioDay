@@ -169,3 +169,30 @@ dùng, và hỏi lại nếu điều đó ảnh hưởng đáng kể đến logi
 - [ ] Cột số/mã dùng font mono?
 - [ ] Dữ liệu mẫu là tiếng Việt, thực tế, đủ dòng để kiểm thử?
 - [ ] Đã tự kiểm thử các thao tác chính, không lỗi, trước khi báo hoàn thành?
+
+## 12. Kiến trúc thư mục và Mô-đun hóa (Bắt buộc)
+
+Tuyệt đối KHÔNG viết toàn bộ HTML/CSS/JS của một trang vào chung một file duy nhất. Khi tạo mới hoặc tái cấu trúc một trang giao diện, bắt buộc phải tuân thủ kiến trúc phân tách sau:
+
+**1. Cấu trúc Jinja2 Templates (Render phía Server):**
+- **Layout chung (`app/templates/base.html`):** Chứa khung HTML tổng thể, nhúng CSS/JS dùng chung.
+- **Thành phần dùng chung (`app/templates/layouts/`):** Chứa các file chia nhỏ như `navbar.html`, `sidebar.html`, `footer.html`.
+- **Trang nội dung (`app/templates/pages/`):** Chứa file nội dung (content) cụ thể của từng trang (kế thừa `base.html`).
+
+**2. Phân tách CSS (`static/css/`):**
+- Chia nhỏ CSS theo vai trò thay vì viết dồn vào một file:
+  - `layout.css`: Định dạng khung sườn trang (`.app`, `.app-body`, lưới...).
+  - `components.css`: CSS cho các thành phần dùng chung (nút, input, checkbox, bảng...).
+  - `sidebar.css`, `navbar.css`, `footer.css`: CSS cho các vùng tương ứng.
+  - `content.css`: CSS cho vùng nội dung đặc thù (toolbar, filter...).
+
+**3. Phân tách JavaScript (`static/js/`):**
+- **`core/`**: Chứa logic hệ thống dùng chung ở mọi nơi.
+  - `constants.js`: Định nghĩa hằng số, cấu hình, URL.
+  - `utils.js`: Các hàm công cụ (format số, ngày, tạo chuỗi ngẫu nhiên...).
+- **`components/`**: Chứa các khối chức năng UI độc lập.
+  - Ví dụ: `toast.js` (hiển thị thông báo), `modal.js`.
+- **`pages/`**: Chứa file JS chỉ huy riêng cho duy nhất một trang.
+  - Mỗi trang một file (ví dụ: `quan_ly_nhom_lop_hoc_phan.js`). File này sẽ gọi các hàm từ `core` và `components` để xử lý sự kiện DOM cho trang đó.
+
+*Mục đích: Đảm bảo khả năng bảo trì, dễ đọc, và nguyên tắc DRY (Don't Repeat Yourself).*
