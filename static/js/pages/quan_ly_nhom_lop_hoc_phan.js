@@ -1,7 +1,9 @@
 const state = {
   data: [], sortKey: null, sortDir: 1, filters: {}, search: '',
   numFilters: { soSV: [-Infinity, Infinity], soTC: [-Infinity, Infinity] },
-  selected: new Set()
+  selected: new Set(),
+  currentPage: 1,
+  pageSize: 100
 };
 
 
@@ -84,13 +86,80 @@ function getRows() {
 
 const tbody = document.getElementById('tbody');
 const thead = document.getElementById('theadRow');
+const paginationEl = document.getElementById('tablePagination');
 
 function renderAll() {
-  const rows = getRows();
-  tbody.innerHTML = rows.map(renderRowHTML).join('');
+  const allRows = getRows();
+  const totalRows = allRows.length;
+  const totalPages = Math.ceil(totalRows / state.pageSize) || 1;
+  
+  if (state.currentPage > totalPages) {
+    state.currentPage = totalPages;
+  }
+  
+  const startIdx = (state.currentPage - 1) * state.pageSize;
+  const endIdx = startIdx + state.pageSize;
+  const pageRows = allRows.slice(startIdx, endIdx);
+  
+  tbody.innerHTML = pageRows.map(renderRowHTML).join('');
   updateHeaderIndicators();
-  updateFooter(rows);
-  updateSelectAllState(rows);
+  updateFooter(allRows);
+  updateSelectAllState(pageRows);
+  renderPagination(totalRows, startIdx, Math.min(endIdx, totalRows));
+}
+
+function renderPagination(totalRows, startIdx, endIdx) {
+  if (!paginationEl) return;
+  const totalPages = Math.ceil(totalRows / state.pageSize) || 1;
+  
+  let html = `
+    <div class="pagination-left">
+      <span>Đang xem ${totalRows > 0 ? startIdx + 1 : 0} - ${endIdx} / ${totalRows} dòng</span>
+      <select id="pageSizeSelect">
+        <option value="50" ${state.pageSize === 50 ? 'selected' : ''}>50 dòng/trang</option>
+        <option value="100" ${state.pageSize === 100 ? 'selected' : ''}>100 dòng/trang</option>
+        <option value="200" ${state.pageSize === 200 ? 'selected' : ''}>200 dòng/trang</option>
+      </select>
+    </div>
+    <div class="pagination-right">
+      <button class="page-btn" data-page="${state.currentPage - 1}" ${state.currentPage === 1 ? 'disabled' : ''}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+  `;
+  
+  for (let i = 1; i <= totalPages; i++) {
+    // Rút gọn hiển thị trang nếu quá nhiều trang
+    if (i === 1 || i === totalPages || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
+      html += `<button class="page-btn ${i === state.currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+    } else if (i === state.currentPage - 2 || i === state.currentPage + 2) {
+      html += `<span style="padding: 0 4px">...</span>`;
+    }
+  }
+
+  html += `
+      <button class="page-btn" data-page="${state.currentPage + 1}" ${state.currentPage === totalPages ? 'disabled' : ''}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  `;
+  
+  paginationEl.innerHTML = html;
+  
+  paginationEl.querySelector('#pageSizeSelect').addEventListener('change', e => {
+    state.pageSize = parseInt(e.target.value);
+    state.currentPage = 1;
+    renderAll();
+  });
+  
+  paginationEl.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = parseInt(btn.dataset.page);
+      if (!isNaN(p) && p !== state.currentPage) {
+        state.currentPage = p;
+        renderAll();
+      }
+    });
+  });
 }
 
 function updateHeaderIndicators() {
@@ -134,6 +203,7 @@ function toggleSort(key) {
     if (state.sortDir === 1) { state.sortDir = -1; }
     else { state.sortKey = null; state.sortDir = 1; }
   } else { state.sortKey = key; state.sortDir = 1; }
+  state.currentPage = 1; // Quay về trang 1 khi sort
   renderAll();
 }
 
@@ -169,12 +239,12 @@ function openFilterDropdown(key, btn) {
     div.querySelectorAll('.fd-cb').forEach(cb => cb.checked = e.target.checked);
   });
   div.querySelector('.fd-clear').addEventListener('click', () => {
-    delete state.filters[key]; closeFilterDropdown(); renderAll(); updateFilterCountBadge();
+    delete state.filters[key]; closeFilterDropdown(); state.currentPage = 1; renderAll(); updateFilterCountBadge();
   });
   div.querySelector('.fd-apply').addEventListener('click', () => {
     const checked = Array.from(div.querySelectorAll('.fd-cb:checked')).map(cb => cb.value);
     if (checked.length === allValues.length) { delete state.filters[key]; } else { state.filters[key] = new Set(checked); }
-    closeFilterDropdown(); renderAll(); updateFilterCountBadge();
+    closeFilterDropdown(); state.currentPage = 1; renderAll(); updateFilterCountBadge();
   });
   setTimeout(() => document.addEventListener('click', outsideClickHandler), 0);
 }
@@ -276,6 +346,7 @@ function bindStaticEvents() {
   document.getElementById('quickSearch').addEventListener('input', e => {
     state.search = e.target.value;
     document.getElementById('advName').value = e.target.value;
+    state.currentPage = 1;
     renderAll(); updateFilterCountBadge();
   });
   document.getElementById('btnToggleFilter').addEventListener('click', function () {
@@ -293,6 +364,7 @@ function bindStaticEvents() {
     state.numFilters.soTC = [parseNum(document.getElementById('advTCMin').value, -Infinity), parseNum(document.getElementById('advTCMax').value, Infinity)];
     state.search = document.getElementById('advName').value;
     document.getElementById('quickSearch').value = state.search;
+    state.currentPage = 1;
     renderAll(); updateFilterCountBadge();
   });
   document.getElementById('btnClearFilter').addEventListener('click', () => {
@@ -300,6 +372,7 @@ function bindStaticEvents() {
     state.filters = {}; state.search = '';
     state.numFilters = { soSV: [-Infinity, Infinity], soTC: [-Infinity, Infinity] };
     document.getElementById('quickSearch').value = '';
+    state.currentPage = 1;
     renderAll(); updateFilterCountBadge();
   });
   document.getElementById('btnSave').addEventListener('click', () => {

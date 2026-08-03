@@ -1,6 +1,11 @@
-<div class="grid-wrap" id="{{ table_id | default('dataTable') }}">
-  <table>
-    <thead id="theadRow"></thead>
-    <tbody id="tbody"></tbody>
-  </table>
+<div class="table-container">
+  <div class="grid-wrap" id="{{ table_id | default('dataTable') }}">
+    <table>
+      <thead id="theadRow"></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+  <div class="table-pagination" id="tablePagination">
+    <!-- Phân trang sẽ được sinh ra từ Javascript -->
+  </div>
 </div>
