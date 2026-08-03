@@ -1,0 +1,497 @@
+/* Toolbar */
+    .toolbar {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 24px;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+
+    .tb-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tb-label {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .tb-sep {
+      width: 1px;
+      align-self: stretch;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .spacer {
+      flex: 1;
+    }
+
+    select,
+    .text-input {
+      height: 32px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--bg-panel);
+      padding: 0 10px;
+      color: var(--text-primary);
+    }
+
+    select:focus,
+    .text-input:focus,
+    input:focus {
+      outline: none;
+      border-color: var(--teal-600);
+      box-shadow: 0 0 0 3px var(--teal-50);
+    }
+
+    .btn {
+      height: 32px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border-strong);
+      background: var(--bg-panel);
+      padding: 0 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      color: var(--text-primary);
+    }
+
+    .btn svg {
+      width: 14px;
+      height: 14px;
+      flex: 0 0 auto;
+    }
+
+    .btn:hover {
+      background: var(--bg-subtle);
+    }
+
+    .btn:active {
+      transform: translateY(1px);
+    }
+
+    .btn-primary {
+      background: var(--navy-800);
+      border-color: var(--navy-800);
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: var(--navy-700);
+    }
+
+    .btn-teal {
+      border-color: var(--teal-600);
+      color: var(--teal-700);
+    }
+
+    .btn-teal:hover {
+      background: var(--teal-50);
+    }
+
+    .btn-filter {
+      position: relative;
+    }
+
+    .filter-count {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      background: var(--teal-600);
+      color: #fff;
+      font-size: 10px;
+      line-height: 16px;
+      height: 16px;
+      min-width: 16px;
+      border-radius: 8px;
+      text-align: center;
+      padding: 0 3px;
+    }
+
+    .chev {
+      transition: transform .15s;
+    }
+
+    .btn-filter.open .chev {
+      transform: rotate(180deg);
+    }
+
+    /* Filter panel */
+    .filter-panel {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 24px;
+      flex: 0 0 auto;
+    }
+
+    .filter-panel.closed {
+      display: none;
+    }
+
+    .adv-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px 16px;
+    }
+
+    .adv-field label {
+      display: block;
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .adv-field select,
+    .adv-field input {
+      width: 100%;
+    }
+
+    .range-pair {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .range-pair input {
+      width: 100%;
+    }
+
+    .range-pair span {
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+
+    .adv-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Quick row above grid */
+    .quick-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 24px;
+      flex: 0 0 auto;
+    }
+
+    .search-box {
+      position: relative;
+      flex: 0 0 320px;
+    }
+
+    .search-box svg {
+      position: absolute;
+      left: 10px;
+      top: 9px;
+      width: 14px;
+      height: 14px;
+      color: var(--text-muted);
+    }
+
+    .search-box input {
+      width: 100%;
+      height: 32px;
+      padding-left: 32px;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-left: auto;
+    }
+
+    .legend .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      margin-right: 5px;
+    }
+
+    /* Grid */
+    .grid-wrap {
+      margin: 0 24px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-panel);
+      overflow: auto;
+      max-height: 520px;
+      flex: 1 1 auto;
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      width: max-content;
+      min-width: 100%;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border-strong);
+      border-right: 1px solid var(--border);
+      text-align: left;
+      padding: 0;
+      z-index: 2;
+    }
+
+    thead th.sticky-th {
+      z-index: 3;
+    }
+
+    .select-th {
+      position: sticky;
+      top: 0;
+      left: 0;
+      z-index: 4;
+      background: var(--bg-subtle);
+      border-right: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .th-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 9px 10px;
+    }
+
+    .th-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .th-actions {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 0 0 auto;
+    }
+
+    .sort-btn,
+    .filter-btn {
+      border: none;
+      background: none;
+      padding: 2px;
+      cursor: pointer;
+      display: flex;
+      border-radius: 3px;
+    }
+
+    .sort-btn:hover,
+    .filter-btn:hover {
+      background: var(--bg-subtle-2);
+    }
+
+    .sort-btn svg polygon {
+      fill: var(--text-muted);
+    }
+
+    .sort-btn svg polygon.on {
+      fill: var(--teal-600);
+    }
+
+    .filter-btn svg path {
+      fill: var(--text-muted);
+    }
+
+    .filter-btn.active svg path {
+      fill: var(--teal-600);
+    }
+
+    tbody td {
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      padding: 8px 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover td {
+      background: var(--bg-subtle);
+    }
+
+    tbody tr:hover .sticky-cell {
+      background: var(--bg-subtle);
+    }
+
+    .select-cell {
+      text-align: center;
+    }
+
+    .sticky-cell {
+      position: sticky;
+      background: var(--bg-panel);
+      z-index: 1;
+    }
+
+    .select-cell.sticky-cell {
+      z-index: 1;
+    }
+
+    tr.row-dirty td {
+      background: var(--amber-50);
+    }
+
+    tr.row-dirty:hover td {
+      background: #F7E9C6;
+    }
+
+    tr.row-dirty .sticky-cell {
+      background: var(--amber-50);
+    }
+
+    tr.row-locked td {
+      background: var(--blue-50);
+      color: var(--text-secondary);
+    }
+
+    tr.row-locked:hover td {
+      background: var(--blue-50);
+    }
+
+    tr.row-locked .sticky-cell {
+      background: var(--blue-50);
+    }
+
+    tr.flash td {
+      background: var(--teal-50) !important;
+      transition: background-color .9s ease;
+    }
+
+    td[data-editable="1"] {
+      cursor: text;
+    }
+
+    td.editing {
+      padding: 4px 6px;
+    }
+
+    .cell-editor {
+      width: 100%;
+      height: 26px;
+      border: 1px solid var(--teal-600);
+      border-radius: 4px;
+      padding: 0 6px;
+      box-shadow: 0 0 0 3px var(--teal-50);
+    }
+
+    .mono-text {
+      font-family: var(--font-mono);
+      font-size: 12.5px;
+      color: var(--text-secondary);
+    }
+
+    .num-text {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      padding: 3px 9px;
+      border-radius: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .badge-gray {
+      background: var(--bg-subtle-2);
+      color: var(--text-secondary);
+    }
+
+    .badge-green {
+      background: var(--green-50);
+      color: var(--green-600);
+    }
+
+    .badge-blue {
+      background: var(--blue-50);
+      color: var(--blue-600);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .badge-blue svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .cap-cell {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .cap-num {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+      min-width: 22px;
+    }
+
+    .cap-bar {
+      width: 46px;
+      height: 5px;
+      background: var(--bg-subtle-2);
+      border-radius: 3px;
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .cap-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .mini-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 26px;
+      padding: 0 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius);
+      background: var(--bg-panel);
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-primary);
+    }
+
+    .mini-btn:hover {
+      background: var(--bg-subtle);
+      border-color: var(--teal-600);
+      color: var(--teal-700);
+    }
+
+    .mini-btn svg {
+      width: 12px;
+      height: 12px;
+    }

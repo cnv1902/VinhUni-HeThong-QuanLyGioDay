@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% set active_menu = 'trang_chu' %}
+
+{% block content %}
+<div class="empty-dashboard" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; padding: 40px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48" style="margin-bottom: 16px; opacity: 0.5;">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+    </svg>
+    <h2 style="font-weight: 500; font-size: 18px; margin: 0 0 8px 0; color: var(--text-secondary);">Trang chủ đang được xây dựng</h2>
+    <p style="margin: 0; font-size: 14px;">Vui lòng chọn các chức năng trong menu bên trái để tiếp tục.</p>
+</div>
+{% endblock %}

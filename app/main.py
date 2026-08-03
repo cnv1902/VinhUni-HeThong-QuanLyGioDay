@@ -23,5 +23,9 @@ from fastapi.staticfiles import StaticFiles
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Mount thư mục giao diện tĩnh (chứa file index.html, css, js)
-app.mount("/", StaticFiles(directory="static", html=True), name="ui")
+# Mount thư mục static chứa css, js, images
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# Cấu hình UI Router
+from app.routes.ui import router as ui_router
+app.include_router(ui_router, tags=["UI"])

@@ -1,0 +1,76 @@
+/* Topbar */
+    .topbar {
+      background: var(--navy-800);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      height: 58px;
+      flex: 0 0 auto;
+    }
+
+    .topbar .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      overflow: hidden;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 2px;
+    }
+
+    .brand-text h1 {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: .2px;
+    }
+
+    .brand-text p {
+      font-size: 11.5px;
+      margin: 1px 0 0;
+      color: #B7C6D3;
+    }
+
+    .topbar .who {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .who-tag {
+      font-size: 12px;
+      color: #C7D5E0;
+      border: 1px solid #2B4A66;
+      padding: 4px 10px;
+      border-radius: var(--radius);
+    }
+
+    .avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--teal-600);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+    }

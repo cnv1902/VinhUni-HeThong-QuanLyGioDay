@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+
+{% set active_menu = 'chinh_quy' %}
+
+{% block content %}
+<div class="toolbar">
+      <div class="tb-group">
+        <span class="tb-label">Học kỳ</span>
+        <select id="hocKySelect">
+          <option>1_2025-2026</option>
+          <option>2_2025-2026</option>
+          <option>3_2025-2026</option>
+        </select>
+      </div>
+      <div class="tb-sep"></div>
+      <button class="btn btn-primary" id="btnSave">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M5 13l4 4L19 7" />
+        </svg>
+        Lưu xác nhận
+      </button>
+      <button class="btn" id="btnGroup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="7" height="7" rx="1" />
+          <rect x="14" y="4" width="7" height="7" rx="1" />
+          <rect x="8" y="14" width="8" height="7" rx="1" />
+        </svg>
+        Nhóm lớp
+      </button>
+      <button class="btn" id="btnUngroup">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="3" y="4" width="7" height="7" rx="1" />
+          <rect x="14" y="4" width="7" height="7" rx="1" />
+          <path d="M8 17h8" />
+        </svg>
+        Bỏ nhóm
+      </button>
+      <button class="btn" id="btnTransfer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 7h13M13 3l4 4-4 4" />
+          <path d="M20 17H7M11 21l-4-4 4-4" />
+        </svg>
+        Chuyển học kỳ thanh toán
+      </button>
+      <div class="spacer"></div>
+      <button class="btn btn-teal" id="btnExport">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M12 3v12M7 10l5 5 5-5" />
+          <path d="M4 19h16" />
+        </svg>
+        Xuất Excel
+      </button>
+      <button class="btn btn-filter open" id="btnToggleFilter">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" />
+        </svg>
+        Bộ lọc
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+        <span class="filter-count" id="filterCount" style="display:none;">0</span>
+      </button>
+    </div>
+
+    <div class="filter-panel" id="filterPanel">
+      <div class="adv-grid">
+        <div class="adv-field">
+          <label>Tên nhóm lớp học phần</label>
+          <input type="text" id="advName" class="text-input" placeholder="Nhập tên môn học...">
+        </div>
+        <div class="adv-field">
+          <label>Khoa</label>
+          <select id="advKhoa">
+            <option value="">— Tất cả —</option>
+          </select>
+        </div>
+        <div class="adv-field">
+          <label>Khoa CN</label>
+          <select id="advKhoaCN">
+            <option value="">— Tất cả —</option>
+          </select>
+        </div>
+        <div class="adv-field">
+          <label>Hình thức học</label>
+          <select id="advHT">
+            <option value="">— Tất cả —</option>
+          </select>
+        </div>
+        <div class="adv-field">
+          <label>Cách tổ chức lớp</label>
+          <select id="advCachTC">
+            <option value="">— Tất cả —</option>
+          </select>
+        </div>
+        <div class="adv-field">
+          <label>Trạng thái</label>
+          <select id="advTrangThai">
+            <option value="">— Tất cả —</option>
+          </select>
+        </div>
+        <div class="adv-field">
+          <label>Số SV (từ — đến)</label>
+          <div class="range-pair">
+            <input type="number" id="advSVMin" class="text-input" placeholder="Từ">
+            <span>—</span>
+            <input type="number" id="advSVMax" class="text-input" placeholder="Đến">
+          </div>
+        </div>
+        <div class="adv-field">
+          <label>Số tín chỉ (từ — đến)</label>
+          <div class="range-pair">
+            <input type="number" id="advTCMin" class="text-input" placeholder="Từ">
+            <span>—</span>
+            <input type="number" id="advTCMax" class="text-input" placeholder="Đến">
+          </div>
+        </div>
+      </div>
+      <div class="adv-actions">
+        <button class="btn" id="btnClearFilter">Xoá điều kiện lọc</button>
+        <button class="btn btn-primary" id="btnApplyFilter">Tìm kiếm</button>
+      </div>
+    </div>
+
+    <div class="quick-row">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7" />
+          <path d="M21 21l-4.3-4.3" />
+        </svg>
+        <input type="text" id="quickSearch" class="text-input"
+          placeholder="Tìm theo tên nhóm lớp, mã lớp, phòng học...">
+      </div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--teal-600)"></span>Còn chỗ</span>
+        <span><span class="dot" style="background:var(--amber-600)"></span>Gần đầy</span>
+        <span><span class="dot" style="background:var(--red-600)"></span>Vượt sĩ số</span>
+      </div>
+    </div>
+
+    <div class="grid-wrap">
+      <table>
+        <thead id="theadRow"></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+{% endblock %}
