@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}Hệ Đào tạo Chính quy{% endblock %}
+
+{% set active_menu = 'chinh_quy' %}
+
+{% block content %}
+<div class="empty-dashboard"
+    style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; padding: 40px;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"
+        style="margin-bottom: 16px; opacity: 0.5;">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+    </svg>
+    <h2 style="font-weight: 500; font-size: 18px; margin: 0 0 8px 0; color: var(--text-secondary);">Hệ Đào tạo Chính quy
+    </h2>
+    <p style="margin: 0; font-size: 14px;">Vui lòng chọn các menu con ở thanh điều hướng bên trái để tiếp tục.</p>
+</div>
+{% endblock %}

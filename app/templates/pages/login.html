@@ -1,8 +1,9 @@
 {% extends 'auth_base.html' %}
 
+{% block title %}Đăng nhập hệ thống quản lý giờ dạy{% endblock %}
 {% block content %}
 <div class="auth-container">
-  
+
   <!-- Cột Banner Trái -->
   <div class="auth-banner">
     <!-- Hình nền sẽ được CSS render -->
@@ -12,7 +13,7 @@
   <div class="auth-form-wrapper">
     <div class="auth-form-inner">
       <img src="/static/images/logo/dhv_logo.png" alt="Logo Đại học Vinh" class="auth-logo">
-      
+
       <h2 class="auth-title">Đăng nhập hệ thống</h2>
       <p class="auth-subtitle">Cổng thông tin nội bộ dành cho Cán bộ & Giảng viên</p>
 
@@ -21,7 +22,7 @@
           <label for="username">Tên đăng nhập hoặc Mã số cán bộ</label>
           <input type="text" id="username" class="text-input" placeholder="Nhập tên đăng nhập" required autofocus>
         </div>
-        
+
         <div class="form-group">
           <label for="password">Mật khẩu</label>
           <div class="password-wrapper">

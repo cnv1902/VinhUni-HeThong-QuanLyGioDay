@@ -1,6 +1,8 @@
 {% extends 'base.html' %}
 
-{% set active_menu = 'chinh_quy' %}
+{% block title %}Quản lý nhóm lớp học phần - Hệ đào tạo Chính quy{% endblock %}
+
+{% set active_menu = 'quan_ly_nhom_lop_hoc_phan' %}
 
 {% block content %}
 <div class="toolbar">
@@ -25,7 +27,7 @@
     </svg>
     Xuất Excel
   </button>
-  <button class="btn btn-filter open" id="btnToggleFilter">
+  <button class="btn btn-filter" id="btnToggleFilter">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
       <path d="M4 5h16l-6 7v6l-4 2v-8L4 5Z" />
     </svg>
@@ -37,7 +39,7 @@
   </button>
 </div>
 
-<div class="filter-panel" id="filterPanel">
+<div class="filter-panel closed" id="filterPanel">
   <div class="adv-grid">
     <div class="adv-field">
       <label>Tên nhóm lớp học phần</label>

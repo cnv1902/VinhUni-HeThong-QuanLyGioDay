@@ -2,7 +2,22 @@
   <ul class="sidebar-menu">
     <li><a href="/" class="{% if active_menu == 'trang_chu' %}active{% endif %}">Trang chủ</a></li>
     <li><a href="#" class="{% if active_menu == 'he_thong' %}active{% endif %}">Hệ thống</a></li>
-    <li><a href="/quan_ly_nhom_lop_hoc_phan.html" class="{% if active_menu == 'chinh_quy' %}active{% endif %}">Hệ Đào tạo Chính quy</a></li>
+    <li class="has-submenu" data-menu-id="menu_chinh_quy">
+      <div class="menu-item-wrap">
+        <a href="/he_dao_tao_chinh_quy.html" class="{% if active_menu == 'chinh_quy' %}active{% endif %}">Hệ Đào tạo
+          Chính quy</a>
+        <button class="submenu-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+      </div>
+      <ul class="sidebar-submenu" style="display: none;">
+        <li><a href="/quan_ly_nhom_lop_hoc_phan.html"
+            class="{% if active_menu == 'quan_ly_nhom_lop_hoc_phan' %}active{% endif %}">Quản lý lớp học phần</a></li>
+      </ul>
+    </li>
     <li><a href="#" class="{% if active_menu == 'vlvh' %}active{% endif %}">Hệ Đào tạo VLVH</a></li>
     <li><a href="#" class="{% if active_menu == 'tu_xa' %}active{% endif %}">Hệ Đào tạo từ xa</a></li>
     <li><a href="#" class="{% if active_menu == 'sdh' %}active{% endif %}">Hệ Đào tạo SĐH</a></li>
@@ -14,3 +29,4 @@
     <li><a href="#" class="{% if active_menu == 'thanh_toan' %}active{% endif %}">Tổng hợp kê khai, thanh toán</a></li>
   </ul>
 </aside>
+<script src="/static/js/components/sidebar.js"></script>

@@ -1,10 +1,14 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
-  <title>Quản lý nhóm lớp học phần — Hệ chính quy</title>
+  <title>{% block title %}Hệ thống quản lý giờ dạy Đại học Vinh{% endblock %}</title>
+  <link rel="icon" type="image/ico" href="/static/images/logo/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="/static/css/layout.css">
   <link rel="stylesheet" href="/static/css/navbar.css">
   <link rel="stylesheet" href="/static/css/sidebar.css">
@@ -14,6 +18,7 @@
   <link rel="stylesheet" href="/static/css/footer.css">
   <link rel="stylesheet" href="/static/css/responsive.css">
 </head>
+
 <body>
   <div class="app">
     {% include 'layouts/navbar.html' %}
@@ -34,4 +39,5 @@
   <script src="/static/js/api/lopHocPhanApi.js"></script>
   <script src="/static/js/pages/quan_ly_nhom_lop_hoc_phan.js"></script>
 </body>
+
 </html>

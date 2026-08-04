@@ -92,15 +92,15 @@ function renderAll() {
   const allRows = getRows();
   const totalRows = allRows.length;
   const totalPages = Math.ceil(totalRows / state.pageSize) || 1;
-  
+
   if (state.currentPage > totalPages) {
     state.currentPage = totalPages;
   }
-  
+
   const startIdx = (state.currentPage - 1) * state.pageSize;
   const endIdx = startIdx + state.pageSize;
   const pageRows = allRows.slice(startIdx, endIdx);
-  
+
   tbody.innerHTML = pageRows.map(renderRowHTML).join('');
   updateHeaderIndicators();
   updateFooter(allRows);
@@ -111,7 +111,7 @@ function renderAll() {
 function renderPagination(totalRows, startIdx, endIdx) {
   if (!paginationEl) return;
   const totalPages = Math.ceil(totalRows / state.pageSize) || 1;
-  
+
   let html = `
     <div class="pagination-left">
       <span>Đang xem ${totalRows > 0 ? startIdx + 1 : 0} - ${endIdx} / ${totalRows} dòng</span>
@@ -126,7 +126,7 @@ function renderPagination(totalRows, startIdx, endIdx) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
   `;
-  
+
   for (let i = 1; i <= totalPages; i++) {
     // Rút gọn hiển thị trang nếu quá nhiều trang
     if (i === 1 || i === totalPages || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
@@ -142,15 +142,15 @@ function renderPagination(totalRows, startIdx, endIdx) {
       </button>
     </div>
   `;
-  
+
   paginationEl.innerHTML = html;
-  
+
   paginationEl.querySelector('#pageSizeSelect').addEventListener('change', e => {
     state.pageSize = parseInt(e.target.value);
     state.currentPage = 1;
     renderAll();
   });
-  
+
   paginationEl.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
     btn.addEventListener('click', () => {
       const p = parseInt(btn.dataset.page);
@@ -351,8 +351,8 @@ function bindStaticEvents() {
   });
   document.getElementById('btnToggleFilter').addEventListener('click', function () {
     const panel = document.getElementById('filterPanel');
-    panel.classList.toggle('closed');
-    this.classList.toggle('open', !panel.classList.contains('closed'));
+    panel.classList.toggle('open');
+    this.classList.toggle('closed', !panel.classList.contains('closed'));
   });
   document.getElementById('btnApplyFilter').addEventListener('click', () => {
     const map = [['advKhoa', 'khoa'], ['advKhoaCN', 'khoaCN'], ['advHT', 'hinhThucHoc'], ['advCachTC', 'cachTCLop'], ['advTrangThai', 'trangThai']];

@@ -11,6 +11,13 @@ async def index(request: Request):
         name="pages/index.html"
     )
 
+@router.get("/he_dao_tao_chinh_quy.html", include_in_schema=False)
+async def he_dao_tao_chinh_quy(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/he_dao_tao_chinh_quy.html"
+    )
+
 @router.get("/quan_ly_nhom_lop_hoc_phan.html", include_in_schema=False)
 async def quan_ly_nhom_lop(request: Request):
     return templates.TemplateResponse(

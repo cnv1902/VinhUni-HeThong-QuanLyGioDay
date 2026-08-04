@@ -36,3 +36,69 @@
   color: var(--teal-700);
   font-weight: 500;
 }
+
+.menu-item-wrap {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background-color 0.15s;
+}
+
+.menu-item-wrap:hover {
+  background-color: var(--bg-subtle);
+}
+
+.menu-item-wrap a {
+  flex: 1;
+}
+
+.menu-item-wrap a:hover {
+  background-color: transparent; /* Let the wrapper handle the hover bg */
+}
+
+.submenu-toggle {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+}
+
+.submenu-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.submenu-toggle:hover {
+  color: var(--text-primary);
+}
+
+.submenu-toggle.open svg {
+  transform: rotate(90deg);
+}
+
+.sidebar-submenu {
+  list-style: none;
+  padding: 0 0 0 16px;
+  margin: 4px 0 0 0;
+}
+
+.sidebar-submenu a {
+  padding: 8px 12px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+.sidebar-submenu a:hover {
+  color: var(--text-primary);
+}
+
+.sidebar-submenu a.active {
+  background-color: var(--teal-50);
+  color: var(--teal-700);
+  font-weight: 500;
+}
