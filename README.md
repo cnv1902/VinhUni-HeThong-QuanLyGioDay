@@ -1,4 +1,4 @@
-# Vinhuni Gateway API
+# HỆ THỐNG QUẢN LÝ GIỜ DẠY
 
 FastAPI project structured for scalability and maintainability.
 
