@@ -2,7 +2,7 @@ const apiLopHocPhan = {
   // Lấy danh sách cấu hình cột từ API
   async getColumnsConfig() {
     try {
-      const response = await fetch('/api/v1/config/columns/CQ_NhomLopHocPhan');
+      const response = await fetch(`${window.API_PREFIX}/config/columns/CQ_NhomLopHocPhan`);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
     } catch (error) {
@@ -14,7 +14,7 @@ const apiLopHocPhan = {
   // Lấy dữ liệu danh sách nhóm lớp, có thể truyền ma_hoc_ky
   async getNhomLopData(ma_hoc_ky = null) {
     try {
-      let url = '/api/v1/cq-nhom-lop-hoc-phan/';
+      let url = `${window.API_PREFIX}/cq-nhom-lop-hoc-phan/`;
       if (ma_hoc_ky !== null) {
         url += `?ma_hoc_ky=${ma_hoc_ky}`;
       }

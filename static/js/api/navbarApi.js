@@ -5,7 +5,7 @@ const apiNavbar = {
    */
   async getHocKyList() {
     try {
-      const response = await fetch('/api/v1/hoc-ky/');
+      const response = await fetch(`${window.API_PREFIX}/hoc-ky/`);
       if (!response.ok) throw new Error('Không thể lấy danh sách học kỳ');
       return await response.json();
     } catch (error) {

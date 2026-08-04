@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
+from app.core.config import settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+templates.env.globals["API_PREFIX"] = settings.API_V1_STR  # type: ignore
 
 @router.get("/", include_in_schema=False)
 async def index(request: Request):
