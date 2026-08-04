@@ -101,9 +101,7 @@ function bindNavbarEvents() {
  */
 async function initNavbar() {
   try {
-    const res = await fetch('/api/v1/hoc-ky/');
-    if (!res.ok) throw new Error('Không thể lấy danh sách học kỳ');
-    const data = await res.json();
+    const data = await apiNavbar.getHocKyList();
     if (!data || data.length === 0) return;
     
     navbarState.hocKyList = data;
