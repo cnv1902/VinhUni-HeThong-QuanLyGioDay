@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.api.dependencies import get_db
 from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopResponse
-from app.crud import cq_nhom_lop_hoc_phan as crud_cq_nhom_lop
+from app.crud import curd_cq_nhom_lop_hoc_phan as crud_cq_nhom_lop
 
 router = APIRouter()
 

@@ -1,0 +1,37 @@
+from sqlalchemy import Column, String, Integer, Boolean, NVARCHAR
+from app.models.base import Base
+
+class HocKy(Base):
+    __tablename__ = "tbl_HocKy"
+
+    MaHocKy = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
+    TenHocKy = Column(NVARCHAR(42), nullable=True)
+    NamHoc = Column(NVARCHAR(20), nullable=True)
+    HocKy = Column(Integer, nullable=True)
+    HocKy_CMC = Column(NVARCHAR(100), nullable=True)
+    HienTai = Column(Boolean, nullable=True, default=False)
+    TrangThaiHeThong = Column(Integer, nullable=True, default=0)
+    TrangThai_MacDinh = Column(Boolean, nullable=True)
+    TrangThai_CQ = Column(Integer, nullable=True)
+    TrangThai_VLVH = Column(Integer, nullable=True)
+    TrangThai_SDH = Column(Integer, nullable=True)
+    TrangThai_NCKH = Column(Integer, nullable=True)
+    TrangThai_HDCM = Column(Integer, nullable=True)
+    TrangThai_DAKL = Column(Integer, nullable=True)
+    TrangThai_DTTX = Column(Integer, nullable=True)
+    TrangThai_Chuyen = Column(Integer, nullable=True)
+    ThoiHan_HDCM = Column(Integer, nullable=True, default=0)
+    TrangThai_THCS = Column(Integer, nullable=True)
+    TrangThai_Khac = Column(Integer, nullable=True, default=0)
+    DuocChuyenVeHocKy_Ma = Column(Integer, nullable=True)
+    DuocChuyenVeHocKy_Ten = Column(NVARCHAR(100), nullable=True)
+    NamTaiChinh = Column(NVARCHAR(20), nullable=True)
+    TrangThai_DKDM = Column(Integer, nullable=True)
+    HienThi_TKB = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_CQ = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_VLVH = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_SDH = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_DTTX = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_Chuyen = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_THCS = Column(Integer, nullable=True, default=0)
+    ThayDoiHinhThucThanhToan_Khac = Column(Integer, nullable=True, default=0)
