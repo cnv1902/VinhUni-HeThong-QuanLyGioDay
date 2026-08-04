@@ -48,11 +48,19 @@ function getRows() {
   // 3. Xử lý sắp xếp dữ liệu (Sort)
   if (state.sortKey) {
     const key = state.sortKey, dir = state.sortDir;
+    const col = state.columns.find(c => c.MaTruong === key);
+    const isNum = col && (col.KieuTruong === 'number' || col.KieuTruong === 'capacity');
+
     rows = rows.slice().sort((a, b) => {
       let av = a[key], bv = b[key];
-      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
-      av = String(av).toLowerCase(); bv = String(bv).toLowerCase();
-      return av.localeCompare(bv) * dir;
+      if (isNum) {
+        let nA = parseFloat(av) || 0;
+        let nB = parseFloat(bv) || 0;
+        return (nA - nB) * dir;
+      }
+      av = String(av ?? '').toLowerCase(); 
+      bv = String(bv ?? '').toLowerCase();
+      return av.localeCompare(bv, 'vi', { numeric: true }) * dir;
     });
   }
   return rows;
@@ -142,10 +150,10 @@ function cellDisplay(row, col) {
  * @returns {string} HTML <tr>...</tr>
  */
 function buildHeaderHTML() {
-  const checkboxTh = `<th class="select-th" style="width:40px;min-width:40px;"><input type="checkbox" id="selectAll"></th>`;
+  const checkboxTh = `<th class="select-th" style="width:40px;min-width:40px;max-width:40px;"><input type="checkbox" id="selectAll"></th>`;
   const ths = state.columns.map(col => {
     const stickyStyle = col.sticky ? `left:${stickyOffsets[col.MaTruong]}px;` : '';
-    return `<th data-col="${col.MaTruong}" class="${col.sticky ? 'sticky-th' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">
+    return `<th data-col="${col.MaTruong}" class="${col.sticky ? 'sticky-th' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">
       <div class="th-inner">
         <span class="th-label" title="${esc(col.TenTruong)}">${esc(col.TenTruong)}</span>
         <span class="th-actions">${sortIconHtml(col.MaTruong)}${filterIconHtml(col.MaTruong)}</span>
@@ -162,10 +170,10 @@ function buildHeaderHTML() {
  * @returns {string} HTML <tr>...</tr>
  */
 function renderRowHTML(row) {
-  const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;"><input type="checkbox" class="row-check" ${state.selected.has(row.MaNhomLopHP) ? 'checked' : ''}></td>`;
+  const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${state.selected.has(row.MaNhomLopHP) ? 'checked' : ''}></td>`;
   const cells = state.columns.map(col => {
     const stickyStyle = col.sticky ? `left:${stickyOffsets[col.MaTruong]}px;` : '';
-    return `<td data-col="${col.MaTruong}" data-editable="${col.DuocSua ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${cellDisplay(row, col)}</td>`;
+    return `<td data-col="${col.MaTruong}" data-editable="${col.DuocSua ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${cellDisplay(row, col)}</td>`;
   }).join('');
   const rowId = row.MaNhomLopHP;
   const rowClass = [row._dirty ? 'row-dirty' : '', row.TrangThai === 'Đã thanh toán' ? 'row-locked' : ''].filter(Boolean).join(' ');
@@ -461,11 +469,13 @@ function bindTableEvents() {
   });
 
   // Bắt sự kiện Nút Check-All (Chọn tất cả Dòng) trên Header
-  document.getElementById('selectAll').addEventListener('change', e => {
-    const checked = e.target.checked;
-    const rows = getRows();
-    rows.forEach(r => { if (checked) state.selected.add(r.MaNhomLopHP); else state.selected.delete(r.MaNhomLopHP); });
-    renderAll();
+  thead.addEventListener('change', e => {
+    if (e.target.id === 'selectAll') {
+      const checked = e.target.checked;
+      const rows = getRows();
+      rows.forEach(r => { if (checked) state.selected.add(r.MaNhomLopHP); else state.selected.delete(r.MaNhomLopHP); });
+      renderAll();
+    }
   });
 }
 
@@ -486,26 +496,38 @@ function bindStaticEvents() {
     panel.classList.toggle('closed');
     this.classList.toggle('closed', panel.classList.contains('closed'));
   });
+
+  // Sự kiện nút Cấu hình hiển thị bảng
+  const btnConfigTable = document.getElementById('btnConfigTable');
+  if (btnConfigTable && typeof TableConfigModal !== 'undefined') {
+    btnConfigTable.addEventListener('click', () => {
+      TableConfigModal.open('table_CQ_NhomLopHocPhan_Config', state.rawColumns, (newCols) => {
+        state.columns = newCols.filter(c => c.HienThi);
+        calculateSticky();
+        thead.innerHTML = `<tr>${buildHeaderHTML()}</tr>`;
+        renderAll();
+      });
+    });
+  }
 }
 
 // ==========================================
 // 8. INITIALIZATION (API CALL)
 // ==========================================
 /**
- * Hàm khởi tạo và chạy dây chuyền hoạt động đầu tiên khi load Web.
- * Liên kết với API (Lớp Học Phần) -> Đổ data -> Gọi render tổng thể -> Kích hoạt Listener.
+ * Khởi tạo dữ liệu cốt lõi (Cấu hình cột) 1 lần duy nhất khi mở trang.
+ * Không tải data bảng ngay lúc này, mà chờ Navbar báo cáo "ContextReady".
  */
 async function init() {
   try {
-    // Tải cấu hình cột và dữ liệu song song (Sử dụng Promise.all để tăng tốc độ lấy data)
-    const [colsConfig, nhomLopData] = await Promise.all([
-      apiLopHocPhan.getColumnsConfig(),
-      apiLopHocPhan.getNhomLopData(3) // Khởi chạy với ma_hoc_ky = 3 (Giả định)
-    ]);
+    const rawColsConfig = await apiLopHocPhan.getColumnsConfig();
+    const colsConfig = TableConfigModal.mergeConfig('table_CQ_NhomLopHocPhan_Config', rawColsConfig);
 
-    // Xóa các cột ẩn và Sắp xếp cột theo số thứ tự (ThuTuHienThi) cấu hình trong DB
+    // Xóa các cột ẩn và Sắp xếp cột theo số thứ tự (ThuTuHienThi) cấu hình trong DB/LocalStorage
     state.columns = colsConfig.filter(c => c.HienThi).sort((a, b) => a.ThuTuHienThi - b.ThuTuHienThi);
-    state.data = nhomLopData;
+    
+    // Lưu bản gốc để truyền vào Modal cấu hình sau này
+    state.rawColumns = rawColsConfig;
 
     calculateSticky();
 
@@ -515,14 +537,48 @@ async function init() {
     // Gắn thính nghe sự kiện cho người dùng bấm bấm
     bindTableEvents();
     bindStaticEvents();
-    
-    // Tổng động viên in data ra cho người dùng coi
-    renderAll();
   } catch (error) {
-    console.error("Lỗi khi khởi tạo ứng dụng:", error);
-    showToast("Không thể tải dữ liệu từ máy chủ!");
+    console.error("Lỗi khi tải cấu hình cột:", error);
+    showToast("Không thể tải cấu hình bảng từ máy chủ!");
   }
 }
 
-// Châm ngòi khởi động 🚀
+/**
+ * Hàm tải dữ liệu bảng lưới dựa trên MaHocKy
+ */
+async function loadTableData(maHocKy) {
+  try {
+    tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
+    
+    const nhomLopData = await apiLopHocPhan.getNhomLopData(maHocKy);
+    state.data = nhomLopData;
+    
+    // Xóa bộ lọc cũ, reset trang
+    state.filters = {};
+    state.search = '';
+    state.currentPage = 1;
+    state.selected.clear();
+    
+    renderAll();
+    updateFilterCountBadge();
+  } catch (error) {
+    console.error("Lỗi khi tải dữ liệu bảng:", error);
+    showToast("Không thể tải dữ liệu Lớp học phần!");
+    tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px; color: var(--red-600);">Lỗi tải dữ liệu</td></tr>';
+  }
+}
+
+// Bắt sự kiện khi Navbar đã nạp xong Context (Lần đầu mở trang)
+window.addEventListener('ContextReady', (e) => {
+  const maHocKy = e.detail;
+  loadTableData(maHocKy);
+});
+
+// Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
+window.addEventListener('ContextChanged', (e) => {
+  const maHocKy = e.detail;
+  loadTableData(maHocKy);
+});
+
+// Châm ngòi khởi động cấu hình tĩnh 🚀
 init();

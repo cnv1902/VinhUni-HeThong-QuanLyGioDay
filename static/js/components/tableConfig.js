@@ -1,0 +1,206 @@
+// static/js/components/tableConfig.js
+
+/**
+ * Quản lý logic của Modal Cấu hình hiển thị bảng.
+ */
+const TableConfigModal = (function() {
+  let modalOverlay, tbody, btnClose, btnCancel, btnSave, btnReset;
+  let currentConfigKey = '';
+  let editingColumns = [];
+  let onSaveCallback = null;
+
+  function init() {
+    modalOverlay = document.getElementById('tableConfigModalOverlay');
+    if (!modalOverlay) return;
+
+    tbody = document.getElementById('tableConfigBody');
+    btnClose = document.getElementById('btnConfigClose');
+    btnCancel = document.getElementById('btnConfigCancel');
+    btnSave = document.getElementById('btnConfigSave');
+    btnReset = document.getElementById('btnConfigReset');
+
+    btnClose.addEventListener('click', close);
+    btnCancel.addEventListener('click', close);
+    btnSave.addEventListener('click', saveConfig);
+    btnReset.addEventListener('click', resetConfig);
+
+    // Xử lý sự kiện Event Delegation cho nút lên/xuống và các input
+    tbody.addEventListener('click', handleTbodyClick);
+    tbody.addEventListener('change', handleTbodyChange);
+  }
+
+  function open(storageKey, originalColumns, callback) {
+    if (!modalOverlay) return;
+    currentConfigKey = storageKey;
+    onSaveCallback = callback;
+
+    // Trộn cấu hình gốc với localStorage
+    editingColumns = mergeConfig(storageKey, originalColumns);
+    
+    // Đảm bảo thứ tự hiển thị luôn liên tục và đúng
+    editingColumns.sort((a, b) => a.ThuTuHienThi - b.ThuTuHienThi);
+    editingColumns.forEach((col, idx) => col.ThuTuHienThi = idx + 1);
+
+    renderTable();
+    modalOverlay.style.display = 'flex';
+  }
+
+  function close() {
+    modalOverlay.style.display = 'none';
+  }
+
+  function renderTable() {
+    tbody.innerHTML = editingColumns.map((col, idx) => {
+      const isFirst = idx === 0;
+      const isLast = idx === editingColumns.length - 1;
+      
+      return `
+        <tr data-index="${idx}">
+          <td style="text-align: center;">${idx + 1}</td>
+          <td>${col.TenTruong || col.MaTruong}</td>
+          <td style="text-align: center;">
+            <input type="checkbox" class="config-hienthi" ${col.HienThi ? 'checked' : ''}>
+          </td>
+          <td>
+            <select class="config-canle">
+              <option value="left" ${(!col.CanLe || col.CanLe === 'left') ? 'selected' : ''}>Mặc định (Trái)</option>
+              <option value="center" ${col.CanLe === 'center' ? 'selected' : ''}>Giữa</option>
+              <option value="right" ${col.CanLe === 'right' ? 'selected' : ''}>Phải</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="config-dorong text-input" value="${col.DoRong || 100}" style="width: 100%; text-align: right;">
+          </td>
+          <td style="text-align: center;">
+            <div class="order-controls">
+              <button class="mini-btn btn-up" title="Lên" ${isFirst ? 'disabled' : ''}>▲</button>
+              <button class="mini-btn btn-down" title="Xuống" ${isLast ? 'disabled' : ''}>▼</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function handleTbodyClick(e) {
+    const btnUp = e.target.closest('.btn-up');
+    const btnDown = e.target.closest('.btn-down');
+    if (!btnUp && !btnDown) return;
+
+    const tr = e.target.closest('tr');
+    const idx = parseInt(tr.dataset.index);
+
+    if (btnUp && idx > 0) {
+      // Hoán đổi vị trí
+      const temp = editingColumns[idx - 1];
+      editingColumns[idx - 1] = editingColumns[idx];
+      editingColumns[idx] = temp;
+    } else if (btnDown && idx < editingColumns.length - 1) {
+      const temp = editingColumns[idx + 1];
+      editingColumns[idx + 1] = editingColumns[idx];
+      editingColumns[idx] = temp;
+    }
+    
+    // Cập nhật lại ThuTuHienThi
+    editingColumns.forEach((col, i) => col.ThuTuHienThi = i + 1);
+    
+    // Cập nhật lại dữ liệu từ form trước khi render lại (tránh mất data người dùng vừa gõ)
+    syncFormDataToState();
+    renderTable();
+  }
+
+  function handleTbodyChange(e) {
+    // Chỉ cập nhật giá trị nếu cần thiết
+    syncFormDataToState();
+  }
+
+  function syncFormDataToState() {
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach(row => {
+      const idx = parseInt(row.dataset.index);
+      const chk = row.querySelector('.config-hienthi');
+      const sel = row.querySelector('.config-canle');
+      const num = row.querySelector('.config-dorong');
+      
+      editingColumns[idx].HienThi = chk.checked;
+      editingColumns[idx].CanLe = sel.value;
+      editingColumns[idx].DoRong = parseInt(num.value) || 100;
+    });
+  }
+
+  function saveConfig() {
+    syncFormDataToState();
+    
+    // Trích xuất những trường cần lưu
+    const savedData = editingColumns.map(col => ({
+      MaTruong: col.MaTruong,
+      HienThi: col.HienThi,
+      CanLe: col.CanLe,
+      DoRong: col.DoRong,
+      ThuTuHienThi: col.ThuTuHienThi
+    }));
+
+    localStorage.setItem(currentConfigKey, JSON.stringify(savedData));
+    
+    if (typeof showToast === 'function') {
+      showToast('Đã lưu cấu hình bảng thành công!', 'success');
+    }
+    
+    close();
+    
+    if (onSaveCallback) {
+      onSaveCallback(editingColumns);
+    }
+  }
+
+  function resetConfig() {
+    localStorage.removeItem(currentConfigKey);
+    if (typeof showToast === 'function') {
+      showToast('Đã khôi phục cấu hình mặc định!', 'success');
+    }
+    close();
+    // Báo reload lại page để gọi lại API nguyên bản
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }
+
+  /**
+   * Trộn cấu hình gốc từ API với cấu hình lưu trong localStorage.
+   */
+  function mergeConfig(storageKey, apiColumns) {
+    const savedStr = localStorage.getItem(storageKey);
+    // Deep clone apiColumns
+    let merged = JSON.parse(JSON.stringify(apiColumns));
+
+    if (savedStr) {
+      try {
+        const savedArr = JSON.parse(savedStr);
+        // Map lại dữ liệu
+        const savedMap = {};
+        savedArr.forEach(c => savedMap[c.MaTruong] = c);
+
+        merged.forEach(col => {
+          const sCol = savedMap[col.MaTruong];
+          if (sCol) {
+            col.HienThi = sCol.HienThi;
+            col.CanLe = sCol.CanLe;
+            col.DoRong = sCol.DoRong;
+            col.ThuTuHienThi = sCol.ThuTuHienThi;
+          }
+        });
+      } catch (e) {
+        console.error('Lỗi khi đọc cấu hình localStorage', e);
+      }
+    }
+    
+    return merged.sort((a, b) => a.ThuTuHienThi - b.ThuTuHienThi);
+  }
+
+  document.addEventListener('DOMContentLoaded', init);
+
+  return {
+    open,
+    mergeConfig
+  };
+})();

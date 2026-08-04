@@ -38,10 +38,10 @@ def get_danh_sach(db: Session, ma_hoc_ky: Optional[int] = None):
         .outerjoin(HinhThucDay, CQNhomLopHocPhan.MaHTDay == HinhThucDay.MaHTDay)
     )
     
-    if ma_hoc_ky:
+    if ma_hoc_ky != None:
         query = query.filter(CQNhomLopHocPhan.MaHocKy == ma_hoc_ky)
-        
-    query = query.order_by(CQNhomLopHocPhan.ID).all()
+
+    # query = query.order_by(CQNhomLopHocPhan.ID).all()
     
     # Convert query results to dictionary so Pydantic can parse them
     results = []

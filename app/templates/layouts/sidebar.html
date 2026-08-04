@@ -1,7 +1,6 @@
 <aside class="sidebar">
   <ul class="sidebar-menu">
     <li><a href="/" class="{% if active_menu == 'trang_chu' %}active{% endif %}">Trang chủ</a></li>
-    <li><a href="#" class="{% if active_menu == 'he_thong' %}active{% endif %}">Hệ thống</a></li>
     <li class="has-submenu" data-menu-id="menu_chinh_quy">
       <div class="menu-item-wrap">
         <a href="/he_dao_tao_chinh_quy.html" class="{% if active_menu == 'chinh_quy' %}active{% endif %}">Hệ Đào tạo
@@ -9,7 +8,7 @@
         <button class="submenu-toggle">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round">
-            <polyline points="6 9 12 15 18 9"></polyline>
+            <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
       </div>
@@ -27,6 +26,21 @@
     <li><a href="#" class="{% if active_menu == 'huong_dan' %}active{% endif %}">Hướng dẫn sinh viên, học viên</a></li>
     <li><a href="#" class="{% if active_menu == 'khcn' %}active{% endif %}">Hoạt động khoa học công nghệ</a></li>
     <li><a href="#" class="{% if active_menu == 'thanh_toan' %}active{% endif %}">Tổng hợp kê khai, thanh toán</a></li>
+    <li class="has-submenu" data-menu-id="menu_he_thong">
+      <div class="menu-item-wrap">
+        <a href="#" class="{% if active_menu == 'he_thong' %}active{% endif %}">Hệ thống</a>
+        <button class="submenu-toggle">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+      </div>
+      <ul class="sidebar-submenu" style="display: none;">
+        <li><a href="#" class="{% if active_menu == 'nguoi_dung' %}active{% endif %}">Người dùng</a></li>
+        <li><a href="#" class="{% if active_menu == 'cau_hinh' %}active{% endif %}">Cấu hình</a></li>
+      </ul>
+    </li>
   </ul>
 </aside>
 <script src="/static/js/components/sidebar.js"></script>
