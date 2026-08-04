@@ -196,3 +196,21 @@ Tuyệt đối KHÔNG viết toàn bộ HTML/CSS/JS của một trang vào chung
   - Mỗi trang một file (ví dụ: `quan_ly_nhom_lop_hoc_phan.js`). File này sẽ gọi các hàm từ `core` và `components` để xử lý sự kiện DOM cho trang đó.
 
 *Mục đích: Đảm bảo khả năng bảo trì, dễ đọc, và nguyên tắc DRY (Don't Repeat Yourself).*
+
+
+## 13. Quy tắc viết Javascript cho Trang (Page-level JS)
+
+Để đảm bảo mã nguồn Javascript của từng trang dễ đọc và dễ bảo trì, tuyệt đối tuân thủ các quy tắc tổ chức sau:
+
+1. **Gom nhóm mã nguồn (Grouping):** Chia file JS thành các phân khu rõ ràng bằng các dòng comment phân cách (ví dụ: // === 1. STATE ===). Các nhóm cơ bản thường bao gồm:
+   - **State & DOM Elements:** Khai báo biến trạng thái toàn cục và các DOM Node cố định.
+   - **Data Processing & Filtering:** Các hàm xử lý mảng dữ liệu, sắp xếp, lọc.
+   - **Table/HTML Rendering:** Các hàm chuyên biệt tạo chuỗi HTML, vẽ bảng, vẽ phân trang.
+   - **UI State Updaters:** Các hàm nhỏ cập nhật huy hiệu (badge), thống kê footer.
+   - **Specific Features:** Các khối logic phức tạp lẻ (như Inline Editing, Excel-like Filter).
+   - **Event Listeners Binding:** Gom tất cả quá trình gắn sự kiện (addEventListener) vào 1-2 hàm (như indTableEvents, indStaticEvents). Tránh rải rác gắn sự kiện ở mọi nơi.
+   - **Initialization:** Hàm init() duy nhất để gọi API và khởi chạy trang.
+
+2. **Bắt buộc chú thích (JSDoc):** Mọi hàm phải có bình luận /** ... */ phía trên, giải thích bằng tiếng Việt: Mục đích của hàm, giải thích các tham số (nếu có), và kết quả trả về.
+
+3. **Event Delegation:** Tối đa hóa việc dùng kỹ thuật Event Delegation (gắn sự kiện click/change vào phần tử cha lớn như 	body, 	head và dùng e.target.closest()) thay vì dùng vòng lặp gắn cả ngàn sự kiện cho từng thẻ con bên trong bảng.
