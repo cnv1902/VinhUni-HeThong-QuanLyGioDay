@@ -18,7 +18,7 @@ class KieuTruongEnum(str, enum.Enum):
     MONO = "mono"
 
 class DMTruongSuDung(Base):
-    __tablename__ = "tbl_HETHONG_DMTruongSuDung"
+    __tablename__ = "tbl_HETHONG_DMTruongDuocSuDung"
 
     ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
     TenBang = Column(String(50), nullable=False)
@@ -30,6 +30,6 @@ class DMTruongSuDung(Base):
     DuocSua = Column(Boolean, default=False)
     GhimCot = Column(Boolean, default=False)
 
-    # 2. Ràng buộc các cột này vào bộ từ điển phía trên
-    CanLe = Column(Enum(CanLeEnum), default=CanLeEnum.LEFT)
-    KieuTruong = Column(Enum(KieuTruongEnum), default=KieuTruongEnum.TEXT)
+    # 2. Các cột này sử dụng String vì trong DB là VARCHAR + CHECK constraint
+    CanLe = Column(String(20), default=CanLeEnum.LEFT.value)
+    KieuTruong = Column(String(50), default=KieuTruongEnum.TEXT.value)
