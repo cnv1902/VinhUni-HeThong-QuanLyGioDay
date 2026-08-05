@@ -1,8 +1,9 @@
 from fastapi import FastAPI
+from app.core.middleware import setup_middlewares
 from app.core.config import settings
 from app.api.v1.api import api_router
 
-from fastapi.middleware.cors import CORSMiddleware
+from app.api.v1.api import api_router
 
 from contextlib import asynccontextmanager
 from app.core.redis import redis_manager
@@ -21,15 +22,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Cấu hình CORS (Cross-Origin Resource Sharing)
-if settings.BACKEND_CORS_ORIGINS:
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.BACKEND_CORS_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+# Kích hoạt toàn bộ Middleware (CORS, Logging...)
+setup_middlewares(app)
 
 from fastapi.staticfiles import StaticFiles
 
