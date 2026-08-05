@@ -70,9 +70,16 @@ BEGIN
 
 	--IF  EXISTS(SELECT ID FROM INSERTED WHERE ID_LanTongHopFile <=1)
 	--	UPDATE tbl_CQ_NhomLopHocPhan SET SoSinhVien = @SiSoDKH + @SiSoChuyenDoi, [TenNhomLopHP_KhongDau] =dbo.f_nosymbol([TenNhomLopHP]) WHERE MaNhomLopHP = (SELECT TOP 1 INSERTED.MaNhomLopHP FROM INSERTED)
-
+	
+--===========================================================================================================================================================================
+	-- KIỂM TRA ĐẢM BẢO BẢN GHI NÀY CHƯA ĐƯỢC TỔNG HỢP CẬP NHẬT LẠI SỐ SINH VIÊN BẰNG SỐ SVDK + SỐ SVCD
+--===========================================================================================================================================================================
 	IF  EXISTS(SELECT ID FROM INSERTED WHERE ID_LanTongHopFile <=1)
 		UPDATE tbl_CQ_NhomLopHocPhan SET SoSinhVien = @SiSoDKH + @SiSoChuyenDoi WHERE MaNhomLopHP = (SELECT TOP 1 INSERTED.MaNhomLopHP FROM INSERTED)
+
+--===========================================================================================================================================================================
+	-- GÁN BIẾN SỐ SINH VIÊN VÀ KIỂM TRA BẢN GHI KHÔNG CẬP NHẬT ID_LANTONGHOPFILE
+--===========================================================================================================================================================================
 
 	Set @SoSinhVien = (SELECT top 1 SoSinhVien FROM INSERTED)
 If NOT(UPDATE(ID_LanTongHopFile))  --AND EXISTS(SELECT ID FROM INSERTED WHERE ID_LanTongHopFile <=1)
@@ -82,6 +89,10 @@ If NOT(UPDATE(ID_LanTongHopFile))  --AND EXISTS(SELECT ID FROM INSERTED WHERE ID
 			--IF EXISTS(SELECT ID FROM INSERTED WHERE ID_LanTongHopFile > 1)
 			--	ROLLBACK;
 		
+--===========================================================================================================================================================================
+	-- NẾU HỌC PHẦN ĐÃ ĐƯỢC XÁC NHẬN THANH TOÁN THÌ KHÔNG THAY ĐỔI
+--===========================================================================================================================================================================
+
 		-- Nếu học phần đã được xác nhận và thanh toán thì không thay đổi được
 			IF EXISTS(SELECT MaNhomLopHP FROM tbl_CQ_KeKhai WHERE MaNhomLopHP IN (SELECT MaNhomLopHP FROM INSERTED) AND (XacNhanThanhToan=1))
 				ROLLBACK;

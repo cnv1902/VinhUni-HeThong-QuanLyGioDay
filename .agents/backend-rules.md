@@ -27,8 +27,11 @@ When instructed to write or modify backend logic for this project, you MUST stri
 - **`app/routes/` (UI/HTML Routers)**
   - Chứa các router trả về giao diện HTML qua Jinja2 (`TemplateResponse`) (ví dụ: `ui.py`).
 
-- **`app/services/` (Business Logic)**
+- **`app/services/` (Business Logic & Caching)**
   - Chứa các nghiệp vụ phức tạp đòi hỏi gọi nhiều hàm CRUD liên tiếp, hoặc gọi ra API bên ngoài.
+  - **Quy tắc Caching (Redis):** Khi viết logic xử lý bộ nhớ đệm (Cache) bằng Redis trong Service, BẮT BUỘC tuân thủ 2 nguyên tắc sau:
+    1. Phải khai báo biến `CACHE_PREFIX` ở ngay đầu file (Ví dụ: `CACHE_PREFIX = "cache:hoc_ky:"`). Nếu API có tham số, phải nối chuỗi tạo Khóa Động (Dynamic Key) (Ví dụ: `f"{CACHE_PREFIX}{ma_hoc_ky}"`). Tuyệt đối không dùng Khóa Tĩnh (Static Key) cho dữ liệu động.
+    2. Bất kỳ lệnh nào tương tác với Redis (`redis_client.get`, `setex`, `delete`) BẮT BUỘC phải được bọc trong khối `try...except Exception as e:` và in ra log lỗi (chống sập API). Nếu Redis hỏng, hàm bắt buộc phải trôi tuột xuống phần dưới để gọi DB bình thường (Graceful Degradation).
 
 ## 2. Quy trình viết mã Backend (Implementation Workflow)
 Mỗi khi nhận yêu cầu làm một chức năng Backend mới, bạn phải tuân thủ luồng sau:

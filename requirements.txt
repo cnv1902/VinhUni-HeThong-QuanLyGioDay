@@ -10,3 +10,4 @@ pytest
 httpx
 pyodbc
 types-python-jose
+redis-8.1.0
