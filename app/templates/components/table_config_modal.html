@@ -14,10 +14,10 @@
           <thead>
             <tr>
               <th style="width: 60px; text-align: center;">STT</th>
-              <th>Tên cột</th>
+              <th style="text-align: center;">Tên cột</th>
               <th style="width: 80px; text-align: center;">Hiển thị</th>
-              <th style="width: 140px;">Căn lề</th>
-              <th style="width: 120px;">Chiều rộng</th>
+              <th style="width: 140px; text-align: center;">Căn lề</th>
+              <th style="width: 120px; text-align: center;">Chiều rộng</th>
               <th style="width: 80px; text-align: center;">Thứ tự</th>
             </tr>
           </thead>
@@ -34,6 +34,15 @@
           <path d="M3 3v5h5" />
         </svg>
         Khôi phục mặc định
+      </button>
+      <button type="button" class="btn" id="btnConfigAutoFit" title="Tự động tính toán chiều rộng dựa trên độ dài tên cột">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 14h6v6"></path>
+          <path d="M4 14l7-7"></path>
+          <path d="M20 10h-6V4"></path>
+          <path d="M20 10l-7 7"></path>
+        </svg>
+        Căn tự động theo tiêu đề
       </button>
       <div class="spacer"></div>
       <button class="btn" id="btnConfigCancel">Đóng</button>

@@ -152,20 +152,4 @@
       padding-left: 32px;
     }
 
-    .legend {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-left: auto;
-    }
-
-    .legend .dot {
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      border-radius: 2px;
-      margin-right: 5px;
-    }
 

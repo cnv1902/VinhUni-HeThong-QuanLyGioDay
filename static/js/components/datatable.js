@@ -25,6 +25,8 @@ function iconRefresh() {
  * @returns {string} Chuỗi HTML của badge
  */
 function badgeHtml(v) {
+  if (v === true || String(v).toLowerCase() === 'true') return `<span class="badge badge-true">True</span>`;
+  if (v === false || String(v).toLowerCase() === 'false') return `<span class="badge badge-false">False</span>`;
   if (v === 'Đã thanh toán') return `<span class="badge badge-blue">${iconLock()}${esc(v)}</span>`;
   if (v === 'Đã xác nhận') return `<span class="badge badge-green">${esc(v)}</span>`;
   return `<span class="badge badge-gray">${esc(v)}</span>`;
@@ -68,12 +70,14 @@ class DataTable {
     this.stickyOffsets = {};
     this.filterDropdownEl = null;
     this.openFilterKey = null;
-    
     this.onRowDirty = config.onRowDirty || function(){};
     this.onSelectionChange = config.onSelectionChange || function(){};
     this.onRenderComplete = config.onRenderComplete || function(){};
+    this.pageSizeEl = document.getElementById(config.pageSizeId) || null;
     this.customCellRender = config.customCellRender || null;
-    
+    this.isRowSelectable = config.isRowSelectable || (() => true);
+    this.isRowEditable = config.isRowEditable || (() => true);
+
     this.outsideClickHandler = this.outsideClickHandler.bind(this);
     
     this.bindEvents();
@@ -253,11 +257,12 @@ class DataTable {
    * @returns {string} Chuỗi HTML bao gồm thẻ <tr> và các thẻ <th>
    */
   buildHeaderHTML() {
-    const allSelected = this.getRows().length > 0 && this.state.selected.size === this.getRows().length;
+    const selectableRows = this.getRows().filter(r => this.isRowSelectable(r));
+    const allSelected = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
     const checkboxTh = `<th class="select-th" style="width:40px;min-width:40px;max-width:40px;"><input type="checkbox" id="selectAll" ${allSelected ? 'checked' : ''}></th>`;
     const ths = this.state.columns.map(col => {
       const stickyStyle = col.sticky ? `left:${this.stickyOffsets[col.MaTruong]}px;` : '';
-      return `<th data-col="${col.MaTruong}" class="${col.sticky ? 'sticky-th' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">
+      return `<th data-col="${col.MaTruong}" class="${col.sticky ? 'sticky-th' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:center;">
         <div class="th-inner">
           <span class="th-label" title="${esc(col.TenTruong)}">${esc(col.TenTruong)}</span>
           <span class="th-actions">${this.sortIconHtml(col.MaTruong)}${this.filterIconHtml(col.MaTruong)}</span>
@@ -299,10 +304,14 @@ class DataTable {
    * @returns {string} Thẻ <tr> chứa các <td>
    */
   renderRowHTML(row) {
-    const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(String(row.MaNhomLopHP)) ? 'checked' : ''}></td>`;
+    const selectable = this.isRowSelectable(row);
+    const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(String(row.MaNhomLopHP)) ? 'checked' : ''} ${!selectable ? 'disabled' : ''}></td>`;
+    
+    const editable = this.isRowEditable(row);
     const cells = this.state.columns.map(col => {
       const stickyStyle = col.sticky ? `left:${this.stickyOffsets[col.MaTruong]}px;` : '';
-      return `<td data-col="${col.MaTruong}" data-editable="${col.DuocSua ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${this.cellDisplay(row, col)}</td>`;
+      const canEditCell = editable && col.DuocSua;
+      return `<td data-col="${col.MaTruong}" data-editable="${canEditCell ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${this.cellDisplay(row, col)}</td>`;
     }).join('');
     const rowId = row.MaNhomLopHP;
     const rowClass = [row._dirty ? 'row-dirty' : '', row.TrangThai === 'Đã thanh toán' ? 'row-locked' : ''].filter(Boolean).join(' ');
@@ -609,7 +618,10 @@ class DataTable {
       this.onSelectionChange(this.state.selected);
       const allRows = this.getRows();
       const selectAllCb = this.thead.querySelector('#selectAll');
-      if (selectAllCb) selectAllCb.checked = allRows.length > 0 && this.state.selected.size === allRows.length;
+      if (selectAllCb) {
+        const selectableRows = allRows.filter(r => this.isRowSelectable(r));
+        selectAllCb.checked = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
+      }
     });
     
     this.thead.addEventListener('click', e => {
@@ -623,7 +635,12 @@ class DataTable {
       if (e.target.id === 'selectAll') {
         const checked = e.target.checked;
         const rows = this.getRows();
-        rows.forEach(r => { if (checked) this.state.selected.add(String(r.MaNhomLopHP)); else this.state.selected.delete(String(r.MaNhomLopHP)); });
+        rows.forEach(r => { 
+          if (this.isRowSelectable(r)) {
+            if (checked) this.state.selected.add(String(r.MaNhomLopHP)); 
+            else this.state.selected.delete(String(r.MaNhomLopHP)); 
+          }
+        });
         this.onSelectionChange(this.state.selected);
         this.renderAll();
       }

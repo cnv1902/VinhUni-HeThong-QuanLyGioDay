@@ -35,3 +35,80 @@ document.querySelectorAll('.submenu-toggle').forEach(btn => {
         }
     });
 });
+
+// --- LOGIC CHO SIDEBAR CO GIÃN VÀ THU GỌN ---
+(function() {
+    const sidebar = document.querySelector('.sidebar');
+    const resizer = document.getElementById('sidebarResizer');
+    const toggleBtn = document.getElementById('btnSidebarToggle');
+    
+    if (!sidebar) return;
+
+    // Phục hồi trạng thái chiều rộng từ localStorage
+    const savedWidth = localStorage.getItem('sidebarWidth');
+    const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+    if (savedWidth) {
+        sidebar.style.setProperty('--sidebar-width', savedWidth + 'px');
+    }
+    
+    if (isCollapsed) {
+        sidebar.classList.add('collapsed');
+    }
+
+    // Logic Đóng/Mở Sidebar
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
+        });
+    }
+
+    // Logic Kéo co giãn (Resize)
+    if (resizer) {
+        let isResizing = false;
+        let startX, startWidth;
+
+        resizer.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            startX = e.clientX;
+            // Tắt transition khi kéo để không bị giật lag
+            sidebar.classList.add('no-transition');
+            resizer.classList.add('dragging');
+            
+            // Nếu chưa có setProperty inline, lấy giá trị getComputedStyle
+            startWidth = parseInt(getComputedStyle(sidebar).width, 10);
+            
+            // Xóa vùng chọn text
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isResizing) return;
+            // Ngăn chặn nếu đang bị thu gọn
+            if (sidebar.classList.contains('collapsed')) return;
+
+            const dx = e.clientX - startX;
+            let newWidth = startWidth + dx;
+            
+            // Giới hạn chiều rộng
+            if (newWidth < 150) newWidth = 150;
+            if (newWidth > 600) newWidth = 600;
+
+            sidebar.style.setProperty('--sidebar-width', newWidth + 'px');
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isResizing) {
+                isResizing = false;
+                sidebar.classList.remove('no-transition');
+                resizer.classList.remove('dragging');
+                document.body.style.userSelect = '';
+                
+                // Lưu lại chiều rộng
+                const currentWidth = parseInt(getComputedStyle(sidebar).width, 10);
+                localStorage.setItem('sidebarWidth', currentWidth);
+            }
+        });
+    }
+})();

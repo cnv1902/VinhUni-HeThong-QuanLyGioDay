@@ -105,31 +105,7 @@
 }
 
 /* Toast */
-.toast-stack {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 100;
-}
 
-.toast {
-  background: var(--navy-800);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: var(--radius);
-  font-size: 13px;
-  opacity: 0;
-  transform: translateY(6px);
-  transition: opacity .2s, transform .2s;
-}
-
-.toast.show {
-  opacity: 1;
-  transform: translateY(0);
-}
 
 /* Table Config Modal */
 .modal-overlay {

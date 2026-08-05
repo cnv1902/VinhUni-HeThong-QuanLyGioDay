@@ -9,6 +9,8 @@ let myTable;
  */
 async function init() {
   try {
+    renderFooterUI();
+
     const rawColsConfig = await apiLopHocPhan.getColumnsConfig();
     const colsConfig = TableConfigModal.mergeConfig('table_CQ_NhomLopHocPhan_Config', rawColsConfig);
 
@@ -17,6 +19,8 @@ async function init() {
       tableId: 'dataTable',
       paginationId: 'tablePagination',
       pageSize: 100,
+      isRowSelectable: (row) => row.XacNhan !== true, // Không cho chọn nếu đã xác nhận
+      isRowEditable: (row) => row.XacNhan !== true,   // Không cho sửa nếu đã xác nhận
       onRowDirty: (row, key, val) => {
         // Có thể gọi API để auto-save nếu muốn
       },
@@ -25,15 +29,25 @@ async function init() {
       },
       onRenderComplete: (allRows, selectedSet) => {
         updateFooter(allRows, selectedSet);
+
+        // Thêm class css row-locked cho các dòng đã xác nhận
+        const trs = document.querySelectorAll('#dataTable tbody tr');
+        trs.forEach(tr => {
+          const rowId = tr.getAttribute('data-id');
+          const rowData = allRows.find(r => String(r.MaNhomLopHP) === String(rowId));
+          if (rowData && rowData.XacNhan === true) {
+            tr.classList.add('row-locked');
+          }
+        });
       }
     });
 
     myTable.setColumns(colsConfig, rawColsConfig);
-    
+
     bindStaticEvents();
   } catch (error) {
     console.error("Lỗi khi tải cấu hình cột:", error);
-    if(typeof showToast !== 'undefined') showToast("Không thể tải cấu hình bảng từ máy chủ!");
+    if (typeof showToast !== 'undefined') showToast("Không thể tải cấu hình bảng từ máy chủ!");
   }
 }
 
@@ -42,19 +56,19 @@ async function init() {
  */
 async function loadTableData(maHocKy) {
   try {
-    if(myTable) {
-        myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
+    if (myTable) {
+      myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
     }
-    
+
     const nhomLopData = await apiLopHocPhan.getNhomLopData(maHocKy);
-    if(myTable) {
-        myTable.setData(nhomLopData);
+    if (myTable) {
+      myTable.setData(nhomLopData);
     }
   } catch (error) {
     console.error("Lỗi khi tải dữ liệu bảng:", error);
-    if(typeof showToast !== 'undefined') showToast("Không thể tải dữ liệu Lớp học phần!");
-    if(myTable) {
-        myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px; color: var(--red-600);">Lỗi tải dữ liệu</td></tr>';
+    if (typeof showToast !== 'undefined') showToast("Không thể tải dữ liệu Lớp học phần!");
+    if (myTable) {
+      myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px; color: var(--red-600);">Lỗi tải dữ liệu</td></tr>';
     }
   }
 }
@@ -78,10 +92,10 @@ window.addEventListener('ContextChanged', (e) => {
  */
 function updateFooter(rows, selectedSet = null) {
   const selectedSize = selectedSet ? selectedSet.size : (myTable ? myTable.state.selected.size : 0);
-  
+
   const totalRowsEl = document.getElementById('statTotal');
   if (totalRowsEl) totalRowsEl.textContent = myTable ? myTable.state.data.length : 0;
-  
+
   const filteredEl = document.getElementById('statFiltered');
   if (filteredEl) filteredEl.textContent = rows.length;
 
@@ -89,24 +103,54 @@ function updateFooter(rows, selectedSet = null) {
   if (selSpan) {
     selSpan.textContent = selectedSize;
   }
-  
-  // Tính tổng sinh viên, tổng tín chỉ
+
+  // Tính tổng sinh viên, tổng tín chỉ, số đã xác nhận, chưa xác nhận
   let sumSv = 0;
   let sumTc = 0;
+  let sumConfirmed = 0;
+  let sumUnconfirmed = 0;
+
   rows.forEach(r => {
     sumSv += (r.SoSinhVien || 0);
     sumTc += (r.SoTinChi || 0);
+    if (r.XacNhan === true) {
+      sumConfirmed++;
+    } else {
+      sumUnconfirmed++;
+    }
   });
-  
+
   const sumSvEl = document.getElementById('statSV');
   if (sumSvEl) sumSvEl.textContent = formatNum(sumSv);
-  
+
   const sumTcEl = document.getElementById('statTC');
   if (sumTcEl) sumTcEl.textContent = formatNum(sumTc);
+
+  const statConfirmedEl = document.getElementById('statConfirmed');
+  if (statConfirmedEl) statConfirmedEl.textContent = formatNum(sumConfirmed);
+
+  const statUnconfirmedEl = document.getElementById('statUnconfirmed');
+  if (statUnconfirmedEl) statUnconfirmedEl.textContent = formatNum(sumUnconfirmed);
+}
+
+function renderFooterUI() {
+  const footer = document.getElementById('pageFooter');
+  if (footer) {
+    footer.innerHTML = `
+            <span>Tổng số: <b id="statTotal">0</b> nhóm lớp</span>
+            <span>Đang hiển thị: <b id="statFiltered">0</b></span>
+            <span>Đã chọn: <b id="statSelected">0</b></span>
+            <span>Tổng SV: <b id="statSV">0</b></span>
+            <span>Tổng số TC: <b id="statTC">0</b></span>
+            <span>Đã xác nhận: <b id="statConfirmed">0</b></span>
+            <span>Chưa xác nhận: <b id="statUnconfirmed">0</b></span>
+            <span class="hint">Nháy đúp vào ô để chỉnh sửa · Lớp đã xác nhận không thể chỉnh sửa</span>
+        `;
+  }
 }
 
 function formatNum(num) {
-    return new Intl.NumberFormat('vi-VN').format(num);
+  return new Intl.NumberFormat('vi-VN').format(num);
 }
 
 /**

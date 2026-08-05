@@ -9,7 +9,8 @@
 
     .grid-wrap {
       border: 1px solid var(--border);
-      border-radius: var(--radius) var(--radius) 0 0; /* Bo tròn phía trên */
+      border-radius: var(--radius) var(--radius) 0 0;
+      /* Bo tròn phía trên */
       background: var(--bg-panel);
       overflow: auto;
       min-height: 0;
@@ -25,7 +26,8 @@
       padding: 8px 16px;
       background: var(--bg-panel);
       border: 1px solid var(--border);
-      border-radius: 0 0 var(--radius) var(--radius); /* Bo tròn phía dưới */
+      border-radius: 0 0 var(--radius) var(--radius);
+      /* Bo tròn phía dưới */
       font-size: 13px;
       color: var(--text-secondary);
     }
@@ -115,12 +117,13 @@
     .th-inner {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 6px;
       padding: 9px 10px;
     }
 
     .th-label {
+      flex: 1;
+      text-align: center;
       font-size: 12px;
       font-weight: 600;
       color: var(--text-primary);
@@ -212,16 +215,16 @@
     }
 
     tr.row-locked td {
-      background: var(--blue-50);
+      background: var(--bg-subtle-2);
       color: var(--text-secondary);
     }
 
     tr.row-locked:hover td {
-      background: var(--blue-50);
+      background: var(--bg-subtle-2);
     }
 
     tr.row-locked .sticky-cell {
-      background: var(--blue-50);
+      background: var(--bg-subtle-2);
     }
 
     tr.flash td {
@@ -282,6 +285,16 @@
       display: inline-flex;
       align-items: center;
       gap: 4px;
+    }
+
+    .badge-true {
+      background: var(--green-50);
+      color: var(--green-600);
+    }
+
+    .badge-false {
+      background: var(--bg-subtle-2);
+      color: var(--text-secondary);
     }
 
     .badge-blue svg {

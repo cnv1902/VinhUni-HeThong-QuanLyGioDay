@@ -4,7 +4,7 @@
  * Quản lý logic của Modal Cấu hình hiển thị bảng.
  */
 const TableConfigModal = (function() {
-  let modalOverlay, tbody, btnClose, btnCancel, btnSave, btnReset;
+  let modalOverlay, tbody, btnClose, btnCancel, btnSave, btnReset, btnAutoFit;
   let currentConfigKey = '';
   let editingColumns = [];
   let onSaveCallback = null;
@@ -18,11 +18,13 @@ const TableConfigModal = (function() {
     btnCancel = document.getElementById('btnConfigCancel');
     btnSave = document.getElementById('btnConfigSave');
     btnReset = document.getElementById('btnConfigReset');
+    btnAutoFit = document.getElementById('btnConfigAutoFit');
 
     btnClose.addEventListener('click', close);
     btnCancel.addEventListener('click', close);
     btnSave.addEventListener('click', saveConfig);
     btnReset.addEventListener('click', resetConfig);
+    if (btnAutoFit) btnAutoFit.addEventListener('click', autoFitColumns);
 
     // Xử lý sự kiện Event Delegation cho nút lên/xuống và các input
     tbody.addEventListener('click', handleTbodyClick);
@@ -57,7 +59,9 @@ const TableConfigModal = (function() {
       return `
         <tr data-index="${idx}">
           <td style="text-align: center;">${idx + 1}</td>
-          <td>${col.TenTruong || col.MaTruong}</td>
+          <td>
+            <input type="text" class="config-tentruong text-input" value="${col.TenTruong || col.MaTruong}" style="width: 100%;">
+          </td>
           <td style="text-align: center;">
             <input type="checkbox" class="config-hienthi" ${col.HienThi ? 'checked' : ''}>
           </td>
@@ -121,10 +125,12 @@ const TableConfigModal = (function() {
       const chk = row.querySelector('.config-hienthi');
       const sel = row.querySelector('.config-canle');
       const num = row.querySelector('.config-dorong');
+      const txt = row.querySelector('.config-tentruong');
       
       editingColumns[idx].HienThi = chk.checked;
       editingColumns[idx].CanLe = sel.value;
       editingColumns[idx].DoRong = parseInt(num.value) || 100;
+      if (txt) editingColumns[idx].TenTruong = txt.value;
     });
   }
 
@@ -134,6 +140,7 @@ const TableConfigModal = (function() {
     // Trích xuất những trường cần lưu
     const savedData = editingColumns.map(col => ({
       MaTruong: col.MaTruong,
+      TenTruong: col.TenTruong,
       HienThi: col.HienThi,
       CanLe: col.CanLe,
       DoRong: col.DoRong,
@@ -166,6 +173,41 @@ const TableConfigModal = (function() {
   }
 
   /**
+   * Tính toán chiều rộng văn bản sử dụng Canvas API
+   */
+  function calculateTextWidth(text, font) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    context.font = font || "13px 'IBM Plex Sans', sans-serif";
+    return Math.ceil(context.measureText(text).width);
+  }
+
+  /**
+   * Tự động căn chỉnh chiều rộng cột dựa theo độ dài nội dung của Tên cột
+   */
+  function autoFitColumns() {
+    syncFormDataToState();
+    
+    // Khoảng trống (padding) bổ sung:
+    // 32px (padding trái phải 16px) + 40px (icon sort & filter) + 10px (buffer)
+    const extraPadding = 82; 
+    
+    editingColumns.forEach((col, idx) => {
+      const textToMeasure = col.TenTruong || col.MaTruong || "";
+      const textWidth = calculateTextWidth(textToMeasure);
+      const calculatedWidth = textWidth + extraPadding;
+      
+      // Giới hạn chiều rộng tối thiểu 80px để không quá bé
+      col.DoRong = Math.max(80, calculatedWidth);
+    });
+    
+    renderTable();
+    if (typeof showToast === 'function') {
+      showToast('Đã tính toán chiều rộng tối ưu cho các cột!', 'success');
+    }
+  }
+
+  /**
    * Trộn cấu hình gốc từ API với cấu hình lưu trong localStorage.
    */
   function mergeConfig(storageKey, apiColumns) {
@@ -187,6 +229,9 @@ const TableConfigModal = (function() {
             col.CanLe = sCol.CanLe;
             col.DoRong = sCol.DoRong;
             col.ThuTuHienThi = sCol.ThuTuHienThi;
+            if (sCol.TenTruong) {
+                col.TenTruong = sCol.TenTruong;
+            }
           }
         });
       } catch (e) {

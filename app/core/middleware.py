@@ -7,7 +7,7 @@ def setup_middlewares(app: FastAPI):
     """
     Hàm cấu hình tất cả các Middleware cho ứng dụng.
     """
-    # 1. Cấu hình CORS (Cross-Origin Resource Sharing)
+
     if settings.BACKEND_CORS_ORIGINS:
         app.add_middleware(
             CORSMiddleware,
@@ -17,7 +17,6 @@ def setup_middlewares(app: FastAPI):
             allow_headers=["*"],
         )
 
-    # 2. Cấu hình Logging (Ghi vết Request)
     import time
     
     def parse_user_agent(ua_string: str) -> str:
@@ -34,30 +33,27 @@ def setup_middlewares(app: FastAPI):
             return f"Safari/{v}"
         elif "PostmanRuntime/" in ua_string:
             return f"Postman/{ua_string.split('PostmanRuntime/')[-1].split('.')[0]}"
-        # Mặc định lấy từ đầu tiên nếu không nhận diện được
+
         return ua_string.split(" ")[0][:20]
     
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         url = request.url.path
         
-        # Bỏ qua không ghi log các file tĩnh (CSS, JS)
         if not url.startswith("/api/"):
             return await call_next(request)
             
         start_time = time.time()
+        
         ip = request.client.host if request.client else "Unknown IP"
+            
         method = request.method
         raw_ua = request.headers.get("User-Agent", "Unknown")
         user_agent = parse_user_agent(raw_ua)
         
-        # Cho phép request đi vào hệ thống xử lý
         response = await call_next(request)
-        
-        # Tính toán thời gian chạy (milliseconds)
         duration_ms = (time.time() - start_time) * 1000
-        
-        # Ghi Log dạng Dictionary để JsonFormatter tự động convert thành JSON
+
         request_logger.info({
             "ip": ip,
             "method": method,
