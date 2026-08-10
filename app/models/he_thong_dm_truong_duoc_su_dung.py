@@ -16,6 +16,8 @@ class KieuTruongEnum(str, enum.Enum):
     CAPACITY = "capacity"
     ACTION = "action"
     MONO = "mono"
+    FORMULA = "formula"
+    BADGE_LIST = "badge_list"
 
 class DMTruongSuDung(Base):
     __tablename__ = "tbl_HETHONG_DMTruongDuocSuDung"

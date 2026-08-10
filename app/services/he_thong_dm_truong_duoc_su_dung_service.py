@@ -1,7 +1,7 @@
 import json
 from sqlalchemy.orm import Session
-from app.crud import crud_dm_truong
-from app.schemas.danh_muc_truong_duoc_su_dung import TruongDuocSuDungResponse
+from app.crud import crud_he_thong_dm_truong_duoc_su_dung
+from app.schemas.he_thong_dm_truong_duoc_su_dung import TruongDuocSuDungResponse
 from app.core.logger import app_logger as logger
 
 CACHE_PREFIX = "cache:config:columns:"
@@ -17,7 +17,7 @@ async def invalidate_columns_cache(redis_client, table_name: str):
         except Exception as e:
             logger.error(f"Lỗi xóa Cache Redis (Cột cấu hình {table_name}): {e}")
 
-async def get_columns_by_table(db: Session, redis_client, table_name: str):
+async def get_danh_sach_cot_theo_bang(db: Session, redis_client, table_name: str):
     """
     Lấy danh sách cấu hình cột (Ưu tiên đọc từ Redis Cache)
     """
@@ -31,7 +31,7 @@ async def get_columns_by_table(db: Session, redis_client, table_name: str):
         except Exception as e:
             logger.error(f"Lỗi lấy Cache Redis (Cột cấu hình {table_name}): {e}")
 
-    columns = crud_dm_truong.get_columns_by_table(db, table_name)
+    columns = crud_he_thong_dm_truong_duoc_su_dung.get_danh_sach_cot_theo_bang(db, table_name)
     columns_dict = [TruongDuocSuDungResponse.model_validate(col).model_dump() for col in columns]
     
     if redis_client:

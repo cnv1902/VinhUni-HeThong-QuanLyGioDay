@@ -1,8 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
-class CQNhomLopResponse(BaseModel):
-    MaNhomLopHP: Optional[str] = None
+class CQNhomLopBase(BaseModel):
+    MaNhomLopHP: str
     TenNhomLopHP: Optional[str] = None
     SoSinhVien: Optional[int] = None
     SiSoDangKyHienTai: Optional[int] = None
@@ -26,5 +26,8 @@ class CQNhomLopResponse(BaseModel):
     ID_LanTongHopFile: Optional[int] = None
     HeSoHocDi: Optional[float] = None
     XacNhan: Optional[bool] = None
+
+class CQNhomLopResponse(CQNhomLopBase):
+    ID: int
 
     model_config = ConfigDict(from_attributes=True)

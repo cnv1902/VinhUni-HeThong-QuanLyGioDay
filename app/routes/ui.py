@@ -39,3 +39,10 @@ async def login_page(request: Request):
         request=request, 
         name="pages/login.html"
     )
+
+@router.get("/cong_thuc_quy_doi.html", include_in_schema=False)
+async def cong_thuc_quy_doi(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/cong_thuc_quy_doi.html"
+    )

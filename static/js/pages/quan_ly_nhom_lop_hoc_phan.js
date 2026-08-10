@@ -75,14 +75,14 @@ async function loadTableData(maHocKy) {
 
 // Bắt sự kiện khi Navbar đã nạp xong Context (Lần đầu mở trang)
 window.addEventListener('ContextReady', (e) => {
-  const maHocKy = e.detail;
-  loadTableData(maHocKy);
+  const hockyNamhoc = e.detail;
+  loadTableData(hockyNamhoc);
 });
 
 // Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
 window.addEventListener('ContextChanged', (e) => {
-  const maHocKy = e.detail;
-  loadTableData(maHocKy);
+  const hockyNamhoc = e.detail;
+  loadTableData(hockyNamhoc);
 });
 
 /**

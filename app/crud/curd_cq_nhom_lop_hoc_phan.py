@@ -9,6 +9,7 @@ from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopResponse
 def get_danh_sach(db: Session, ma_hoc_ky: Optional[int] = None):
     query = (
         db.query(
+            CQNhomLopHocPhan.ID,
             CQNhomLopHocPhan.MaNhomLopHP,
             CQNhomLopHocPhan.TenNhomLopHP,
             CQNhomLopHocPhan.SoSinhVien,
@@ -48,6 +49,7 @@ def get_danh_sach(db: Session, ma_hoc_ky: Optional[int] = None):
 def get_danh_sach_theo_hoc_ky(db: Session, ma_hoc_ky: Optional[int] = None):
     query = (
         db.query(
+            CQNhomLopHocPhan.ID,
             CQNhomLopHocPhan.MaNhomLopHP,
             CQNhomLopHocPhan.TenNhomLopHP,
             CQNhomLopHocPhan.SoSinhVien,

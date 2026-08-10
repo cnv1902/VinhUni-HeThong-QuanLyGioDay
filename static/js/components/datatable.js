@@ -229,12 +229,54 @@ class DataTable {
     const v = row[col.MaTruong];
     switch (col.KieuTruong) {
       case 'badge': return badgeHtml(v);
+      case 'badge_list': return this.badgeListHtml(v);
       case 'capacity': return this.capacityHtml(row);
       case 'action': return `<button class="mini-btn" data-action="tonghop" title="Tính lại số liệu">${iconRefresh()}<span>Tính lại</span></button>`;
       case 'mono': return `<span class="mono-text">${esc(v)}</span>`;
       case 'number': return `<span class="num-text">${this.formatNum(v, col.MaTruong)}</span>`;
+      case 'formula': return this.formatFormulaHtml(v);
       default: return `<span>${esc(v)}</span>`;
     }
+  }
+
+  /**
+   * Trả về HTML hiển thị danh sách các badge từ một chuỗi phân cách bởi dấu phẩy
+   * @param {string} v - Chuỗi các giá trị (VD: "Lý thuyết, Bài tập")
+   * @returns {string} Chuỗi HTML chứa các badge
+   */
+  badgeListHtml(v) {
+    if (!v) return '<span class="text-muted">Chưa cấu hình</span>';
+    
+    // Tách chuỗi theo dấu phẩy, loại bỏ khoảng trắng và các phần tử rỗng
+    const items = String(v).split(',').map(s => s.trim()).filter(s => s);
+    
+    if (items.length === 0) return '<span class="text-muted">Chưa cấu hình</span>';
+    
+    // Gộp các badge lại thành chuỗi HTML
+    const badges = items.map(item => `<span class="badge badge-gray">${esc(item)}</span>`);
+    return `<div class="badge-list-container" style="display:flex; flex-wrap:wrap; gap:4px;">${badges.join('')}</div>`;
+  }
+
+  /**
+   * Định dạng chuỗi công thức: [VAR:Tên Biến] * max([VAR:Tên Biến], 10)
+   */
+  formatFormulaHtml(v) {
+    if (!v) return '<span class="text-muted">Chưa cấu hình</span>';
+    
+    // 1. Format biến số [VAR:Tên Biến]
+    let html = String(v).replace(/\[VAR:([^\]]+)\]/g, '<span class="fm-var">$1</span>');
+    
+    // 2. Format hàm (max, min, round)
+    html = html.replace(/\b(max|min|round)\b/gi, '<span class="fm-func">$1</span>');
+    
+    // 3. Format hằng số
+    html = html.replace(/(?<!\[VAR:.*?)\b(\d+(\.\d+)?)\b/g, '<span class="fm-num">$1</span>');
+    
+    // 4. Format phép toán
+    html = html.replace(/([+\-*/])/g, '<span class="fm-op">$1</span>');
+    html = html.replace(/([(),])/g, '<span class="fm-paren">$1</span>');
+    
+    return `<div style="white-space:normal; line-height:1.6; word-wrap:break-word;">${html}</div>`;
   }
 
   /**

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, Boolean, NVARCHAR
 from app.models.base import Base
 
-class HocKy(Base):
+class HocKyThanhToan(Base):
     __tablename__ = "tbl_HocKy"
 
     MaHocKy = Column(Integer, primary_key=True, autoincrement=True, nullable=False)

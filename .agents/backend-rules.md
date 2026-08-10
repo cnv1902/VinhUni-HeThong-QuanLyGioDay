@@ -11,7 +11,9 @@ When instructed to write or modify backend logic for this project, you MUST stri
   
 - **`app/schemas/` (Pydantic Models)**
   - Chứa các class DTO (Data Transfer Objects) phục vụ kiểm tra/validate dữ liệu đầu vào (Request) và định dạng dữ liệu đầu ra (Response).
-  - Khuyến nghị chia thành các class như `ItemBase`, `ItemCreate`, `ItemUpdate`, `ItemResponse`.
+  - BẮT BUỘC áp dụng Mô hình kế thừa (Inheritance Pattern): Tách các trường thành các Class riêng biệt để tái sử dụng.
+    - `Class Base` (VD: `ItemBase`): Chứa các trường thông tin cơ bản (Không chứa khóa chính ID).
+    - `Class Response` (hoặc `Create`, `Update`): Kế thừa lại `Base` và thêm các trường đặc thù như khóa chính (VD: `ID: int`) hoặc cấu hình `ConfigDict(from_attributes=True)`.
 
 - **`app/crud/` (Database Operations - C.R.U.D)**
   - Chỉ chứa logic truy vấn cơ sở dữ liệu bằng SQLAlchemy (Create, Read, Update, Delete).

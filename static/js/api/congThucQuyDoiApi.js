@@ -1,8 +1,8 @@
-const apiLopHocPhan = {
+const apiCongThuc = {
   // Lấy danh sách cấu hình cột từ API
   async getColumnsConfig() {
     try {
-      const response = await fetch(`${window.API_PREFIX}/cau-hinh-chung/danh-sach-cot/CQ_NhomLopHocPhan`);
+      const response = await fetch(`${window.API_PREFIX}/cau-hinh-chung/danh-sach-cot/HETHONG_NhomCongThuc`);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
     } catch (error) {
@@ -11,10 +11,10 @@ const apiLopHocPhan = {
     }
   },
 
-  // Lấy dữ liệu danh sách nhóm lớp, truyền chuỗi hocky_namhoc
-  async getNhomLopData(hocky_namhoc = null) {
+  // Lấy dữ liệu danh sách công thức, truyền chuỗi hocky_namhoc
+  async getCongThucData(hocky_namhoc = null) {
     try {
-      let url = `${window.API_PREFIX}/cq-nhom-lop-hoc-phan/`;
+      let url = `${window.API_PREFIX}/nhom-cong-thuc/`;
       if (hocky_namhoc !== null) {
         url += `?hocky_namhoc=${hocky_namhoc}`;
       }
@@ -27,4 +27,3 @@ const apiLopHocPhan = {
     }
   }
 };
-

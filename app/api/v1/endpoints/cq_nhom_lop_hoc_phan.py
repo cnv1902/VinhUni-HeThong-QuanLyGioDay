@@ -10,9 +10,9 @@ from app.services import cq_nhom_lop_hoc_phan_service as services_cq_nhom_lop
 router = APIRouter()
 
 @router.get("/", response_model=List[CQNhomLopResponse])
-async def get_danh_sach(db: Session = Depends(get_db), redis_client = Depends(get_redis), ma_hoc_ky: Optional[int] = None):
+async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session = Depends(get_db), redis_client = Depends(get_redis), hocky_namhoc: Optional[str] = None):
     """
     Lấy danh sách các nhóm lớp học phần hệ chính quy
     """
-    items = await services_cq_nhom_lop.get_danh_sach(db, redis_client, ma_hoc_ky=ma_hoc_ky)
-    return items
+    columns = await services_cq_nhom_lop.get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db, redis_client, hocky_namhoc=hocky_namhoc)
+    return columns
