@@ -9,13 +9,17 @@ def get_by_id(db: Session, id_nhom_ct: int):
 def get_danh_sach(db: Session):
     """Lấy toàn bộ nhóm công thức, dùng LEFT OUTER JOIN cho bảng học kỳ."""
     return db.query(HeThongNhomCongThuc).options(
-        joinedload(HeThongNhomCongThuc.he_dao_tao)
+        joinedload(HeThongNhomCongThuc.he_dao_tao),
+        joinedload(HeThongNhomCongThuc.tu_hoc_ky),
+        joinedload(HeThongNhomCongThuc.den_hoc_ky)
     ).all()
 
 def get_danh_sach_theo_hoc_ky(db: Session, ma_hoc_ky: int):
     """Lọc nhóm công thức theo ID của học kỳ học phần."""
     return db.query(HeThongNhomCongThuc).options(
-        joinedload(HeThongNhomCongThuc.he_dao_tao)
+        joinedload(HeThongNhomCongThuc.he_dao_tao),
+        joinedload(HeThongNhomCongThuc.tu_hoc_ky),
+        joinedload(HeThongNhomCongThuc.den_hoc_ky)
     ).filter(
         HeThongNhomCongThuc.TuMaHocKy <= ma_hoc_ky,
         (HeThongNhomCongThuc.DenMaHocKy == None) | (HeThongNhomCongThuc.DenMaHocKy >= ma_hoc_ky)

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.crud import crud_he_thong_nhom_cong_thuc
 from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate
-from app.services.hoc_ky_service import resolve_ma_hoc_ky, get_all_hoc_ky_hoc_phan
+from app.services.hoc_ky_service import resolve_ma_hoc_ky
 from app.services.hinh_thuc_hoc_service import get_danh_sach as get_hinh_thuc_hoc
 from app.core.logger import app_logger as logger
 import re
@@ -42,7 +42,7 @@ def _format_ten_hoc_ky(raw_ten: str) -> str:
         return f"Kỳ {match.group(1)} ({match.group(2)})"
     return raw_ten
 
-def _build_response(col, hth_list, hoc_ky_list) -> dict:
+def _build_response(col) -> dict:
     """Chuyển đổi ORM Model thành Dict với các trường ánh xạ Tên"""
     data = NhomCongThucResponse.model_validate(col).model_dump()
     
@@ -50,12 +50,11 @@ def _build_response(col, hth_list, hoc_ky_list) -> dict:
     if col.he_dao_tao:
         data['Ten_HeDaoTao'] = col.he_dao_tao.Ten_He
         
-    # Ánh xạ tên học kỳ qua danh sách cache
-    hk_map = {hk.get('MaHocKy'): hk.get('TenHocKy') for hk in hoc_ky_list}
-    if col.TuMaHocKy and col.TuMaHocKy in hk_map:
-        data['TuHocKy_Ten'] = _format_ten_hoc_ky(hk_map[col.TuMaHocKy].strip()) if hk_map[col.TuMaHocKy] else None
-    if col.DenMaHocKy and col.DenMaHocKy in hk_map:
-        data['DenHocKy_Ten'] = _format_ten_hoc_ky(hk_map[col.DenMaHocKy].strip()) if hk_map[col.DenMaHocKy] else None
+    # Ánh xạ tên học kỳ qua relationship
+    if getattr(col, 'tu_hoc_ky', None):
+        data['TuHocKy_Ten'] = _format_ten_hoc_ky(col.tu_hoc_ky.TenHocKy.strip()) if col.tu_hoc_ky.TenHocKy else None
+    if getattr(col, 'den_hoc_ky', None):
+        data['DenHocKy_Ten'] = _format_ten_hoc_ky(col.den_hoc_ky.TenHocKy.strip()) if col.den_hoc_ky.TenHocKy else None
         
     # Ánh xạ danh sách hình thức học (xử lý bất đồng bộ ở hàm gọi)
     return data
@@ -72,11 +71,10 @@ async def get_danh_sach(db: Session, redis_client):
 
     columns = crud_he_thong_nhom_cong_thuc.get_danh_sach(db)
     hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    hoc_ky_list = await get_all_hoc_ky_hoc_phan(db, redis_client)
     
     columns_dict = []
     for col in columns:
-        data = _build_response(col, hth_list, hoc_ky_list)
+        data = _build_response(col)
         data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(col.DsMaHTHoc), hth_list)
         columns_dict.append(data)
     
@@ -98,12 +96,10 @@ async def get_danh_sach_theo_hoc_ky(db: Session, redis_client, hocky_namhoc: str
     # 2. Truy vấn DB
     columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_hoc_ky(db, ma_hoc_ky)
     hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    hoc_ky_list = await get_all_hoc_ky_hoc_phan(db, redis_client)
     
-    # 3. Ánh xạ tên
     columns_dict = []
     for col in columns:
-        data = _build_response(col, hth_list, hoc_ky_list)
+        data = _build_response(col)
         data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(col.DsMaHTHoc), hth_list)
         columns_dict.append(data)
         
@@ -116,8 +112,7 @@ async def create_nhom_cong_thuc(db: Session, redis_client, obj_in: NhomCongThucC
     
     # Map tên cho response trả về ngay lập tức
     hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    hoc_ky_list = await get_all_hoc_ky_hoc_phan(db, redis_client)
-    data = _build_response(new_obj, hth_list, hoc_ky_list)
+    data = _build_response(new_obj)
     data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(new_obj.DsMaHTHoc), hth_list)
     return data
 
@@ -134,8 +129,7 @@ async def update_nhom_cong_thuc(db: Session, redis_client, id_nhom_ct: int, obj_
     
     # Build response format
     hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    hoc_ky_list = await get_all_hoc_ky_hoc_phan(db, redis_client)
-    data = _build_response(updated_obj, hth_list, hoc_ky_list)
+    data = _build_response(updated_obj)
     data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(updated_obj.DsMaHTHoc), hth_list)
     return data
 
