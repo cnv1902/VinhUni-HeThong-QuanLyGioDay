@@ -4,7 +4,7 @@ from typing import List
 
 from app.api.dependencies import get_db
 from app.core.redis import get_redis
-from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate
 from app.services import he_thong_nhom_cong_thuc_service
 
 router = APIRouter()
@@ -37,3 +37,26 @@ async def create_nhom_cong_thuc(
     Tạo mới một Nhóm công thức quy đổi
     """
     return await he_thong_nhom_cong_thuc_service.create_nhom_cong_thuc(db, redis_client, obj_in)
+
+@router.put("/{id_nhom_ct}", response_model=NhomCongThucResponse)
+async def update_nhom_cong_thuc(
+    id_nhom_ct: int,
+    obj_in: NhomCongThucUpdate,
+    db: Session = Depends(get_db),
+    redis_client = Depends(get_redis)
+):
+    """
+    Cập nhật Nhóm công thức quy đổi
+    """
+    return await he_thong_nhom_cong_thuc_service.update_nhom_cong_thuc(db, redis_client, id_nhom_ct, obj_in)
+
+@router.delete("/{id_nhom_ct}")
+async def delete_nhom_cong_thuc(
+    id_nhom_ct: int,
+    db: Session = Depends(get_db),
+    redis_client = Depends(get_redis)
+):
+    """
+    Xóa Nhóm công thức quy đổi
+    """
+    return await he_thong_nhom_cong_thuc_service.delete_nhom_cong_thuc(db, redis_client, id_nhom_ct)

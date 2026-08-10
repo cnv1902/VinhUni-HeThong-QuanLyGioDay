@@ -1,0 +1,21 @@
+<div class="modal-overlay" id="globalConfirmModal" style="display: none; z-index: 10000;">
+  <div class="modal-content modal-sm">
+    <div class="modal-header">
+      <h3 class="modal-title" id="confirmModalTitle">Xác nhận</h3>
+      <button type="button" class="btn-close-modal" data-close-modal aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <p id="confirmModalMessage" style="margin: 0; padding: 10px 0; font-size: 14px; color: var(--text-primary);">Bạn có chắc chắn muốn thực hiện thao tác này?</p>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-close-modal id="btnConfirmCancel">Hủy bỏ</button>
+      <button type="button" class="btn btn-primary" id="btnConfirmOk" style="background-color: var(--red-600); border-color: var(--red-600);">Xác nhận</button>
+    </div>
+  </div>
+</div>

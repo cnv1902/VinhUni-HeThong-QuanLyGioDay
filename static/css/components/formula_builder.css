@@ -1,0 +1,131 @@
+/* ==========================================================================
+   Component: FormulaBuilder
+   Tuân thủ nghiêm ngặt UI Rules Đại học Vinh
+   ========================================================================== */
+
+.formula-builder-wrapper {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background-color: var(--bg-panel);
+    overflow: hidden;
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+/* 1. TOOLBAR */
+.fb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+}
+
+.fb-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.fb-group-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-right: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Các nút cơ bản (Toán tử, Hàm) - Ghost button */
+.fb-btn {
+    height: 28px;
+    padding: 0 8px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fb-btn:hover {
+    background-color: var(--bg-subtle-2);
+    border-color: var(--text-muted);
+}
+
+.fb-btn:active {
+    background-color: var(--border);
+}
+
+/* Nút biến số (Từ điển) */
+.fb-btn-var {
+    background-color: var(--teal-50);
+    border-color: var(--teal-600);
+    color: var(--teal-700);
+    font-family: 'IBM Plex Sans', sans-serif;
+}
+
+.fb-btn-var:hover {
+    background-color: var(--teal-600);
+    color: #ffffff;
+}
+
+/* 2. EDITOR */
+.fb-editor-container {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-panel);
+}
+
+.fb-textarea {
+    width: 100%;
+    min-height: 80px;
+    border: none;
+    padding: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    resize: vertical;
+    box-sizing: border-box;
+    transition: box-shadow 0.2s ease;
+}
+
+.fb-textarea:focus {
+    outline: none;
+    box-shadow: inset 0 0 0 2px var(--teal-600); /* Viền focus trong để không tràn container */
+}
+
+/* 3. SEMANTIC PREVIEW */
+.fb-semantic-preview {
+    padding: 10px 12px;
+    background-color: var(--bg-subtle);
+    border-top: 1px dashed var(--border);
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-height: 20px;
+}
+
+.fb-preview-label {
+    font-weight: 600;
+    color: var(--brand-800);
+}
+
+.fb-preview-content {
+    color: var(--text-primary);
+    line-height: 1.5;
+}
+
+.fb-preview-content.empty {
+    color: var(--text-muted);
+    font-style: italic;
+}

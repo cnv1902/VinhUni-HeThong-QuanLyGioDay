@@ -208,9 +208,41 @@ Tuyệt đối KHÔNG viết toàn bộ HTML/CSS/JS của một trang vào chung
    - **Table/HTML Rendering:** Các hàm chuyên biệt tạo chuỗi HTML, vẽ bảng, vẽ phân trang.
    - **UI State Updaters:** Các hàm nhỏ cập nhật huy hiệu (badge), thống kê footer.
    - **Specific Features:** Các khối logic phức tạp lẻ (như Inline Editing, Excel-like Filter).
-   - **Event Listeners Binding:** Gom tất cả quá trình gắn sự kiện (addEventListener) vào 1-2 hàm (như indTableEvents, indStaticEvents). Tránh rải rác gắn sự kiện ở mọi nơi.
+
+
+## 13. Quy tắc viết Javascript cho Trang (Page-level JS)
+
+Để đảm bảo mã nguồn Javascript của từng trang dễ đọc và dễ bảo trì, tuyệt đối tuân thủ các quy tắc tổ chức sau:
+
+1. **Gom nhóm mã nguồn (Grouping):** Chia file JS thành các phân khu rõ ràng bằng các dòng comment phân cách (ví dụ: // === 1. STATE ===). Các nhóm cơ bản thường bao gồm:
+   - **State & DOM Elements:** Khai báo biến trạng thái toàn cục và các DOM Node cố định.
+   - **Data Processing & Filtering:** Các hàm xử lý mảng dữ liệu, sắp xếp, lọc.
+   - **Table/HTML Rendering:** Các hàm chuyên biệt tạo chuỗi HTML, vẽ bảng, vẽ phân trang.
+   - **UI State Updaters:** Các hàm nhỏ cập nhật huy hiệu (badge), thống kê footer.
+   - **Specific Features:** Các khối logic phức tạp lẻ (như Inline Editing, Excel-like Filter).
+   - **Event Listeners Binding:** Gom tất cả quá trình gắn sự kiện (addEventListener) vào 1-2 hàm (như  indTableEvents,  indStaticEvents). Tránh rải rác gắn sự kiện ở mọi nơi.
    - **Initialization:** Hàm init() duy nhất để gọi API và khởi chạy trang.
 
 2. **Bắt buộc chú thích (JSDoc):** Mọi hàm phải có bình luận /** ... */ phía trên, giải thích bằng tiếng Việt: Mục đích của hàm, giải thích các tham số (nếu có), và kết quả trả về.
 
 3. **Event Delegation:** Tối đa hóa việc dùng kỹ thuật Event Delegation (gắn sự kiện click/change vào phần tử cha lớn như 	body, 	head và dùng e.target.closest()) thay vì dùng vòng lặp gắn cả ngàn sự kiện cho từng thẻ con bên trong bảng.
+
+## 14. Quy tắc quản lý Dữ liệu Frontend (No Mock Data)
+
+Tuyệt đối không được trả về hoặc gán dữ liệu giả định (mock data) cứng trong code nếu API hoặc nguồn cấp bị lỗi hay không có dữ liệu. 
+Thay vào đó, phải xử lý lỗi êm mượt và trả về mảng rỗng `[]`, chuỗi rỗng `""`, hoặc null để giao diện tự hiển thị trạng thái "Không có dữ liệu".
+
+## 15. Quy tắc khởi tạo Modal Thêm/Sửa/Xóa (Bắt buộc)
+
+Để đồng nhất toàn bộ UI và tối ưu bảo trì, mọi Modal Thêm/Sửa/Xóa đều bắt buộc phải sử dụng kiến trúc Hybrid Framework đã có:
+1. **Giao diện HTML**: Bắt buộc dùng Jinja2 Macro `render_modal` (từ `components/modal_macro.html`) để dựng khung Modal thay vì tự viết lại HTML.
+2. **Logic JS**: Bắt buộc kế thừa hoặc sử dụng Class `BaseModal` (từ `static/js/core/modal.js`) để tự động hóa việc mở, đóng (click nút X, ấn phím Escape, click ra ngoài vùng mousedown).
+3. Tuyệt đối không dùng JavaScript thuần để generate chuỗi HTML của khung Modal (tránh phình to logic và mất tính trong suốt của Jinja2).
+
+## 16. Quy tắc Xử lý Dropdown và Hiệu ứng Focus (UI Components)
+
+Để tránh các lỗi UI kinh điển (như cắt xén Dropdown bởi Modal, lỗi hiển thị viền Focus lồng nhau), tất cả UI Component (như ComboBox, TagInput) bắt buộc phải tuân thủ:
+1. **Dropdown Menu Placement (Kiến trúc Portal)**: Khối HTML hiển thị danh sách xổ xuống (`.dropdown-menu`) tuyệt đối KHÔNG được nhét chung vào cấu trúc của input field hoặc cấu trúc của Modal nội dung (`.modal-body`). Phải dùng JS để **append trực tiếp Dropdown ra lớp phủ ngoài cùng của Modal** (như `.modal-overlay`), sau đó tính toán vị trí bằng `getBoundingClientRect()` dựa theo vị trí tuyệt đối của Input field trên màn hình. Nếu không có Modal, fallback append ra `document.body`.
+2. **Hiệu ứng Focus lồng nhau**: Nếu một Component phức tạp sử dụng cấu trúc Hộp ảo bao quanh Input thực bên trong (như TagInput: `div.form-input > input.tag-input-field`), bắt buộc phải:
+   - Dùng CSS pseudo-class `:focus-within` lên Hộp ảo để bắt hiệu ứng focus khi Input thực được click (`.form-input:focus-within { box-shadow: ... }`).
+   - Tước bỏ toàn bộ hiệu ứng Focus/Outline/Ring mặc định của trình duyệt/Tailwind trên Input thực bằng `!important` (`.tag-input-field:focus { outline: none !important; box-shadow: none !important; }`).

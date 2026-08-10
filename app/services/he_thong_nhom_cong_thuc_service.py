@@ -1,10 +1,12 @@
 import json
+from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.crud import crud_he_thong_nhom_cong_thuc
-from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate
 from app.services.hoc_ky_service import resolve_ma_hoc_ky, get_all_hoc_ky_hoc_phan
 from app.services.hinh_thuc_hoc_service import get_danh_sach as get_hinh_thuc_hoc
 from app.core.logger import app_logger as logger
+import re
 
 CACHE_PREFIX = "cache:he_thong_nhom_cong_thuc:all"
 CACHE_TTL = 3600
@@ -32,6 +34,14 @@ async def _map_danh_sach_hinh_thuc_hoc(ds_ma_hinh_thuc: str, hth_list: list) -> 
     list_names = [hth_map.get(id, str(id)) for id in list_ids]
     return ", ".join(list_names)
 
+def _format_ten_hoc_ky(raw_ten: str) -> str:
+    if not raw_ten:
+        return raw_ten
+    match = re.match(r"^(\w+)_(\d{4}-\d{4})$", raw_ten.strip())
+    if match:
+        return f"Kỳ {match.group(1)} ({match.group(2)})"
+    return raw_ten
+
 def _build_response(col, hth_list, hoc_ky_list) -> dict:
     """Chuyển đổi ORM Model thành Dict với các trường ánh xạ Tên"""
     data = NhomCongThucResponse.model_validate(col).model_dump()
@@ -43,9 +53,9 @@ def _build_response(col, hth_list, hoc_ky_list) -> dict:
     # Ánh xạ tên học kỳ qua danh sách cache
     hk_map = {hk.get('MaHocKy'): hk.get('TenHocKy') for hk in hoc_ky_list}
     if col.TuMaHocKy and col.TuMaHocKy in hk_map:
-        data['TuHocKy_Ten'] = hk_map[col.TuMaHocKy].strip() if hk_map[col.TuMaHocKy] else None
+        data['TuHocKy_Ten'] = _format_ten_hoc_ky(hk_map[col.TuMaHocKy].strip()) if hk_map[col.TuMaHocKy] else None
     if col.DenMaHocKy and col.DenMaHocKy in hk_map:
-        data['DenHocKy_Ten'] = hk_map[col.DenMaHocKy].strip() if hk_map[col.DenMaHocKy] else None
+        data['DenHocKy_Ten'] = _format_ten_hoc_ky(hk_map[col.DenMaHocKy].strip()) if hk_map[col.DenMaHocKy] else None
         
     # Ánh xạ danh sách hình thức học (xử lý bất đồng bộ ở hàm gọi)
     return data
@@ -110,3 +120,33 @@ async def create_nhom_cong_thuc(db: Session, redis_client, obj_in: NhomCongThucC
     data = _build_response(new_obj, hth_list, hoc_ky_list)
     data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(new_obj.DsMaHTHoc), hth_list)
     return data
+
+async def update_nhom_cong_thuc(db: Session, redis_client, id_nhom_ct: int, obj_in: NhomCongThucUpdate):
+    """Cập nhật Nhóm công thức"""
+    db_obj = crud_he_thong_nhom_cong_thuc.get_by_id(db, id_nhom_ct)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Không tìm thấy nhóm công thức quy đổi")
+    
+    updated_obj = crud_he_thong_nhom_cong_thuc.update_nhom_cong_thuc(db, db_obj, obj_in)
+    
+    # Xóa cache
+    await invalidate_cache(redis_client)
+    
+    # Build response format
+    hth_list = await get_hinh_thuc_hoc(db, redis_client)
+    hoc_ky_list = await get_all_hoc_ky_hoc_phan(db, redis_client)
+    data = _build_response(updated_obj, hth_list, hoc_ky_list)
+    data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(updated_obj.DsMaHTHoc), hth_list)
+    return data
+
+async def delete_nhom_cong_thuc(db: Session, redis_client, id_nhom_ct: int):
+    """Xóa Nhóm công thức"""
+    db_obj = crud_he_thong_nhom_cong_thuc.get_by_id(db, id_nhom_ct)
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Không tìm thấy nhóm công thức quy đổi")
+    
+    crud_he_thong_nhom_cong_thuc.delete_nhom_cong_thuc(db, id_nhom_ct)
+    
+    # Xóa cache
+    await invalidate_cache(redis_client)
+    return {"message": "Xóa nhóm công thức thành công"}

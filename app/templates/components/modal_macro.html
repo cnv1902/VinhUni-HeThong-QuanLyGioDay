@@ -1,0 +1,27 @@
+{% macro render_modal(id, title, form_id, size="md") %}
+{# size có thể là 'sm', 'md', 'lg', 'xl' #}
+<div class="modal-overlay" id="{{ id }}" style="display: none;">
+  <div class="modal-content modal-{{ size }}">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ title }}</h3>
+      <button type="button" class="btn-close-modal" data-close-modal aria-label="Đóng">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <path d="M18 6L6 18M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <form id="{{ form_id }}">
+        <!-- Khối caller() sẽ chèn HTML truyền từ bên ngoài vào đây -->
+        {{ caller() }}
+      </form>
+    </div>
+    
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost" data-close-modal>Hủy bỏ</button>
+      <button type="submit" form="{{ form_id }}" class="btn btn-primary" id="{{ id }}_btnSave">Lưu thay đổi</button>
+    </div>
+  </div>
+</div>
+{% endmacro %}

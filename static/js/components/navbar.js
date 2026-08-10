@@ -21,10 +21,10 @@ function applyContextFromTenHocKy(tenHocKy) {
   const hk = navbarState.hocKyList.find(x => x.TenHocKy == tenHocKy);
   if (hk) {
     navbarState.selectedMaHocKy = hk.MaHocKy;
-    const parts = hk.TenHocKy.split('_');
+    const parts = hk.TenHocKy.trim().split('_');
     if (parts.length === 2) {
-      navbarState.selectedHocKy = parseInt(parts[0]);
-      navbarState.selectedNamHoc = parts[1];
+      navbarState.selectedHocKy = parseInt(parts[0].trim());
+      navbarState.selectedNamHoc = parts[1].trim();
     }
     sessionStorage.setItem('CTX_HOC_KY_NAM_HOC', hk.TenHocKy);
   }
@@ -36,8 +36,8 @@ function applyContextFromTenHocKy(tenHocKy) {
 function renderNamHocOptions() {
   if (!selNamHoc) return;
   const namHocs = [...new Set(navbarState.hocKyList.map(item => {
-    const parts = item.TenHocKy ? item.TenHocKy.split('_') : [];
-    return parts.length === 2 ? parts[1] : null;
+    const parts = item.TenHocKy ? item.TenHocKy.trim().split('_') : [];
+    return parts.length === 2 ? parts[1].trim() : null;
   }))].filter(Boolean);
   // Sắp xếp năm học giảm dần (mới nhất lên trên)
   namHocs.sort((a, b) => b.localeCompare(a));
@@ -54,8 +54,8 @@ function renderNamHocOptions() {
 function renderHocKyOptions() {
   if (!selHocKy) return;
   const hocKys = [...new Set(navbarState.hocKyList.map(item => {
-    const parts = item.TenHocKy ? item.TenHocKy.split('_') : [];
-    return parts.length === 2 ? parseInt(parts[0]) : null;
+    const parts = item.TenHocKy ? item.TenHocKy.trim().split('_') : [];
+    return parts.length === 2 ? parseInt(parts[0].trim()) : null;
   }))].filter(Boolean);
   hocKys.sort((a, b) => a - b);
   
@@ -75,7 +75,7 @@ function handleContextChange() {
   const tenHocKyStr = `${hocKy}_${namHoc}`;
   
   // Tìm TenHocKy tương ứng với cặp (Năm học, Học kỳ) vừa chọn
-  const match = navbarState.hocKyList.find(x => x.TenHocKy === tenHocKyStr);
+  const match = navbarState.hocKyList.find(x => x.TenHocKy && x.TenHocKy.trim() === tenHocKyStr);
   
   if (match) {
     applyContextFromTenHocKy(match.TenHocKy);
@@ -83,7 +83,7 @@ function handleContextChange() {
     window.dispatchEvent(new CustomEvent('ContextChanged', { detail: match.TenHocKy }));
   } else {
     // Nếu cặp Năm học + Học kỳ này không tồn tại trong DB, tự động fall back về học kỳ hợp lệ đầu tiên của Năm học đó
-    const fallback = navbarState.hocKyList.find(x => x.TenHocKy && x.TenHocKy.endsWith(`_${namHoc}`));
+    const fallback = navbarState.hocKyList.find(x => x.TenHocKy && x.TenHocKy.trim().endsWith(`_${namHoc}`));
     if (fallback) {
       applyContextFromTenHocKy(fallback.TenHocKy);
       renderHocKyOptions(); // Update lại UI combobox

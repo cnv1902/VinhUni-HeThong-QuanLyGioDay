@@ -12,6 +12,12 @@ class NhomCongThucBase(BaseModel):
 class NhomCongThucCreate(NhomCongThucBase):
     DsMaHTHoc: str # Chuỗi danh sách hình thức học từ giao diện (VD: ",1,12,")
 
+class NhomCongThucUpdate(NhomCongThucBase):
+    DsMaHTHoc: Optional[str] = None
+    ID_He: Optional[int] = None
+    TenNhomCongThuc: Optional[str] = None
+    TuMaHocKy: Optional[int] = None
+
 class NhomCongThucResponse(NhomCongThucBase):
     ID_Nhom_CT: int
     DsMaHTHoc: str

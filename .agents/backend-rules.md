@@ -45,3 +45,7 @@ Mỗi khi nhận yêu cầu làm một chức năng Backend mới, bạn phải 
 
 ## 3. Các quy tắc Import
 - Luôn sử dụng Absolute Import bắt đầu bằng `app.` (VD: `from app.models.user import User` thay vì `from ..models.user import User`).
+
+## 4. Quy tắc Dữ liệu trả về (No Mock Data)
+- Tuyệt đối không được trả về dữ liệu giả định (mock data) cứng trong code API.
+- Nếu không lấy được dữ liệu do bảng trống hoặc lỗi, API phải trả về mảng rỗng `[]` (đối với danh sách), giá trị `null`, hoặc mã lỗi HTTP phù hợp để Frontend tự định đoạt trạng thái (Hiển thị "Không có dữ liệu").

@@ -33,10 +33,12 @@
     {% include 'layouts/footer.html' %}
   </div>
   {% include 'components/toast.html' %}
+  {% include 'components/confirm_modal.html' %}
 
   <script src="/static/js/core/constants.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/core/utils.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/components/toast.js?v={{ CACHE_BUSTER() }}"></script>
+  <script src="/static/js/components/confirm_modal.js?v={{ CACHE_BUSTER() }}"></script>
   {% block scripts %}{% endblock %}
 </body>
 
