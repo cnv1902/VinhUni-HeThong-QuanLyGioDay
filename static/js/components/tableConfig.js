@@ -90,6 +90,9 @@ const TableConfigModal = (function() {
     const btnUp = e.target.closest('.btn-up');
     const btnDown = e.target.closest('.btn-down');
     if (!btnUp && !btnDown) return;
+    
+    // PHẢI sync dữ liệu từ DOM vào mảng TRƯỚC KHI hoán đổi vị trí
+    syncFormDataToState();
 
     const tr = e.target.closest('tr');
     const idx = parseInt(tr.dataset.index);
@@ -108,8 +111,7 @@ const TableConfigModal = (function() {
     // Cập nhật lại ThuTuHienThi
     editingColumns.forEach((col, i) => col.ThuTuHienThi = i + 1);
     
-    // Cập nhật lại dữ liệu từ form trước khi render lại (tránh mất data người dùng vừa gõ)
-    syncFormDataToState();
+    // Render lại giao diện
     renderTable();
   }
 

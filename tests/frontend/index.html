@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cấu hình Nhóm Công thức - Đại học Vinh</title>
+
+    <!-- Tải font chữ chuẩn theo quy tắc -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap"
+        rel="stylesheet">
+
+    <!-- ==========================================
+         KHỐI 1: CSS (Tách riêng biệt theo quy tắc)
+         ========================================== -->
+    <style>
+        :root {
+            /* Bảng màu chuẩn Đại học Vinh */
+            --brand-800: #0055AF;
+            --brand-700: #1568C4;
+            --brand-900: #003D82;
+            --teal-600: #0E7C7B;
+            --teal-700: #0A5F5E;
+            --teal-50: #E6F4F3;
+            --bg-page: #EEF1F4;
+            --bg-panel: #FFFFFF;
+            --bg-subtle: #F4F6F8;
+            --bg-subtle-2: #EAEDF0;
+            --border: #DCE3E9;
+            --border-strong: #C3CDD5;
+            --text-primary: #182430;
+            --text-secondary: #5B6B78;
+            --text-muted: #96A3AD;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* --- Nút chuẩn hệ thống --- */
+        .btn {
+            height: 32px;
+            padding: 0 16px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background-color: var(--brand-800);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--brand-700);
+        }
+
+        .btn-ghost {
+            background-color: var(--bg-panel);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost:hover {
+            background-color: var(--bg-subtle);
+        }
+
+        /* --- Khung trượt (Right Drawer) --- */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(24, 36, 48, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-panel {
+            position: fixed;
+            top: 0;
+            right: -700px;
+            width: 700px;
+            max-width: 100vw;
+            height: 100vh;
+            background: var(--bg-panel);
+            z-index: 1001;
+            box-shadow: -4px 0 16px rgba(0, 0, 0, 0.05);
+            /* Vi phạm nhẹ để phân tách drawer, có thể đổi thành border-left nếu quá khắt khe */
+            border-left: 1px solid var(--border-strong);
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-overlay.active .drawer-panel {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .drawer-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: var(--bg-subtle);
+        }
+
+        /* --- Formula Builder (Đa mục tiêu) --- */
+        .formula-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-strong);
+            padding: 12px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .formula-group-title {
+            font-size: 11.5px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            display: block;
+        }
+
+        .formula-btn-sm {
+            height: 28px;
+            padding: 0 8px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            cursor: pointer;
+            color: var(--text-primary);
+        }
+
+        .formula-btn-sm:hover {
+            background: var(--bg-subtle-2);
+        }
+
+        .formula-btn-var {
+            border-color: var(--teal-600);
+            color: var(--teal-700);
+            background: var(--teal-50);
+        }
+
+        .formula-btn-var:hover {
+            background: var(--bg-panel);
+        }
+
+        .editor-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        /* Input & Focus ring tuân thủ quy tắc */
+        .formula-target {
+            width: 100%;
+            min-height: 80px;
+            padding: 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .formula-target:focus {
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 3px var(--teal-50);
+        }
+
+        .semantic-preview {
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg-subtle);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-height: 20px;
+            border: 1px dashed var(--border-strong);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Nút giả lập trên trang chính -->
+    <div style="padding: 40px;">
+        <button id="btnOpenDrawer" class="btn btn-primary">Cấu hình Nhóm: Lý Thuyết</button>
+    </div>
+
+    <!-- ==========================================
+         KHỐI 2: HTML DRAWER (Giả lập render_modal)
+         ========================================== -->
+    <div id="configDrawer" class="drawer-overlay">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <h2>Cấu hình Chi tiết: Nhóm Lý Thuyết</h2>
+                <button id="btnCloseDrawer" class="btn btn-ghost" style="border:none; padding:0 8px;">✕</button>
+            </div>
+
+            <div class="drawer-body">
+                <!-- Toolbar Cố định -->
+                <div class="formula-toolbar" id="masterToolbar">
+                    <div>
+                        <span class="formula-group-title">Toán tử & Hàm</span>
+                        <div style="display:flex; gap: 4px;">
+                            <button type="button" class="formula-btn-sm" data-insert="+">+</button>
+                            <button type="button" class="formula-btn-sm" data-insert="-">-</button>
+                            <button type="button" class="formula-btn-sm" data-insert="*">*</button>
+                            <button type="button" class="formula-btn-sm" data-insert="/">/</button>
+                            <button type="button" class="formula-btn-sm" data-insert="ROUND( , )"
+                                data-offset="-4">ROUND</button>
+                            <button type="button" class="formula-btn-sm" data-insert="IF( , , )"
+                                data-offset="-6">IF</button>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="formula-group-title">Tham số Từ điển</span>
+                        <div style="display:flex; gap: 4px; flex-wrap: wrap;" id="dictionaryContainer">
+                            <!-- JS sẽ render nút biến số vào đây -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Các vùng soạn thảo (Tabs/Sections) -->
+                <div class="editor-section">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <label class="form-label" style="margin: 0;">2. Cấu hình Hệ số Lớp đông</label>
+                        <button type="button" class="btn btn-ghost" id="btnAddLopDong"
+                            style="height: 28px; font-size: 13px; color: var(--brand-800);">
+                            + Thêm mốc sĩ số
+                        </button>
+                    </div>
+
+                    <!-- Vùng chứa các mốc sĩ số động -->
+                    <div id="danhSachLopDong">
+                        <!-- JS sẽ render các dòng dữ liệu vào đây -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-footer">
+                <button id="btnCancel" class="btn btn-ghost">Hủy bỏ</button>
+                <button id="btnSave" class="btn btn-primary">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         KHỐI 3: JS (Event Delegation & Logic)
+         ========================================== -->
+    <script>
+        // === 1. STATE & DOM ELEMENTS ===
+        const state = {
+            activeEditor: null, // Lưu trữ ô Input đang được người dùng trỏ chuột
+            dictionary: [
+                { key: 'SoTietLT', label: 'Số tiết Lý thuyết' },
+                { key: 'HeSoGoc', label: 'Hệ số gốc' },
+                { key: 'SiSoSV', label: 'Sĩ số Sinh viên' }
+            ]
+        };
+
+        const DOM = {
+            overlay: document.getElementById('configDrawer'),
+            toolbar: document.getElementById('masterToolbar'),
+            dictContainer: document.getElementById('dictionaryContainer'),
+            editors: document.querySelectorAll('.formula-target')
+        };
+
+        // === 2. INITIALIZATION ===
+        /**
+         * Khởi tạo trang, render dữ liệu và gắn sự kiện
+         */
+        function init() {
+            renderDictionary();
+            bindDrawerEvents();
+            bindEditorEvents();
+            bindToolbarEvents();
+        }
+
+        // === 3. UI RENDER ===
+        /**
+         * Vẽ danh sách nút Biến số từ Từ điển
+         */
+        function renderDictionary() {
+            const html = state.dictionary.map(item =>
+                `<button type="button" class="formula-btn-sm formula-btn-var" 
+                         data-insert="${item.key}" title="${item.label}">
+                    ${item.key}
+                 </button>`
+            ).join('');
+            DOM.dictContainer.innerHTML = html;
+        }
+        /**
+         * Tạo một dòng HTML cho 1 mốc Hệ số lớp đông
+         */
+        function createLopDongRow(min = '', max = '', formula = '') {
+            const rowId = 'row_' + Date.now();
+            return `
+                    <div class="lop-dong-row" id="${rowId}" style="border: 1px solid var(--border); padding: 12px; border-radius: 6px; margin-bottom: 12px; background: var(--bg-subtle-2);">
+                
+                <div style="display: flex; gap: 12px; margin-bottom: 8px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Từ sĩ số (Min)</label>
+                        <input type="number" class="formula-target-ignore" placeholder="VD: 41" value="${min}" style="width: 100%; height: 32px; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 8px; font-family: 'IBM Plex Mono', monospace;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Đến sĩ số (Max)</label>
+                        <input type="number" class="formula-target-ignore" placeholder="VD: 50" value="${max}" style="width: 100%; height: 32px; border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 8px; font-family: 'IBM Plex Mono', monospace;">
+                    </div>
+                    <button type="button" class="btn btn-ghost btn-remove-row" style="color: var(--red-600); border-color: transparent; height: 32px;">✕ Xóa</button>
+                </div>
+
+                <div style="width: 100%;">
+                    <label style="font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block;">Biểu thức tính hệ số</label>
+                    
+                    <!-- Ô này BẮT BUỘC có class formula-target để Toolbar nhận diện -->
+                    <textarea class="formula-target" placeholder="Nhấp vào đây và dùng Toolbar..." style="width: 100%; height: 60px; border: 1px solid var(--border-strong); border-radius: 4px; padding: 8px; font-family: 'IBM Plex Mono', monospace;">${formula}</textarea>
+                    
+                    <div class="semantic-preview" style="font-size: 12px; color: var(--text-muted); margin-top: 4px; min-height: 18px;">${translateToSemantic(formula)}</div>
+                </div>
+            </div>`;
+        }
+
+        // === 4. DATA PROCESSING (Dịch nghĩa bằng Regex \b) ===
+        /**
+         * Dịch chuỗi Raw chứa mã tham số thành chuỗi Ngữ nghĩa thân thiện
+         * @param {string} rawString - VD: "SoTietLT * 2"
+         * @returns {string} - VD: "[Số tiết Lý thuyết] * 2"
+         */
+        function translateToSemantic(rawString) {
+            if (!rawString) return "";
+            let result = rawString;
+
+            state.dictionary.forEach(dict => {
+                // Bắt buộc dùng \b (word boundary) để không replace nhầm chuỗi con
+                const regex = new RegExp('\\b' + dict.key + '\\b', 'g');
+                result = result.replace(regex, `[${dict.label}]`);
+            });
+            return result;
+        }
+
+        // === 5. EVENT LISTENERS ===
+
+        /** Quản lý Trạng thái Drawer */
+        function bindDrawerEvents() {
+            document.getElementById('btnOpenDrawer').addEventListener('click', () => {
+                DOM.overlay.classList.add('active');
+                // Tự động focus vào ô soạn thảo đầu tiên khi mở Modal
+                if (DOM.editors.length > 0) DOM.editors[0].focus();
+            });
+
+            const closeDrawer = () => DOM.overlay.classList.remove('active');
+            document.getElementById('btnCloseDrawer').addEventListener('click', closeDrawer);
+            document.getElementById('btnCancel').addEventListener('click', closeDrawer);
+            DOM.overlay.addEventListener('click', closeDrawer); // Click ra ngoài overlay
+        }
+
+        /** Quản lý Đa mục tiêu (Multi-target Tracking) */
+        function bindEditorEvents() {
+            DOM.editors.forEach(editor => {
+                // Lắng nghe focus để biết đang soạn thảo ở ô nào
+                editor.addEventListener('focus', (e) => {
+                    state.activeEditor = e.target;
+                });
+
+                // Lắng nghe thao tác gõ phím để cập nhật ngay chuỗi Semantic
+                editor.addEventListener('input', (e) => {
+                    updatePreview(e.target);
+                });
+            });
+        }
+
+        /** Cập nhật khung Preview Semantic ngay dưới Editor */
+        function updatePreview(editorElement) {
+            const previewDiv = editorElement.nextElementSibling;
+            if (previewDiv && previewDiv.classList.contains('semantic-preview')) {
+                previewDiv.innerText = translateToSemantic(editorElement.value);
+            }
+        }
+
+        /** Gắn sự kiện cho Toolbar bằng kỹ thuật Event Delegation */
+        function bindToolbarEvents() {
+            DOM.toolbar.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-insert]');
+                if (!btn) return; // Nếu không click trúng nút thì bỏ qua
+
+                if (!state.activeEditor) {
+                    alert("Vui lòng nhấp chuột vào một ô soạn thảo trước!");
+                    return;
+                }
+
+                const textToInsert = btn.dataset.insert;
+                const offset = parseInt(btn.dataset.offset || '0', 10);
+
+                insertAtCursor(state.activeEditor, textToInsert, offset);
+            });
+        }
+
+        /**
+         * Thuật toán chèn chuỗi vào đúng vị trí con trỏ chuột
+         * @param {HTMLTextAreaElement} editor - Ô text đang active
+         * @param {string} text - Text cần chèn
+         * @param {number} offset - Độ lùi con trỏ (vd: -4)
+         */
+        function insertAtCursor(editor, text, offset) {
+            const startPos = editor.selectionStart;
+            const endPos = editor.selectionEnd;
+            const currentVal = editor.value;
+
+            // Chèn text vào giữa
+            const newVal = currentVal.substring(0, startPos) + text + currentVal.substring(endPos, currentVal.length);
+            editor.value = newVal;
+
+            // Đặt lại con trỏ chuột
+            const newCursorPos = startPos + text.length + offset;
+            editor.focus();
+            editor.setSelectionRange(newCursorPos, newCursorPos);
+
+            // Cập nhật Semantic
+            updatePreview(editor);
+        }
+
+        // Chạy khởi tạo
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

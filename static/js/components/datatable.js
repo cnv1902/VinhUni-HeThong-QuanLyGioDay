@@ -129,7 +129,8 @@ class DataTable {
     let rows = this.state.data.filter(r => {
       if (this.state.search) {
         const s = this.state.search.toLowerCase();
-        const hay = (r.TenNhomLopHP + ' ' + (r.ID_LanTongHopFile || '') + ' ' + (r.MaNhomLopHP || '')).toLowerCase();
+        // Nối tất cả các giá trị của các cột đang cấu hình thành một chuỗi để tìm kiếm chung
+        const hay = this.state.columns.map(c => r[c.MaTruong] || '').join(' ').toLowerCase();
         if (!hay.includes(s)) return false;
       }
       for (const key in this.state.filters) {
@@ -229,7 +230,7 @@ class DataTable {
     const v = row[col.MaTruong];
     switch (col.KieuTruong) {
       case 'badge': return badgeHtml(v);
-      case 'badge_list': return this.badgeListHtml(v);
+      case 'badge_list': return this.badgeListHtml(v, col);
       case 'capacity': return this.capacityHtml(row);
       case 'action': return `<button class="mini-btn" data-action="tonghop" title="Tính lại số liệu">${iconRefresh()}<span>Tính lại</span></button>`;
       case 'mono': return `<span class="mono-text">${esc(v)}</span>`;
@@ -242,9 +243,10 @@ class DataTable {
   /**
    * Trả về HTML hiển thị danh sách các badge từ một chuỗi phân cách bởi dấu phẩy
    * @param {string} v - Chuỗi các giá trị (VD: "Lý thuyết, Bài tập")
+   * @param {Object} col - Object chứa thông tin cấu hình cột
    * @returns {string} Chuỗi HTML chứa các badge
    */
-  badgeListHtml(v) {
+  badgeListHtml(v, col) {
     if (!v) return '<span class="text-muted">Chưa cấu hình</span>';
     
     // Tách chuỗi theo dấu phẩy, loại bỏ khoảng trắng và các phần tử rỗng
@@ -252,9 +254,14 @@ class DataTable {
     
     if (items.length === 0) return '<span class="text-muted">Chưa cấu hình</span>';
     
+    // Xác định lề
+    let justify = 'flex-start';
+    if (col && col.CanLe === 'center') justify = 'center';
+    else if (col && col.CanLe === 'right') justify = 'flex-end';
+    
     // Gộp các badge lại thành chuỗi HTML
     const badges = items.map(item => `<span class="badge badge-gray">${esc(item)}</span>`);
-    return `<div class="badge-list-container" style="display:flex; flex-wrap:wrap; gap:4px;">${badges.join('')}</div>`;
+    return `<div class="badge-list-container" style="display:flex; flex-wrap:wrap; gap:4px; justify-content: ${justify};">${badges.join('')}</div>`;
   }
 
   /**

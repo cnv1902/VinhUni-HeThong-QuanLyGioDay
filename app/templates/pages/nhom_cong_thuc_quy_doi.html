@@ -3,7 +3,7 @@
 
 {% block title %}Quản lý Công thức quy đổi - Hệ thống cấu hình{% endblock %}
 
-{% set active_menu = 'cong_thuc_quy_doi' %}
+{% set active_menu = 'nhom_cong_thuc_quy_doi' %}
 
 {% block content %}
 <div class="toolbar">
@@ -39,7 +39,7 @@
       <circle cx="11" cy="11" r="7" />
       <path d="M21 21l-4.3-4.3" />
     </svg>
-    <input type="text" id="quickSearch" class="text-input" placeholder="Tìm theo ID, Ghi chú, Hệ thống...">
+    <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
   </div>
 </div>
 
@@ -114,6 +114,6 @@
 <script src="/static/js/core/modal.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/components/combo_box.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/components/tag_input.js?v={{ CACHE_BUSTER() }}"></script>
-<script src="/static/js/api/congThucQuyDoiApi.js?v={{ CACHE_BUSTER() }}"></script>
-<script src="/static/js/pages/cong_thuc_quy_doi.js?v={{ CACHE_BUSTER() }}"></script>
+<script src="/static/js/api/nhomCongThucQuyDoiApi.js?v={{ CACHE_BUSTER() }}"></script>
+<script src="/static/js/pages/nhom_cong_thuc_quy_doi.js?v={{ CACHE_BUSTER() }}"></script>
 {% endblock %}
