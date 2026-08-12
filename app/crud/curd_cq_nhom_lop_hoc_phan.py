@@ -6,7 +6,7 @@ from app.models.hinh_thuc_hoc import HinhThucHoc
 from app.models.hinh_thuc_day import HinhThucDay
 from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopResponse
 
-def get_danh_sach(db: Session, ma_hoc_ky: Optional[int] = None):
+def get_danh_sach(db: Session):
     query = (
         db.query(
             CQNhomLopHocPhan.ID,
@@ -46,7 +46,7 @@ def get_danh_sach(db: Session, ma_hoc_ky: Optional[int] = None):
     
     return results
 
-def get_danh_sach_theo_hoc_ky(db: Session, ma_hoc_ky: Optional[int] = None):
+def get_danh_sach_theo_hoc_ky(db: Session, hoc_ky: Optional[str] = None):
     query = (
         db.query(
             CQNhomLopHocPhan.ID,
@@ -77,7 +77,7 @@ def get_danh_sach_theo_hoc_ky(db: Session, ma_hoc_ky: Optional[int] = None):
         )
         .outerjoin(HinhThucHoc, CQNhomLopHocPhan.MaHTHoc == HinhThucHoc.MaHTHoc)
         .outerjoin(HinhThucDay, CQNhomLopHocPhan.MaHTDay == HinhThucDay.MaHTDay)
-    ).filter(CQNhomLopHocPhan.MaHocKy == ma_hoc_ky).all()
+    ).filter(CQNhomLopHocPhan.HocKy == hoc_ky).all()
 
     results = []
     for row in query:

@@ -1,0 +1,89 @@
+<!-- DRAWER CẤU HÌNH CÔNG THỨC -->
+<div id="{{ drawer_id|default('configDrawer') }}" class="drawer-overlay">
+    <div class="drawer-panel" onclick="event.stopPropagation()">
+        <div class="drawer-header">
+            <h2 id="drawerTitle">Cấu hình Chi tiết</h2>
+            <button id="btnCloseDrawer" class="icon-btn" aria-label="Đóng">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="md-container">
+            <!-- CỘT TRÁI (MENU ĐỘNG) -->
+            <div class="md-master">
+                <div class="md-master-group">CẤU HÌNH CHUNG</div>
+                <div id="menuFixed">
+                    <!-- Render Hệ số lớp đông -->
+                </div>
+
+                <div class="md-master-group" style="margin-top: 8px;">CÔNG THỨC THEO TRƯỜNG HỢP</div>
+                <div id="menuDynamic" style="flex: 1; overflow-y: auto;">
+                    <!-- Render Trường hợp dạy học -->
+                </div>
+
+                <!-- Khu vực thêm mới Trường hợp dạy bằng Datalist combobox -->
+                <div class="md-add-section">
+                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block;">Thêm trường
+                        hợp dạy</label>
+                    <div id="cbHinhThucDayContainer"></div>
+                    <button id="btnAddFormat" class="btn btn-ghost" style="width: 100%; margin-top: 8px;">+ Thêm vào
+                        danh sách</button>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI (CHI TIẾT & CHỈNH SỬA) -->
+            <div class="md-detail">
+                <div class="md-detail-header">
+                    <h3 id="detailTitle">Đang tải...</h3>
+                </div>
+
+                <!-- Nơi render nội dung Form -->
+                <div class="detail-content" id="detailContent">
+                    <!-- JS Render Here -->
+                </div>
+
+                <!-- Toolbar (Ẩn mặc định, hiển thị khi focus vào ô công thức) -->
+                <div class="formula-toolbar" id="masterToolbar" style="display: none; margin-top: 16px;">
+                    <div class="formula-group">
+                        <div id="dictGroup" style="display:flex; flex-wrap: wrap; gap: 6px;">
+                            <!-- Render Biến -->
+                        </div>
+                    </div>
+                    <div class="formula-group">
+                        <div class="formula-group-title">Hàm tính toán</div>
+                        <button type="button" class="formula-btn-sm btn-func" data-insert="LÀM_TRÒN( , )"
+                            data-offset="-4">LÀM_TRÒN(Số, Số_lẻ)</button>
+                        <button type="button" class="formula-btn-sm btn-func" data-insert="NẾU( , , )"
+                            data-offset="-6">NẾU(Điều_kiện, Đúng, Sai)</button>
+                    </div>
+                    <div class="formula-group">
+                        <div class="formula-group-title">Phép toán logic</div>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" = "> = (Gán)</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" + ">+</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" - ">-</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" * ">*</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" / ">/</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert="(">(</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=")">)</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" > ">&gt;</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" < ">&lt;</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" >= ">&gt;=</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" <= ">&lt;=</button>
+                        <button type="button" class="formula-btn-sm btn-op" data-insert=" == ">==</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="drawer-footer">
+            <span id="footerStatus" style="font-size: 13px; color: var(--text-secondary); margin-right: auto;">Mọi thay
+                đổi sẽ không được lưu nếu chưa nhấn "Lưu cấu hình"</span>
+            <button id="btnCancelDrawer" class="btn btn-ghost">Hủy bỏ</button>
+            <button id="btnSaveConfig" class="btn btn-primary">Lưu cấu hình</button>
+        </div>
+    </div>
+</div>

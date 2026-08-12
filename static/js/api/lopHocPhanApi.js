@@ -11,12 +11,12 @@ const apiLopHocPhan = {
     }
   },
 
-  // Lấy dữ liệu danh sách nhóm lớp, truyền chuỗi hocky_namhoc
-  async getNhomLopData(hocky_namhoc = null) {
+  // Lấy dữ liệu danh sách nhóm lớp, truyền hoc_ky
+  async getNhomLopData(hoc_ky = null) {
     try {
       let url = `${window.API_PREFIX}/cq-nhom-lop-hoc-phan/`;
-      if (hocky_namhoc !== null) {
-        url += `?hocky_namhoc=${hocky_namhoc}`;
+      if (hoc_ky !== null) {
+        url += `?hoc_ky=${hoc_ky}`;
       }
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');

@@ -1,12 +1,14 @@
 import json
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.crud import crud_he_thong_nhom_cong_thuc
-from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate
-from app.services.hoc_ky_service import resolve_ma_hoc_ky
+from app.crud import crud_he_thong_nhom_cong_thuc, crud_he_thong_he_so_lop_dong, crud_he_thong_truong_hop_cong_thuc
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate, NhomCongThucBulkUpdate
+from app.models.he_thong_he_so_lop_dong import HeThongHeSoLopDong
+from app.models.he_thong_truong_hop_cong_thuc import HeThongTruongHopCongThuc
 from app.services.hinh_thuc_hoc_service import get_danh_sach as get_hinh_thuc_hoc
 from app.core.logger import app_logger as logger
 import re
+from typing import Optional
 
 CACHE_PREFIX = "cache:he_thong_nhom_cong_thuc:all"
 CACHE_TTL = 3600
@@ -34,14 +36,6 @@ async def _map_danh_sach_hinh_thuc_hoc(ds_ma_hinh_thuc: str, hth_list: list) -> 
     list_names = [hth_map.get(id, str(id)) for id in list_ids]
     return ", ".join(list_names)
 
-def _format_ten_hoc_ky(raw_ten: str) -> str:
-    if not raw_ten:
-        return raw_ten
-    match = re.match(r"^(\w+)_(\d{4}-\d{4})$", raw_ten.strip())
-    if match:
-        return f"Kỳ {match.group(1)} ({match.group(2)})"
-    return raw_ten
-
 def _build_response(col) -> dict:
     """Chuyển đổi ORM Model thành Dict với các trường ánh xạ Tên"""
     data = NhomCongThucResponse.model_validate(col).model_dump()
@@ -49,12 +43,6 @@ def _build_response(col) -> dict:
     # Ánh xạ tên hệ đào tạo
     if col.he_dao_tao:
         data['Ten_HeDaoTao'] = col.he_dao_tao.Ten_He
-        
-    # Ánh xạ tên học kỳ qua relationship
-    if getattr(col, 'tu_hoc_ky', None):
-        data['TuHocKy_Ten'] = _format_ten_hoc_ky(col.tu_hoc_ky.TenHocKy.strip()) if col.tu_hoc_ky.TenHocKy else None
-    if getattr(col, 'den_hoc_ky', None):
-        data['DenHocKy_Ten'] = _format_ten_hoc_ky(col.den_hoc_ky.TenHocKy.strip()) if col.den_hoc_ky.TenHocKy else None
         
     # Ánh xạ danh sách hình thức học (xử lý bất đồng bộ ở hàm gọi)
     return data
@@ -86,15 +74,24 @@ async def get_danh_sach(db: Session, redis_client):
             
     return columns_dict
 
-async def get_danh_sach_theo_hoc_ky(db: Session, redis_client, hocky_namhoc: str):
-    """Lọc danh sách nhóm công thức theo ID của chuỗi Học Kỳ"""
-    # 1. Giải mã chuỗi hocky_namhoc -> ID (MaHocKy)
-    ma_hoc_ky = await resolve_ma_hoc_ky(db, redis_client, hocky_namhoc, "HocPhan")
-    if not ma_hoc_ky:
-        return []
+async def get_danh_sach_theo_he_va_trang_thai(db: Session, redis_client, id_he: Optional[int] = None, trang_thai: Optional[int] = None):
+    """Lọc danh sách nhóm công thức theo Hệ đào tạo và Trạng thái"""
+    # TODO: Add dynamic caching here if needed, bypassing for now to ensure freshness
+    columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_he_va_trang_thai(db, id_he, trang_thai)
+    hth_list = await get_hinh_thuc_hoc(db, redis_client)
+    
+    columns_dict = []
+    for col in columns:
+        data = _build_response(col)
+        data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(col.DsMaHTHoc), hth_list)
+        columns_dict.append(data)
+        
+    return columns_dict
 
+async def get_danh_sach_theo_nam_tai_chinh(db: Session, redis_client, nam_tai_chinh: int, id_he: Optional[int] = None, trang_thai: Optional[int] = None):
+    """Lọc danh sách nhóm công thức theo ID của Năm Tài Chính"""
     # 2. Truy vấn DB
-    columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_hoc_ky(db, ma_hoc_ky)
+    columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_nam_tai_chinh(db, nam_tai_chinh, id_he, trang_thai)
     hth_list = await get_hinh_thuc_hoc(db, redis_client)
     
     columns_dict = []
@@ -121,8 +118,20 @@ async def update_nhom_cong_thuc(db: Session, redis_client, id_nhom_ct: int, obj_
     db_obj = crud_he_thong_nhom_cong_thuc.get_by_id(db, id_nhom_ct)
     if not db_obj:
         raise HTTPException(status_code=404, detail="Không tìm thấy nhóm công thức quy đổi")
-    
-    updated_obj = crud_he_thong_nhom_cong_thuc.update_nhom_cong_thuc(db, db_obj, obj_in)
+    if obj_in.ID_He is not None:
+        setattr(db_obj, 'ID_He', obj_in.ID_He)
+    if obj_in.DsMaHTHoc is not None:
+        setattr(db_obj, 'DsMaHTHoc', obj_in.DsMaHTHoc)
+    if obj_in.TuNam is not None:
+        setattr(db_obj, 'TuNam', obj_in.TuNam)
+    if obj_in.DenNam is not None:
+        setattr(db_obj, 'DenNam', obj_in.DenNam)
+    if obj_in.GhiChu_DieuKien is not None:
+        setattr(db_obj, 'GhiChu_DieuKien', obj_in.GhiChu_DieuKien)
+    if obj_in.TrangThai is not None:
+        setattr(db_obj, 'TrangThai', obj_in.TrangThai)
+        
+    updated_obj = crud_he_thong_nhom_cong_thuc.update_nhom_cong_thuc(db, db_obj)
     
     # Xóa cache
     await invalidate_cache(redis_client)
@@ -139,8 +148,75 @@ async def delete_nhom_cong_thuc(db: Session, redis_client, id_nhom_ct: int):
     if not db_obj:
         raise HTTPException(status_code=404, detail="Không tìm thấy nhóm công thức quy đổi")
     
-    crud_he_thong_nhom_cong_thuc.delete_nhom_cong_thuc(db, id_nhom_ct)
+    crud_he_thong_nhom_cong_thuc.delete_nhom_cong_thuc(db, db_obj)
     
     # Xóa cache
     await invalidate_cache(redis_client)
     return {"message": "Xóa nhóm công thức thành công"}
+
+async def bulk_update_cong_thuc(db: Session, redis_client, id_nhom_ct: int, payload: NhomCongThucBulkUpdate):
+    """Cập nhật hàng loạt (Smart Diff) Hệ số lớp đông và Trường hợp công thức"""
+    # 1. Gọi CRUD lấy dữ liệu (Chỉ Get, không viết query DB ở đây)
+    db_lop_dong = crud_he_thong_he_so_lop_dong.get_danh_sach_theo_nhom(db, id_nhom_ct)
+    db_truong_hop = crud_he_thong_truong_hop_cong_thuc.get_danh_sach_theo_nhom(db, id_nhom_ct)
+
+    db_ld_map = {item.ID_HeSo_LD: item for item in db_lop_dong}
+    db_th_map = {item.ID_TruongHop_CT: item for item in db_truong_hop}
+
+    ld_inserts = []
+    ld_deletes = []
+    incoming_ld_ids = set()
+
+    # 2. Xử lý nghiệp vụ phân tích dữ liệu cập nhật/thêm mới Hệ số lớp đông
+    for ld in payload.he_so_lop_dong:
+        if ld.ID_HeSo_LD is not None:
+            incoming_ld_ids.add(ld.ID_HeSo_LD)
+            if ld.ID_HeSo_LD in db_ld_map:
+                db_item = db_ld_map[ld.ID_HeSo_LD]
+                setattr(db_item, 'GiaTri_Min', ld.GiaTri_Min)
+                setattr(db_item, 'GiaTri_Max', ld.GiaTri_Max)
+                setattr(db_item, 'BieuThuc_HeSoLopDong', ld.BieuThuc_HeSoLopDong)
+        else:
+            ld_inserts.append(ld)
+
+    for db_id, db_item in db_ld_map.items():
+        if db_id not in incoming_ld_ids:
+            ld_deletes.append(db_item)
+
+    th_inserts = []
+    th_deletes = []
+    incoming_th_ids = set()
+
+    # 3. Xử lý nghiệp vụ phân tích dữ liệu cập nhật/thêm mới Trường hợp công thức
+    for th in payload.truong_hop_cong_thuc:
+        if th.ID_TruongHop_CT is not None:
+            incoming_th_ids.add(th.ID_TruongHop_CT)
+            if th.ID_TruongHop_CT in db_th_map:
+                db_item = db_th_map[th.ID_TruongHop_CT]
+                setattr(db_item, 'MaHTDay', th.MaHTDay)
+                setattr(db_item, 'BieuThuc_JSON', th.BieuThuc_JSON)
+                setattr(db_item, 'BieuThuc_Text', th.BieuThuc_Text)
+                setattr(db_item, 'TrangThai', th.TrangThai)
+        else:
+            th_inserts.append(th)
+
+    for db_id, db_item in db_th_map.items():
+        if db_id not in incoming_th_ids:
+            th_deletes.append(db_item)
+
+    # 4. Ủy quyền cho CRUD thực hiện Transaction (Thêm, Xóa, Commit)
+    crud_he_thong_nhom_cong_thuc.execute_bulk_transaction(
+        db, id_nhom_ct, ld_inserts, ld_deletes, th_inserts, th_deletes
+    )
+    
+    # Xóa cache liên quan
+    await invalidate_cache(redis_client)
+    # Xóa các cache chi tiết để tránh tình trạng stale data trên UI
+    if redis_client:
+        try:
+            await redis_client.delete(f"cache:he_thong_he_so_lop_dong:{id_nhom_ct}")
+            await redis_client.delete(f"cache:he_thong_truong_hop_cong_thuc:{id_nhom_ct}")
+        except Exception as e:
+            logger.error(f"Lỗi xóa Cache Redis chi tiết: {e}")
+            
+    return {"message": "Cập nhật thành công"}

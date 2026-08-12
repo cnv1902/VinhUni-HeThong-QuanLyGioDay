@@ -11,18 +11,39 @@ const apiCongThuc = {
     }
   },
 
-  // Lấy dữ liệu danh sách công thức, truyền chuỗi hocky_namhoc
-  async getCongThucData(hocky_namhoc = null) {
+  // Lấy dữ liệu danh sách công thức (chỉ lọc theo hệ đào tạo và trạng thái)
+  async getCongThucData(id_he = null, trang_thai = null) {
     try {
       let url = `${window.API_PREFIX}/nhom-cong-thuc/`;
-      if (hocky_namhoc !== null) {
-        url += `?hocky_namhoc=${hocky_namhoc}`;
+      const params = new URLSearchParams();
+      
+      let hasFilter = false;
+      if (id_he !== null && id_he !== '') { params.append('id_he', id_he); hasFilter = true; }
+      if (trang_thai !== null && trang_thai !== '') { params.append('trang_thai', trang_thai); hasFilter = true; }
+      
+      if (hasFilter) {
+        url = `${window.API_PREFIX}/nhom-cong-thuc/?${params.toString()}`;
       }
+      
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu danh sách:', error);
+      return [];
+    }
+  },
+
+  // Lấy danh sách hình thức dạy
+  async getHinhThucDay() {
+    try {
+      const response = await fetch(`${window.API_PREFIX}/hinh-thuc-day/`);
+      if (!response.ok) {
+        throw new Error('Lỗi khi lấy danh sách hình thức dạy');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Lỗi khi lấy hình thức dạy:', error);
       return [];
     }
   },
@@ -125,6 +146,21 @@ const apiCongThuc = {
     try {
       const response = await fetch('/api/v1/hinh-thuc-hoc/');
       if (!response.ok) throw new Error('Lỗi lấy hình thức học');
+      return await response.json();
+    } catch (error) {
+      console.error(error);
+      return [];
+    }
+  },
+
+  async getTuDienBienSo(id_he = 1, trang_thai = 1) {
+    try {
+      const params = new URLSearchParams();
+      if (id_he !== null && id_he !== '') params.append('id_he', id_he);
+      if (trang_thai !== null && trang_thai !== '') params.append('trang_thai', trang_thai);
+      
+      const response = await fetch(`${window.API_PREFIX}/cau-hinh-chung/tu-dien-bien-so?${params.toString()}`);
+      if (!response.ok) throw new Error('Lỗi lấy từ điển biến số');
       return await response.json();
     } catch (error) {
       console.error(error);

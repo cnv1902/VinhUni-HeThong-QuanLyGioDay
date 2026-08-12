@@ -74,3 +74,4 @@ class CQNhomLopHocPhan(Base):
     HeSo_LopDong = Column(Float, nullable=True)
     HeSo_Khac = Column(Float, nullable=True)
     HeSo_HeDaoTao = Column(Float, nullable=True)
+    NamTaiChinh = Column(Integer, nullable=True)

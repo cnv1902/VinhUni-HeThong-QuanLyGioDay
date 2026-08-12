@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from app.api.dependencies import get_db
 from app.core.redis import get_redis
@@ -19,10 +19,15 @@ async def get_danh_sach_cot_theo_bang(table_name: str, db: Session = Depends(get
     return columns
 
 @router.get("/tu-dien-bien-so", response_model=List[TuDienBienSoResponse])
-async def get_danh_sach_tu_dien_bien_so(db: Session = Depends(get_db), redis_client = Depends(get_redis)):
+async def get_danh_sach_tu_dien_bien_so(
+    id_he: Optional[int] = None,
+    trang_thai: Optional[int] = None,
+    db: Session = Depends(get_db), 
+    redis_client = Depends(get_redis)
+):
     """
     Lấy danh sách từ điển biến số.
     """
-    columns = await he_thong_tu_dien_bien_so_service.get_danh_sach_tu_dien_bien_so(db, redis_client)
+    columns = await he_thong_tu_dien_bien_so_service.get_danh_sach_tu_dien_bien_so(db, redis_client, id_he, trang_thai)
     return columns
 

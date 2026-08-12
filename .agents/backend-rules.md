@@ -20,6 +20,7 @@ When instructed to write or modify backend logic for this project, you MUST stri
   - Tên file thường là `crud_[tên_đối_tượng].py` hoặc `[tên_đối_tượng].py`.
   - Các hàm luôn phải nhận `db: Session` làm tham số đầu tiên. Ví dụ: `def get_item(db: Session, item_id: int)`.
   - **KHÔNG** throw lỗi HTTP (`HTTPException`) tại đây. Chỉ trả về dữ liệu hoặc `None`.
+  - **QUY TẮC BẮT BUỘC (Explicit Assignment):** Khi tạo mới hoặc cập nhật bản ghi trong hàm CRUD, bắt buộc phải khởi tạo đối tượng bằng cách gán tay từng trường (VD: `HeThongHeSoLopDong(GiaTri_Min=obj_in.GiaTri_Min, ...)`). Tuyệt đối KHÔNG sử dụng cú pháp Dictionary Unpacking (`**obj_in.model_dump()`).
 
 - **`app/api/v1/endpoints/` (REST API Routers)**
   - Chứa các endpoint API trả về dữ liệu JSON (`@router.get()`, `@router.post()`).
@@ -40,8 +41,9 @@ When instructed to write or modify backend logic for this project, you MUST stri
 Mỗi khi nhận yêu cầu làm một chức năng Backend mới, bạn phải tuân thủ luồng sau:
 1. **Model:** Khai báo cấu trúc bảng trong `app/models/`.
 2. **Schema:** Viết các class validate Pydantic trong `app/schemas/`.
-3. **CRUD:** Viết các hàm thao tác DB trong `app/crud/`.
-4. **Router/API:** Khai báo endpoint trong `app/api/v1/endpoints/` (JSON) hoặc `app/routes/` (HTML), gọi hàm từ CRUD/Service và import Pydantic Schema để format dữ liệu.
+3. **CRUD:** Viết các hàm thao tác DB trong `app/crud/`. Bắt buộc dùng Explicit Assignment.
+4. **Service:** LUÔN LUÔN tạo file Service trong `app/services/` để bọc các hàm CRUD lại, dù là tác vụ đơn giản nhất.
+5. **Router/API:** Khai báo endpoint trong `app/api/v1/endpoints/` (JSON). Tầng API BẮT BUỘC phải gọi qua Service, KHÔNG ĐƯỢC gọi trực tiếp hàm trong thư mục CRUD.
 
 ## 3. Các quy tắc Import
 - Luôn sử dụng Absolute Import bắt đầu bằng `app.` (VD: `from app.models.user import User` thay vì `from ..models.user import User`).

@@ -52,15 +52,15 @@ async function init() {
 }
 
 /**
- * Hàm tải dữ liệu bảng lưới dựa trên MaHocKy
+ * Hàm tải dữ liệu bảng lưới dựa trên hoc_ky
  */
-async function loadTableData(maHocKy) {
+async function loadTableData(hoc_ky) {
   try {
     if (myTable) {
       myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
     }
 
-    const nhomLopData = await apiLopHocPhan.getNhomLopData(maHocKy);
+    const nhomLopData = await apiLopHocPhan.getNhomLopData(hoc_ky);
     if (myTable) {
       myTable.setData(nhomLopData);
     }
@@ -75,14 +75,14 @@ async function loadTableData(maHocKy) {
 
 // Bắt sự kiện khi Navbar đã nạp xong Context (Lần đầu mở trang)
 window.addEventListener('ContextReady', (e) => {
-  const hockyNamhoc = e.detail;
-  loadTableData(hockyNamhoc);
+  const hoc_ky = e.detail;
+  loadTableData(hoc_ky);
 });
 
 // Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
 window.addEventListener('ContextChanged', (e) => {
-  const hockyNamhoc = e.detail;
-  loadTableData(hockyNamhoc);
+  const hoc_ky = e.detail;
+  loadTableData(hoc_ky);
 });
 
 /**

@@ -1,0 +1,1786 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semantic Editor Drawer — Cấu hình công thức quy đổi giờ dạy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ==========================================================================
+   TOKENS — trùng tên với biến toàn cục đã dùng trong hệ thống thật
+   (--border, --bg-panel, --brand-800, --teal-600...). Khi ghép vào app thật
+   đã có sẵn các token này, có thể xóa khối :root bên dưới.
+   ========================================================================== */
+        :root {
+            --brand-900: #00305F;
+            --brand-800: #004998;
+            --brand-700: #0A5CB8;
+            --brand-50: #EAF2FC;
+
+            --teal-700: #0F7A7D;
+            --teal-600: #129A9D;
+            --teal-50: #E6F6F6;
+
+            --amber-700: #9A6400;
+            --amber-50: #FCF3E0;
+            --danger-600: #C4432B;
+            --danger-50: #FBEAE6;
+
+            --text-primary: #16233A;
+            --text-secondary: #5B677E;
+            --text-muted: #8C97AD;
+
+            --border: #E3E8F0;
+            --border-strong: #CBD5E3;
+
+            --bg-page: #F1F4F8;
+            --bg-panel: #FFFFFF;
+            --bg-subtle: #F7F9FC;
+            --bg-subtle-2: #EEF2F7;
+            --bg-default: #FFFFFF;
+
+            --radius: 4px;
+            --radius-sm: 3px;
+
+            --font-ui: 'Inter', -apple-system, "Segoe UI", sans-serif;
+            --font-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-ui);
+            color: var(--text-primary);
+            background: var(--bg-page);
+        }
+
+        /* ==========================================================================
+   DEMO SHELL (chỉ để xem trước file độc lập, không thuộc component)
+   ========================================================================== */
+        .demo-shell {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 56px 24px 24px;
+        }
+
+        .demo-topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .demo-topbar-eyebrow {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            color: var(--brand-700);
+            margin-bottom: 6px;
+        }
+
+        .demo-topbar-title h1 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .demo-hint {
+            max-width: 680px;
+            margin-top: 14px;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text-secondary);
+        }
+
+        /* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+        .btn {
+            height: 34px;
+            padding: 0 14px;
+            border-radius: var(--radius);
+            font-family: var(--font-ui);
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background .12s ease, border-color .12s ease;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: var(--brand-800);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-700);
+        }
+
+        .btn-ghost {
+            background: var(--bg-panel);
+            color: var(--text-secondary);
+            border-color: var(--border-strong);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        .icon-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-subtle);
+            color: var(--text-primary);
+        }
+
+        .icon-btn.danger:hover {
+            background: var(--danger-50);
+            color: var(--danger-600);
+        }
+
+        .icon-btn.sm {
+            width: 24px;
+            height: 24px;
+            font-size: 12px;
+        }
+
+        /* ==========================================================================
+   DRAWER SHELL
+   ========================================================================== */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(16, 24, 38, 0.44);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity .22s ease, visibility .22s ease;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .drawer-panel {
+            position: fixed;
+            top: 0;
+            right: -1240px;
+            width: 1240px;
+            max-width: 97vw;
+            height: 100vh;
+            background: var(--bg-panel);
+            z-index: 1001;
+            box-shadow: -8px 0 24px rgba(15, 23, 42, 0.10);
+            border-left: 1px solid var(--border-strong);
+            transition: right .28s cubic-bezier(.4, 0, .2, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-overlay.active .drawer-panel {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-shrink: 0;
+        }
+
+        .drawer-header h2 {
+            margin: 0 0 3px;
+            font-size: 15.5px;
+            font-weight: 700;
+        }
+
+        .drawer-subtitle {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        .drawer-tabs {
+            display: flex;
+            gap: 4px;
+            padding: 0 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-panel);
+            flex-shrink: 0;
+        }
+
+        .drawer-tab {
+            appearance: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 11px 6px;
+            margin-right: 22px;
+            font-family: var(--font-ui);
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+            position: relative;
+            top: 1px;
+        }
+
+        .drawer-tab:hover {
+            color: var(--text-primary);
+        }
+
+        .drawer-tab.active {
+            color: var(--brand-800);
+            border-bottom-color: var(--brand-800);
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-tab-content {
+            display: none;
+            flex: 1;
+            overflow: hidden;
+            flex-direction: column;
+        }
+
+        .drawer-tab-content.active {
+            display: flex;
+        }
+
+        .drawer-footer {
+            padding: 12px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-subtle);
+            flex-shrink: 0;
+        }
+
+        .drawer-footer-status {
+            font-size: 12.5px;
+            color: var(--text-muted);
+        }
+
+        .drawer-footer-status.is-dirty {
+            color: var(--brand-700);
+            font-weight: 600;
+        }
+
+        .drawer-footer-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* ==========================================================================
+   TOOLBAR — CỐ ĐỊNH, DÙNG CHUNG CHO CẢ 2 TAB
+   Nằm giữa .drawer-tabs và .drawer-body, không nằm trong tab-content nào,
+   nên không mất đi/không đổi khi chuyển tab.
+   ========================================================================== */
+        .formula-toolbar {
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border-strong);
+            background: var(--bg-subtle);
+            flex-shrink: 0;
+        }
+
+        .toolbar-row-1 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 9px;
+        }
+
+        .toolbar-pills {
+            display: flex;
+            gap: 4px;
+            background: var(--bg-subtle-2);
+            padding: 3px;
+            border-radius: var(--radius);
+            flex-shrink: 0;
+        }
+
+        .pill {
+            appearance: none;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            padding: 6px 11px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-ui);
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .pill.active {
+            background: var(--bg-panel);
+            color: var(--brand-800);
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .08);
+        }
+
+        .toolbar-search {
+            flex: 1;
+            height: 30px;
+            padding: 0 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            font-family: var(--font-ui);
+            font-size: 12.5px;
+            background: var(--bg-panel);
+            outline: none;
+        }
+
+        .toolbar-search:focus {
+            border-color: var(--teal-600);
+        }
+
+        .toolbar-hint {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .toolbar-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            min-height: 29px;
+            max-height: 90px;
+            overflow-y: auto;
+        }
+
+        .chip {
+            height: 27px;
+            padding: 0 10px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border-strong);
+            background: var(--bg-panel);
+            color: var(--text-primary);
+        }
+
+        .chip:hover {
+            background: var(--bg-subtle-2);
+        }
+
+        .chip-var {
+            border-color: var(--teal-600);
+            color: var(--teal-700);
+            background: var(--teal-50);
+        }
+
+        .chip-var:hover {
+            background: var(--bg-panel);
+        }
+
+        .chip-func {
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .chip-empty {
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 5px 2px;
+        }
+
+        .toolbar-ops {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 9px;
+            padding-top: 9px;
+            border-top: 1px dashed var(--border-strong);
+        }
+
+        .op-btn {
+            min-width: 27px;
+            height: 27px;
+            padding: 0 6px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--bg-panel);
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .op-btn:hover {
+            background: var(--bg-subtle-2);
+            color: var(--text-primary);
+        }
+
+        .op-btn.op-assign {
+            border-color: var(--brand-700);
+            color: var(--brand-800);
+            font-weight: 700;
+            background: var(--brand-50);
+        }
+
+        /* ==========================================================================
+   TAB 1 — LƯỚI TRƯỜNG HỢP × GIAI ĐOẠN
+   ========================================================================== */
+        #tab-truong-hop {}
+
+        .th-toolbar-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .th-search-input {
+            width: 240px;
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            background: var(--bg-panel);
+            outline: none;
+        }
+
+        .th-search-input:focus {
+            border-color: var(--teal-600);
+        }
+
+        .th-toolbar-spacer {
+            flex: 1;
+        }
+
+        .th-row-count {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .th-grid-scroll {
+            flex: 1;
+            overflow: auto;
+        }
+
+        .th-grid-header,
+        .th-grid-row {
+            display: grid;
+            grid-template-columns: 250px repeat(3, minmax(230px, 1fr));
+            min-width: 940px;
+        }
+
+        .th-grid-header {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--bg-subtle);
+            border-bottom: 1px solid var(--border-strong);
+        }
+
+        .th-grid-header>div {
+            padding: 9px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        .th-grid-header>div:last-child {
+            border-right: none;
+        }
+
+        .th-col-title {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .th-col-sub {
+            display: block;
+            font-size: 10.5px;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-top: 1px;
+        }
+
+        .th-grid-row {
+            border-bottom: 1px solid var(--border);
+        }
+
+        .th-grid-row.is-inactive {
+            background: repeating-linear-gradient(135deg, var(--bg-subtle), var(--bg-subtle) 10px, var(--bg-subtle-2) 10px, var(--bg-subtle-2) 20px);
+        }
+
+        .th-grid-row.is-inactive .th-meta-cell,
+        .th-grid-row.is-inactive .phase-cell {
+            opacity: .55;
+        }
+
+        .th-grid-row>div {
+            padding: 12px 14px;
+            border-right: 1px solid var(--border);
+        }
+
+        .th-grid-row>div:last-child {
+            border-right: none;
+        }
+
+        .th-meta-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--bg-subtle);
+        }
+
+        .th-meta-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .th-id-wrap {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .th-id-badge-sm {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+
+        .dirty-dot {
+            display: none;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--brand-700);
+        }
+
+        .is-dirty .dirty-dot {
+            display: inline-block;
+        }
+
+        .th-meta-top-actions {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .th-status-toggle {
+            width: 32px;
+            height: 18px;
+            border-radius: 10px;
+            background: var(--border-strong);
+            position: relative;
+            border: none;
+            cursor: pointer;
+            flex-shrink: 0;
+            padding: 0;
+        }
+
+        .th-status-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #fff;
+            transition: left .15s ease;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+        }
+
+        .th-status-toggle.on {
+            background: var(--brand-800);
+        }
+
+        .th-status-toggle.on::after {
+            left: 16px;
+        }
+
+        .th-meta-name {
+            font-size: 13.5px;
+            font-weight: 700;
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            padding: 4px 6px;
+            background: transparent;
+            font-family: var(--font-ui);
+            width: 100%;
+            outline: none;
+        }
+
+        .th-meta-name:hover {
+            background: var(--bg-panel);
+            border-color: var(--border-strong);
+        }
+
+        .th-meta-name:focus {
+            background: var(--bg-panel);
+            border-color: var(--teal-600);
+        }
+
+        .th-meta-select {
+            height: 27px;
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            font-size: 12px;
+            background: var(--bg-panel);
+            padding: 0 5px;
+            font-family: var(--font-ui);
+            color: var(--text-primary);
+        }
+
+        .th-meta-note {
+            border: 1px solid var(--border-strong);
+            border-radius: var(--radius);
+            font-size: 11.5px;
+            padding: 4px 6px;
+            background: var(--bg-panel);
+            font-family: var(--font-ui);
+            outline: none;
+            color: var(--text-secondary);
+        }
+
+        .th-meta-note:focus {
+            border-color: var(--teal-600);
+        }
+
+        .th-meta-note::placeholder {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* ---- Ô công thức nhiều dòng theo giai đoạn ---- */
+        .phase-cell {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .phase-formula-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .phase-formula-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 6px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 5px 6px;
+            cursor: pointer;
+        }
+
+        .phase-formula-item:hover {
+            border-color: var(--teal-600);
+        }
+
+        .pf-index {
+            font-size: 10px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            flex-shrink: 0;
+            margin-top: 2px;
+            min-width: 12px;
+        }
+
+        .pf-body {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .pf-text {
+            font-family: var(--font-mono);
+            font-size: 12px;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .pf-preview {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            line-height: 1.5;
+        }
+
+        .pf-preview .tk {
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+
+        .pf-preview .tk-var {
+            background: var(--teal-50);
+            color: var(--teal-700);
+            font-weight: 600;
+        }
+
+        .pf-preview .tk-func {
+            color: var(--brand-800);
+            font-weight: 700;
+        }
+
+        .pf-remove {
+            flex-shrink: 0;
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 13px;
+            line-height: 1;
+            padding: 2px;
+        }
+
+        .pf-remove:hover {
+            color: var(--danger-600);
+        }
+
+        .phase-expand-btn {
+            font-size: 11px;
+            color: var(--brand-700);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 0;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .phase-empty-hint {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 2px 0;
+        }
+
+        .formula-input {
+            width: 100%;
+            height: 28px;
+            border: 1px dashed var(--border-strong);
+            border-radius: var(--radius);
+            padding: 0 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
+            outline: none;
+            background: var(--bg-panel);
+        }
+
+        .formula-input:focus {
+            border-style: solid;
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 2px var(--teal-50);
+        }
+
+        .formula-input::placeholder {
+            font-family: var(--font-ui);
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
+        .th-empty-grid {
+            padding: 40px 24px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        /* ==========================================================================
+   TAB 2 — HỆ SỐ LỚP ĐÔNG (theo schema HeThongHeSoLopDong)
+   ========================================================================== */
+        .ld-wrap {
+            padding: 18px 24px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .ld-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .ld-hint {
+            margin: 4px 0 0;
+            font-size: 12.5px;
+            color: var(--text-muted);
+            max-width: 460px;
+            line-height: 1.5;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .ld-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+        }
+
+        .ld-table th {
+            text-align: left;
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .03em;
+            color: var(--text-muted);
+            background: var(--bg-subtle);
+            padding: 9px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .ld-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .ld-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .ld-col-minmax {
+            width: 130px;
+        }
+
+        .ld-col-op {
+            width: 40px;
+            text-align: center;
+        }
+
+        .ld-input {
+            width: 100%;
+            height: 30px;
+            border: 1px solid var(--border-strong);
+            background: var(--bg-panel);
+            border-radius: var(--radius-sm);
+            padding: 0 8px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            outline: none;
+        }
+
+        .ld-input:focus {
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 2px var(--teal-50);
+        }
+
+        .ld-warn {
+            display: block;
+            font-size: 10.5px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .ld-warn-gap {
+            color: var(--amber-700);
+        }
+
+        .ld-warn-overlap,
+        .ld-warn-invalid {
+            color: var(--danger-600);
+        }
+
+        .ld-formula-preview {
+            margin-top: 5px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .ld-formula-preview .tk {
+            padding: 0 3px;
+            border-radius: 2px;
+        }
+
+        .ld-formula-preview .tk-var {
+            background: var(--teal-50);
+            color: var(--teal-700);
+            font-weight: 600;
+        }
+
+        .ld-formula-preview .tk-func {
+            color: var(--brand-800);
+            font-weight: 700;
+        }
+
+        .ld-row-dirty-dot {
+            display: none;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--brand-700);
+            margin: 0 auto 6px;
+        }
+
+        .is-dirty .ld-row-dirty-dot {
+            display: block;
+        }
+
+        .ld-empty-row td {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            padding: 24px 12px;
+        }
+
+        /* Responsive fallback */
+        @media (max-width: 760px) {
+            .drawer-panel {
+                width: 100vw;
+                right: -100vw;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="demo-shell">
+        <div class="demo-topbar">
+            <div class="demo-topbar-title">
+                <span class="demo-topbar-eyebrow">Hệ thống Quản lý Giờ dạy · Trường Đại học Vinh</span>
+                <h1>Cấu hình công thức quy đổi giờ dạy</h1>
+            </div>
+            <button id="btnOpenDemo" class="btn btn-primary">Mở cấu hình nhóm công thức</button>
+        </div>
+        <p class="demo-hint">
+            Thanh biến số / hàm / toán tử nay cố định giữa 2 tab, dùng chung cho cả công thức trường hợp lẫn
+            công thức hệ số lớp đông. Tab 1 chuyển sang dạng lưới Trường hợp × Giai đoạn, mỗi ô giai đoạn cho phép
+            nhập nhiều công thức — gõ xong nhấn <strong>Enter</strong> để chốt một công thức và tiếp tục nhập công thức
+            khác.
+        </p>
+    </div>
+
+    <!-- DRAWER CẤU HÌNH CÔNG THỨC -->
+    <div id="configDrawer" class="drawer-overlay">
+        <div class="drawer-panel" onclick="event.stopPropagation()">
+            <div class="drawer-header">
+                <div>
+                    <h2 id="drawerTitle">Cấu hình Chi tiết</h2>
+                    <span class="drawer-subtitle" id="drawerSubtitle">Nhóm công thức quy đổi giờ dạy</span>
+                </div>
+                <button id="btnCloseDrawer" class="icon-btn" aria-label="Đóng">✕</button>
+            </div>
+
+            <div class="drawer-tabs">
+                <button type="button" class="drawer-tab active" data-tab="tab-truong-hop">1. Trường hợp công
+                    thức</button>
+                <button type="button" class="drawer-tab" data-tab="tab-lop-dong">2. Hệ số Lớp đông</button>
+            </div>
+
+            <!-- TOOLBAR CỐ ĐỊNH — DÙNG CHUNG CHO CẢ 2 TAB -->
+            <div class="formula-toolbar" id="masterToolbar">
+                <div class="toolbar-row-1">
+                    <div class="toolbar-pills" id="toolbarPills">
+                        <button type="button" class="pill active" data-group="thuoctinh">Thuộc tính</button>
+                        <button type="button" class="pill" data-group="trunggian">Trung gian</button>
+                        <button type="button" class="pill" data-group="ham">Hàm logic</button>
+                    </div>
+                    <input type="text" id="toolbarSearchInput" class="toolbar-search"
+                        placeholder="Tìm biến hoặc hàm...">
+                    <span class="toolbar-hint" id="toolbarHint">Nhấp vào một ô công thức rồi chọn biến để chèn</span>
+                </div>
+                <div class="toolbar-chips" id="toolbarChips"></div>
+                <div class="toolbar-ops" id="toolbarOps"></div>
+            </div>
+
+            <div class="drawer-body">
+
+                <!-- TAB 1: Trường hợp công thức — lưới Trường hợp × Giai đoạn -->
+                <div id="tab-truong-hop" class="drawer-tab-content active">
+                    <div class="th-toolbar-row">
+                        <input type="text" id="searchCaseInput" class="th-search-input" placeholder="Tìm trường hợp...">
+                        <span class="th-row-count" id="thRowCount"></span>
+                        <div class="th-toolbar-spacer"></div>
+                        <button type="button" id="btnAddTruongHop" class="btn btn-ghost">+ Thêm trường hợp</button>
+                    </div>
+                    <div class="th-grid-scroll">
+                        <div class="th-grid-header">
+                            <div><span class="th-col-title">Trường hợp công thức</span></div>
+                            <div><span class="th-col-title">Giai đoạn 1</span><span class="th-col-sub">Điều chỉnh tiết
+                                    đầu vào</span></div>
+                            <div><span class="th-col-title">Giai đoạn 2</span><span class="th-col-sub">Hệ số nhân</span>
+                            </div>
+                            <div><span class="th-col-title">Giai đoạn 3</span><span class="th-col-sub">Quy đổi
+                                    chuẩn</span></div>
+                        </div>
+                        <div id="dsTruongHopGrid"><!-- render JS --></div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: Hệ số lớp đông — theo schema HeThongHeSoLopDong -->
+                <div id="tab-lop-dong" class="drawer-tab-content">
+                    <div class="ld-wrap">
+                        <div class="ld-head">
+                            <div>
+                                <label class="form-label">Danh sách mốc Hệ số Lớp đông</label>
+                                <p class="ld-hint">Mỗi mốc gồm khoảng sĩ số [Từ – Đến] và một biểu thức tính hệ số — có
+                                    thể dùng biến/hàm như công thức trường hợp.</p>
+                            </div>
+                            <button type="button" id="btnAddLopDong" class="btn btn-ghost">+ Thêm mốc sĩ số</button>
+                        </div>
+                        <table class="ld-table">
+                            <thead>
+                                <tr>
+                                    <th class="ld-col-minmax">Từ sĩ số</th>
+                                    <th class="ld-col-minmax">Đến sĩ số</th>
+                                    <th>Biểu thức Hệ số lớp đông</th>
+                                    <th class="ld-col-op"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="dsLopDongBody"><!-- render JS --></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-footer">
+                <span class="drawer-footer-status" id="drawerStatus"></span>
+                <div class="drawer-footer-actions">
+                    <button id="btnCancelDrawer" class="btn btn-ghost">Hủy bỏ</button>
+                    <button id="btnSaveConfig" class="btn btn-primary">Lưu cấu hình</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SemanticEditorDrawer {
+            constructor(drawerId) {
+                this.drawerId = drawerId;
+                this.drawer = document.getElementById(drawerId);
+
+                this.tuDienBienSo = [];
+                this.truongHopList = [];
+                this.lopDongList = [];
+
+                this.currentGroupId = null;
+                this.activeEditor = null;
+                this.toolbarGroup = 'thuoctinh'; // thuoctinh | trunggian | ham
+                this.dirtyCaseIds = new Set();
+                this.dirtyLopDongIds = new Set();
+                this.expandedPhaseCells = new Set(); // `${caseId}:${phaseKey}`
+
+                this.PHASES = [
+                    { key: 'dc', label: 'Giai đoạn 1', sub: 'Điều chỉnh tiết đầu vào' },
+                    { key: 'hs', label: 'Giai đoạn 2', sub: 'Hệ số nhân' },
+                    { key: 'qd', label: 'Giai đoạn 3', sub: 'Quy đổi chuẩn' }
+                ];
+                this.PHASE_COLLAPSE_LIMIT = 4;
+
+                this.HAM_LOGIC = [
+                    { code: 'ROUND( , )', label: 'LÀM_TRÒN(Số, Số_lẻ)', offset: -4 },
+                    { code: 'IIF( , , )', label: 'NẾU(Điều_kiện, Đúng, Sai)', offset: -6 }
+                ];
+                // "=" là toán tử GÁN (khác "==" so sánh) — dùng để viết công thức kiểu
+                // "hệ số lt = hệ số lt + hệ số bt" cho các biến trung gian.
+                this.TOAN_TU = [
+                    { op: '=', assign: true, title: 'Gán giá trị' },
+                    { op: '+' }, { op: '-' }, { op: '*' }, { op: '/' },
+                    { op: '(' }, { op: ')' },
+                    { op: '>' }, { op: '<' }, { op: '>=' }, { op: '<=' }, { op: '==' }
+                ];
+
+                this.HINH_THUC_DAY = [
+                    { id: 1, ten: 'Lý thuyết' },
+                    { id: 2, ten: 'Thực hành' },
+                    { id: 3, ten: 'Thảo luận' },
+                    { id: 4, ten: 'Bài tập' },
+                    { id: 5, ten: 'Đồ án / Khóa luận' },
+                    { id: 6, ten: 'Thực tập' }
+                ];
+
+                this.renderToolbarOps();
+                this.initEvents();
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* OPEN / CLOSE                                                      */
+            /* ---------------------------------------------------------------- */
+            async open(groupId, groupName) {
+                this.currentGroupId = groupId;
+                const titleEl = document.getElementById('drawerTitle');
+                if (titleEl) titleEl.textContent = `Cấu hình Chi tiết: ${groupName || 'Nhóm Công Thức'}`;
+
+                this.drawer.classList.add('active');
+
+                if (this.tuDienBienSo.length === 0) await this.loadDictionary();
+                this.renderToolbarChips('');
+
+                this.loadDrawerData(groupId);
+                this.updateFooterStatus();
+            }
+
+            close() {
+                this.drawer.classList.remove('active');
+                this.currentGroupId = null;
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* DICTIONARY                                                        */
+            /* ---------------------------------------------------------------- */
+            async loadDictionary() {
+                try {
+                    const res = await fetch((window.API_PREFIX || '') + '/cau-hinh-chung/tu-dien-bien-so');
+                    if (res.ok) {
+                        const data = await res.json();
+                        this.tuDienBienSo = data.data || data;
+                        return;
+                    }
+                    throw new Error('API not ok');
+                } catch (err) {
+                    console.warn("Không tải được từ điển biến số từ API, dùng dữ liệu mẫu:", err);
+                    this.tuDienBienSo = this.getMockDictionary();
+                    if (typeof showToast !== 'undefined') showToast("Không thể tải từ điển biến số — đang dùng dữ liệu mẫu", "warning");
+                }
+            }
+
+            getMockDictionary() {
+                return [
+                    { MaBienSo: 'SoSV', TenHienThi: 'Số SV', NhomBien: 1 },
+                    { MaBienSo: 'SiSoDK', TenHienThi: 'Sĩ số ĐK', NhomBien: 1 },
+                    { MaBienSo: 'SiSoCD', TenHienThi: 'Sĩ số CĐ', NhomBien: 1 },
+                    { MaBienSo: 'SiSoDKH', TenHienThi: 'Sĩ số ĐKH', NhomBien: 1 },
+                    { MaBienSo: 'SoTC', TenHienThi: 'Số TC', NhomBien: 1 },
+                    { MaBienSo: 'SoTietLT', TenHienThi: 'Số tiết LT', NhomBien: 1 },
+                    { MaBienSo: 'SoTietTH', TenHienThi: 'Số tiết TH', NhomBien: 1 },
+                    { MaBienSo: 'SoTietTL', TenHienThi: 'Số tiết TL', NhomBien: 1 },
+                    { MaBienSo: 'SoTietDA', TenHienThi: 'Số tiết ĐA', NhomBien: 1 },
+                    { MaBienSo: 'SoTietTT', TenHienThi: 'Số tiết TT', NhomBien: 1 },
+                    { MaBienSo: 'SoTietDAKL', TenHienThi: 'Số tiết ĐAKL', NhomBien: 1 },
+                    { MaBienSo: 'HeSoHP', TenHienThi: 'Hệ số HP', NhomBien: 1 },
+                    { MaBienSo: 'HeSoLopDong', TenHienThi: 'Hệ số lớp đông', NhomBien: 1 },
+                    { MaBienSo: 'HeSoLyThuyet', TenHienThi: 'Hệ số Lý thuyết', NhomBien: 2 },
+                    { MaBienSo: 'HeSoThucHanh', TenHienThi: 'Hệ số Thực hành', NhomBien: 2 },
+                    { MaBienSo: 'HeSoBaiTap', TenHienThi: 'Hệ số Bài tập', NhomBien: 2 },
+                    { MaBienSo: 'GioDay1TCGDTC', TenHienThi: 'Giờ dạy/1TC GDTC', NhomBien: 2 }
+                ];
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* LOAD MOCK DATA CHO NHÓM (thay bằng gọi API thật theo groupId)     */
+            /* ---------------------------------------------------------------- */
+            loadDrawerData(groupId) {
+                this.truongHopList = [
+                    {
+                        id: 1, tenTruongHop: 'Lý thuyết', maHTDay: 1, ghiChu: '', active: true,
+                        dc: [], hs: ['IIF(SoTietLT > 30, 1.2, 1.0)'], qd: ['SoTietLT * HeSoLopDong']
+                    },
+                    {
+                        id: 2, tenTruongHop: 'Thực hành', maHTDay: 2, ghiChu: '', active: true,
+                        dc: ['SoTietTH / 2'], hs: ['1.0'], qd: ['SoTietTH * 0.8']
+                    },
+                    {
+                        id: 3, tenTruongHop: 'Bài tập lớn', maHTDay: 4, ghiChu: '', active: true,
+                        dc: [], hs: ['1.5'], qd: ['SoTietTL * 1.5']
+                    },
+                    {
+                        id: 4, tenTruongHop: 'Thực tập', maHTDay: 6, ghiChu: '', active: true,
+                        dc: [], hs: ['1.0'], qd: ['SoTietTT']
+                    },
+                    {
+                        id: 5, tenTruongHop: 'Đồ án / Khóa luận', maHTDay: 5, ghiChu: '', active: true,
+                        dc: ['SoTietDA + 5'], hs: ['2.0'], qd: ['ROUND(SoTietDA * 2, 1)']
+                    },
+                    {
+                        id: 6, tenTruongHop: 'Lý thuyết - lớp ghép Bài tập', maHTDay: 1, ghiChu: 'Áp dụng khi gộp lớp Lý thuyết với Bài tập',
+                        active: false,
+                        dc: [], hs: ['HeSoLyThuyet = HeSoLyThuyet + HeSoBaiTap', 'IIF(SoTietLT > 45, 1.3, HeSoLyThuyet)'], qd: ['SoTietLT * HeSoLopDong']
+                    }
+                ];
+                this.lopDongList = [
+                    { id: 1, tu: 0, den: 40, congThuc: '1.0' },
+                    { id: 2, tu: 41, den: 70, congThuc: '1.1' },
+                    { id: 3, tu: 71, den: 100, congThuc: '1.2' },
+                    { id: 4, tu: 101, den: 200, congThuc: 'IIF(SiSoDK > 150, 1.35, 1.3)' }
+                ];
+                this.dirtyCaseIds.clear();
+                this.dirtyLopDongIds.clear();
+                this.expandedPhaseCells.clear();
+
+                this.renderCaseGrid();
+                this.renderLopDongTable();
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* TOOLBAR (cố định, dùng chung 2 tab)                                */
+            /* ---------------------------------------------------------------- */
+            renderToolbarOps() {
+                const container = document.getElementById('toolbarOps');
+                if (!container) return;
+                container.innerHTML = this.TOAN_TU.map(o => {
+                    const insert = (o.op === '(' || o.op === ')') ? o.op : ` ${o.op} `;
+                    const cls = o.assign ? 'op-btn op-assign' : 'op-btn';
+                    const title = o.title ? ` title="${this.escapeAttr(o.title)}"` : '';
+                    return `<button type="button" class="${cls}" data-insert="${this.escapeAttr(insert)}"${title}>${this.escapeHtml(o.op)}</button>`;
+                }).join('');
+            }
+
+            renderToolbarChips(searchTerm) {
+                const container = document.getElementById('toolbarChips');
+                if (!container) return;
+                const term = this.normalize(searchTerm || '');
+
+                let chips = [];
+                if (term) {
+                    chips = [
+                        ...this.tuDienBienSo
+                            .filter(d => this.normalize(d.TenHienThi).includes(term) || this.normalize(d.MaBienSo).includes(term))
+                            .map(d => this.chipHtmlVar(d)),
+                        ...this.HAM_LOGIC
+                            .filter(h => this.normalize(h.label).includes(term))
+                            .map(h => this.chipHtmlFunc(h))
+                    ];
+                } else if (this.toolbarGroup === 'ham') {
+                    chips = this.HAM_LOGIC.map(h => this.chipHtmlFunc(h));
+                } else {
+                    const nb = this.toolbarGroup === 'thuoctinh' ? 1 : 2;
+                    chips = this.tuDienBienSo.filter(d => (d.NhomBien || 1) === nb).map(d => this.chipHtmlVar(d));
+                }
+
+                container.innerHTML = chips.length ? chips.join('') : `<span class="chip-empty">Không có mục nào phù hợp</span>`;
+            }
+
+            chipHtmlVar(item) {
+                return `<button type="button" class="chip chip-var" data-insert=" [${item.MaBienSo}] " title="${this.escapeAttr(item.TenHienThi)}">${this.escapeHtml(item.TenHienThi)}</button>`;
+            }
+            chipHtmlFunc(item) {
+                return `<button type="button" class="chip chip-func" data-insert="${this.escapeAttr(item.code)}" data-offset="${item.offset}">${this.escapeHtml(item.label)}</button>`;
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* PREVIEW NGỮ NGHĨA                                                  */
+            /* ---------------------------------------------------------------- */
+            buildSemanticHtml(rawString) {
+                if (!rawString || !rawString.trim()) return `<span class="ph">— để trống —</span>`;
+                let escaped = this.escapeHtml(rawString);
+                const sorted = [...this.tuDienBienSo].sort((a, b) => b.MaBienSo.length - a.MaBienSo.length);
+                sorted.forEach(dict => {
+                    const regex = new RegExp('\\b' + dict.MaBienSo + '\\b', 'g');
+                    escaped = escaped.replace(regex, `<span class="tk tk-var">${this.escapeHtml(dict.TenHienThi)}</span>`);
+                });
+                escaped = escaped
+                    .replace(/\bROUND\b/g, '<span class="tk tk-func">LÀM_TRÒN</span>')
+                    .replace(/\bIIF\b/g, '<span class="tk tk-func">NẾU</span>');
+                return escaped;
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* TAB 1 — LƯỚI TRƯỜNG HỢP × GIAI ĐOẠN                                */
+            /* ---------------------------------------------------------------- */
+            renderCaseGrid(filterText = '') {
+                const container = document.getElementById('dsTruongHopGrid');
+                const countEl = document.getElementById('thRowCount');
+                if (!container) return;
+
+                const norm = this.normalize(filterText);
+                const items = this.truongHopList.filter(c =>
+                    this.normalize(c.tenTruongHop).includes(norm) || this.normalize(c.ghiChu).includes(norm)
+                );
+
+                if (countEl) countEl.textContent = filterText ? `${items.length}/${this.truongHopList.length} trường hợp` : `${this.truongHopList.length} trường hợp`;
+
+                if (items.length === 0) {
+                    container.innerHTML = `<div class="th-empty-grid">Không tìm thấy trường hợp phù hợp.</div>`;
+                    return;
+                }
+
+                container.innerHTML = items.map(c => this.renderCaseRow(c)).join('');
+            }
+
+            renderCaseRow(caseObj) {
+                const htOptions = [`<option value="">— Không gán —</option>`]
+                    .concat(this.HINH_THUC_DAY.map(h => `<option value="${h.id}" ${Number(caseObj.maHTDay) === h.id ? 'selected' : ''}>${this.escapeHtml(h.ten)}</option>`))
+                    .join('');
+
+                return `
+        <div class="th-grid-row ${caseObj.active ? '' : 'is-inactive'} ${this.dirtyCaseIds.has(caseObj.id) ? 'is-dirty' : ''}" data-case-row="${caseObj.id}">
+            <div class="th-meta-cell">
+                <div class="th-meta-top">
+                    <div class="th-id-wrap">
+                        <span class="th-id-badge-sm">ID ${caseObj.id}</span>
+                        <span class="dirty-dot" title="Có thay đổi chưa lưu"></span>
+                    </div>
+                    <div class="th-meta-top-actions">
+                        <button type="button" class="th-status-toggle ${caseObj.active ? 'on' : ''}" data-toggle-case="${caseObj.id}" title="${caseObj.active ? 'Đang áp dụng — nhấn để tạm ngưng' : 'Đang tạm ngưng — nhấn để áp dụng'}"></button>
+                        <button type="button" class="icon-btn danger sm" data-delete-case="${caseObj.id}" title="Xóa trường hợp">🗑</button>
+                    </div>
+                </div>
+                <input type="text" class="th-meta-name" data-case-field="tenTruongHop" data-case-id="${caseObj.id}" value="${this.escapeAttr(caseObj.tenTruongHop)}" placeholder="Tên trường hợp">
+                <select class="th-meta-select" data-case-field="maHTDay" data-case-id="${caseObj.id}">${htOptions}</select>
+                <input type="text" class="th-meta-note" data-case-field="ghiChu" data-case-id="${caseObj.id}" value="${this.escapeAttr(caseObj.ghiChu)}" placeholder="Ghi chú điều kiện (tuỳ chọn)">
+            </div>
+            ${this.PHASES.map(p => this.renderPhaseCellOuter(caseObj, p.key)).join('')}
+        </div>`;
+            }
+
+            renderPhaseCellOuter(caseObj, phaseKey) {
+                return `<div class="phase-cell" id="phase-cell-${caseObj.id}-${phaseKey}">${this.renderPhaseCellInner(caseObj, phaseKey)}</div>`;
+            }
+
+            renderPhaseCellInner(caseObj, phaseKey) {
+                const list = caseObj[phaseKey] || [];
+                const cellKey = `${caseObj.id}:${phaseKey}`;
+                const expanded = this.expandedPhaseCells.has(cellKey);
+                const visible = expanded ? list : list.slice(0, this.PHASE_COLLAPSE_LIMIT);
+                const hiddenCount = list.length - visible.length;
+
+                let itemsHtml = visible.map((formula, idx) => `
+            <div class="phase-formula-item" data-case-id="${caseObj.id}" data-phase="${phaseKey}" data-index="${idx}">
+                <span class="pf-index">${idx + 1}.</span>
+                <div class="pf-body">
+                    <div class="pf-text">${this.escapeHtml(formula)}</div>
+                    <div class="pf-preview">${this.buildSemanticHtml(formula)}</div>
+                </div>
+                <button type="button" class="pf-remove" data-remove-formula title="Xóa công thức này">✕</button>
+            </div>
+        `).join('');
+
+                if (list.length === 0) {
+                    itemsHtml = `<div class="phase-empty-hint">Chưa có công thức nào cho giai đoạn này.</div>`;
+                }
+
+                const expandBtn = hiddenCount > 0
+                    ? `<button type="button" class="phase-expand-btn" data-toggle-expand="${cellKey}">+ ${hiddenCount} công thức khác</button>`
+                    : (expanded && list.length > this.PHASE_COLLAPSE_LIMIT
+                        ? `<button type="button" class="phase-expand-btn" data-toggle-expand="${cellKey}">Thu gọn</button>`
+                        : '');
+
+                return `
+            <div class="phase-formula-list">${itemsHtml}</div>
+            ${expandBtn}
+            <input type="text" class="formula-input" data-case-id="${caseObj.id}" data-phase="${phaseKey}" placeholder="Nhập công thức, Enter để thêm...">
+        `;
+            }
+
+            refreshPhaseCell(caseId, phaseKey, focusInput) {
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                const cell = document.getElementById(`phase-cell-${caseId}-${phaseKey}`);
+                if (!caseObj || !cell) return;
+                cell.innerHTML = this.renderPhaseCellInner(caseObj, phaseKey);
+                if (focusInput) {
+                    const input = cell.querySelector('.formula-input');
+                    if (input) input.focus();
+                }
+            }
+
+            markCaseDirty(caseId) {
+                this.dirtyCaseIds.add(caseId);
+                const row = this.drawer.querySelector(`.th-grid-row[data-case-row="${caseId}"]`);
+                if (row) row.classList.add('is-dirty');
+                this.updateFooterStatus();
+            }
+
+            addCase() {
+                const nextId = this.truongHopList.length ? Math.max(...this.truongHopList.map(c => c.id)) + 1 : 1;
+                this.truongHopList.push({ id: nextId, tenTruongHop: 'Trường hợp mới', maHTDay: '', ghiChu: '', active: true, dc: [], hs: [], qd: [] });
+                this.dirtyCaseIds.add(nextId);
+                this.renderCaseGrid(document.getElementById('searchCaseInput')?.value || '');
+                this.updateFooterStatus();
+                const nameInput = this.drawer.querySelector(`.th-meta-name[data-case-id="${nextId}"]`);
+                if (nameInput) { nameInput.focus(); nameInput.select(); nameInput.scrollIntoView({ block: 'center' }); }
+            }
+
+            deleteCase(caseId) {
+                this.truongHopList = this.truongHopList.filter(c => c.id !== caseId);
+                this.dirtyCaseIds.delete(caseId);
+                this.renderCaseGrid(document.getElementById('searchCaseInput')?.value || '');
+                this.updateFooterStatus();
+            }
+
+            toggleCaseActive(caseId) {
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                if (!caseObj) return;
+                caseObj.active = !caseObj.active;
+                this.markCaseDirty(caseId);
+                this.renderCaseGrid(document.getElementById('searchCaseInput')?.value || '');
+            }
+
+            updateCaseMetaField(caseId, field, value) {
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                if (!caseObj) return;
+                caseObj[field] = value;
+                this.markCaseDirty(caseId);
+            }
+
+            addFormulaToPhase(caseId, phaseKey, rawText) {
+                const text = (rawText || '').trim();
+                if (!text) return;
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                if (!caseObj) return;
+                if (!Array.isArray(caseObj[phaseKey])) caseObj[phaseKey] = [];
+                caseObj[phaseKey].push(text);
+                this.markCaseDirty(caseId);
+                this.refreshPhaseCell(caseId, phaseKey, true);
+            }
+
+            removeFormulaFromPhase(caseId, phaseKey, index) {
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                if (!caseObj || !Array.isArray(caseObj[phaseKey])) return;
+                caseObj[phaseKey].splice(index, 1);
+                this.markCaseDirty(caseId);
+                this.refreshPhaseCell(caseId, phaseKey, false);
+            }
+
+            editFormulaFromPhase(caseId, phaseKey, index) {
+                const caseObj = this.truongHopList.find(c => c.id === caseId);
+                if (!caseObj || !Array.isArray(caseObj[phaseKey])) return;
+                const [text] = caseObj[phaseKey].splice(index, 1);
+                this.markCaseDirty(caseId);
+                this.refreshPhaseCell(caseId, phaseKey, true);
+                const cell = document.getElementById(`phase-cell-${caseId}-${phaseKey}`);
+                const input = cell ? cell.querySelector('.formula-input') : null;
+                if (input) { input.value = text; input.focus(); }
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* TAB 2 — HỆ SỐ LỚP ĐÔNG                                             */
+            /* ---------------------------------------------------------------- */
+            renderLopDongTable() {
+                const body = document.getElementById('dsLopDongBody');
+                if (!body) return;
+
+                this.lopDongList.sort((a, b) => (a.tu ?? 0) - (b.tu ?? 0));
+
+                if (this.lopDongList.length === 0) {
+                    body.innerHTML = `<tr class="ld-empty-row"><td colspan="4">Chưa có mốc sĩ số nào. Nhấn "+ Thêm mốc sĩ số" để bắt đầu.</td></tr>`;
+                    return;
+                }
+
+                body.innerHTML = this.lopDongList.map(row => `
+            <tr data-ld-row="${row.id}" class="${this.dirtyLopDongIds.has(row.id) ? 'is-dirty' : ''}">
+                <td>
+                    <input type="number" class="ld-input" data-ld-field="tu" data-ld-id="${row.id}" value="${row.tu ?? ''}" placeholder="0">
+                    <span class="ld-warn" id="ld-warn-${row.id}"></span>
+                </td>
+                <td><input type="number" class="ld-input" data-ld-field="den" data-ld-id="${row.id}" value="${row.den ?? ''}" placeholder="0"></td>
+                <td>
+                    <input type="text" class="ld-input formula-input" data-ld-field="congThuc" data-ld-id="${row.id}" value="${this.escapeAttr(row.congThuc)}" placeholder="Ví dụ: IIF(SiSoDK > 90, 1.3, 1.0)">
+                    <div class="ld-formula-preview" id="ld-preview-${row.id}">${this.buildSemanticHtml(row.congThuc)}</div>
+                </td>
+                <td class="ld-col-op">
+                    <span class="ld-row-dirty-dot" title="Có thay đổi chưa lưu"></span>
+                    <button type="button" class="icon-btn danger sm" data-ld-delete="${row.id}" title="Xóa mốc">🗑</button>
+                </td>
+            </tr>
+        `).join('');
+
+                this.refreshLopDongWarnings();
+            }
+
+            refreshLopDongWarnings() {
+                const sorted = [...this.lopDongList].sort((a, b) => (a.tu ?? 0) - (b.tu ?? 0));
+                sorted.forEach((row, idx) => {
+                    const el = document.getElementById(`ld-warn-${row.id}`);
+                    if (!el) return;
+                    let msg = '';
+                    let cls = '';
+                    if (row.tu != null && row.den != null && Number(row.tu) > Number(row.den)) {
+                        msg = '⚠ Từ sĩ số phải ≤ Đến sĩ số'; cls = 'ld-warn-invalid';
+                    } else if (idx > 0) {
+                        const prev = sorted[idx - 1];
+                        if (prev.den != null && row.tu != null) {
+                            if (Number(row.tu) > Number(prev.den) + 1) {
+                                msg = `⚠ Thiếu khoảng ${Number(prev.den) + 1}–${Number(row.tu) - 1}`; cls = 'ld-warn-gap';
+                            } else if (Number(row.tu) <= Number(prev.den)) {
+                                msg = '⚠ Trùng khoảng với mốc trước'; cls = 'ld-warn-overlap';
+                            }
+                        }
+                    }
+                    el.textContent = msg;
+                    el.className = 'ld-warn' + (cls ? ' ' + cls : '');
+                });
+            }
+
+            addLopDongRow() {
+                const nextId = this.lopDongList.length ? Math.max(...this.lopDongList.map(r => r.id)) + 1 : 1;
+                const last = [...this.lopDongList].sort((a, b) => (a.tu ?? 0) - (b.tu ?? 0)).pop();
+                const tu = last ? Number(last.den ?? 0) + 1 : 0;
+                this.lopDongList.push({ id: nextId, tu, den: tu + 30, congThuc: '1.0' });
+                this.dirtyLopDongIds.add(nextId);
+                this.renderLopDongTable();
+                this.updateFooterStatus();
+            }
+
+            deleteLopDongRow(id) {
+                this.lopDongList = this.lopDongList.filter(r => r.id !== id);
+                this.dirtyLopDongIds.delete(id);
+                this.renderLopDongTable();
+                this.updateFooterStatus();
+            }
+
+            updateLopDongField(id, field, value) {
+                const row = this.lopDongList.find(r => r.id === id);
+                if (!row) return;
+                row[field] = (field === 'congThuc') ? value : (value === '' ? null : Number(value));
+                this.dirtyLopDongIds.add(id);
+
+                const tr = this.drawer.querySelector(`tr[data-ld-row="${id}"]`);
+                if (tr) tr.classList.add('is-dirty');
+
+                if (field === 'congThuc') {
+                    const preview = document.getElementById(`ld-preview-${id}`);
+                    if (preview) preview.innerHTML = this.buildSemanticHtml(value);
+                } else {
+                    this.refreshLopDongWarnings();
+                }
+                this.updateFooterStatus();
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* FOOTER STATUS / SAVE                                              */
+            /* ---------------------------------------------------------------- */
+            updateFooterStatus() {
+                const el = document.getElementById('drawerStatus');
+                if (!el) return;
+                const n = this.dirtyCaseIds.size + this.dirtyLopDongIds.size;
+                if (n === 0) { el.textContent = ''; el.classList.remove('is-dirty'); }
+                else { el.textContent = `Có ${n} thay đổi chưa lưu`; el.classList.add('is-dirty'); }
+            }
+
+            saveConfig() {
+                // TODO: gọi API lưu thực tế tại đây, ví dụ:
+                // - Với mỗi case: PUT BieuThuc_DieuChinhDauVao_JSON = JSON.stringify(case.dc), v.v.
+                // - Với mỗi mốc lớp đông: PUT GiaTri_Min/GiaTri_Max/BieuThuc_HeSoLopDong
+                this.dirtyCaseIds.forEach(id => this.drawer.querySelector(`.th-grid-row[data-case-row="${id}"]`)?.classList.remove('is-dirty'));
+                this.dirtyLopDongIds.forEach(id => this.drawer.querySelector(`tr[data-ld-row="${id}"]`)?.classList.remove('is-dirty'));
+                this.dirtyCaseIds.clear();
+                this.dirtyLopDongIds.clear();
+                this.updateFooterStatus();
+
+                if (typeof showToast !== 'undefined') {
+                    showToast('Đã lưu cấu hình', 'success');
+                } else {
+                    const el = document.getElementById('drawerStatus');
+                    if (el) el.textContent = 'Đã lưu lúc ' + new Date().toLocaleTimeString('vi-VN');
+                }
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* HELPERS                                                           */
+            /* ---------------------------------------------------------------- */
+            escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+            escapeAttr(str) { return this.escapeHtml(str).replace(/"/g, '&quot;'); }
+            normalize(str) {
+                return String(str ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd');
+            }
+
+            /* ---------------------------------------------------------------- */
+            /* EVENTS                                                            */
+            /* ---------------------------------------------------------------- */
+            initEvents() {
+                if (!this.drawer) return;
+
+                const btnClose = document.getElementById('btnCloseDrawer');
+                const btnCancel = document.getElementById('btnCancelDrawer');
+                if (btnClose) btnClose.addEventListener('click', () => this.close());
+                if (btnCancel) btnCancel.addEventListener('click', () => this.close());
+                this.drawer.addEventListener('click', (e) => { if (e.target === this.drawer) this.close(); });
+
+                const btnSave = document.getElementById('btnSaveConfig');
+                if (btnSave) btnSave.addEventListener('click', () => this.saveConfig());
+
+                // Chuyển tab — toolbar nằm ngoài tab-content nên không bị ảnh hưởng
+                this.drawer.querySelectorAll('.drawer-tab').forEach(tab => {
+                    tab.addEventListener('click', () => {
+                        this.drawer.querySelectorAll('.drawer-tab').forEach(t => t.classList.remove('active'));
+                        this.drawer.querySelectorAll('.drawer-tab-content').forEach(c => c.classList.remove('active'));
+                        tab.classList.add('active');
+                        document.getElementById(tab.dataset.tab)?.classList.add('active');
+                    });
+                });
+
+                // Tìm kiếm trường hợp (tab 1)
+                const searchCaseInput = document.getElementById('searchCaseInput');
+                if (searchCaseInput) searchCaseInput.addEventListener('input', (e) => this.renderCaseGrid(e.target.value));
+
+                // Thêm trường hợp / mốc lớp đông
+                document.getElementById('btnAddTruongHop')?.addEventListener('click', () => this.addCase());
+                document.getElementById('btnAddLopDong')?.addEventListener('click', () => this.addLopDongRow());
+
+                // Pill nhóm biến/hàm trong toolbar
+                this.drawer.addEventListener('click', (e) => {
+                    const pillBtn = e.target.closest('.pill');
+                    if (pillBtn) {
+                        this.toolbarGroup = pillBtn.dataset.group;
+                        this.drawer.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p === pillBtn));
+                        const searchInput = document.getElementById('toolbarSearchInput');
+                        if (searchInput) searchInput.value = '';
+                        this.renderToolbarChips('');
+                        return;
+                    }
+
+                    // Chèn biến / hàm / toán tử vào ô công thức đang focus (dùng chung 2 tab)
+                    const insertBtn = e.target.closest('button[data-insert]');
+                    if (insertBtn) {
+                        const editorAlive = this.activeEditor && this.drawer.contains(this.activeEditor) && this.activeEditor.offsetParent !== null;
+                        if (!editorAlive) {
+                            if (typeof showToast !== 'undefined') showToast("Vui lòng nhấp chuột vào một ô công thức trước!", "warning");
+                            return;
+                        }
+                        const text = insertBtn.dataset.insert;
+                        const offset = parseInt(insertBtn.dataset.offset || '0', 10);
+                        const el = this.activeEditor;
+                        const startPos = el.selectionStart;
+                        const endPos = el.selectionEnd;
+                        const currentVal = el.value;
+                        el.value = currentVal.substring(0, startPos) + text + currentVal.substring(endPos);
+                        const newCursorPos = startPos + text.length + offset;
+                        el.focus();
+                        el.setSelectionRange(newCursorPos, newCursorPos);
+                        return;
+                    }
+
+                    // Bật/tắt trạng thái trường hợp
+                    const toggleBtn = e.target.closest('[data-toggle-case]');
+                    if (toggleBtn) { this.toggleCaseActive(Number(toggleBtn.dataset.toggleCase)); return; }
+
+                    // Xóa trường hợp
+                    const delCaseBtn = e.target.closest('[data-delete-case]');
+                    if (delCaseBtn) { this.deleteCase(Number(delCaseBtn.dataset.deleteCase)); return; }
+
+                    // Thu gọn / mở rộng danh sách công thức trong 1 giai đoạn
+                    const expandBtn = e.target.closest('[data-toggle-expand]');
+                    if (expandBtn) {
+                        const key = expandBtn.dataset.toggleExpand;
+                        if (this.expandedPhaseCells.has(key)) this.expandedPhaseCells.delete(key);
+                        else this.expandedPhaseCells.add(key);
+                        const [caseId, phaseKey] = key.split(':');
+                        this.refreshPhaseCell(Number(caseId), phaseKey, false);
+                        return;
+                    }
+
+                    // Sửa 1 công thức đã chốt (đưa lại vào ô nhập)
+                    const formulaItem = e.target.closest('.phase-formula-item');
+                    if (formulaItem && !e.target.closest('[data-remove-formula]')) {
+                        this.editFormulaFromPhase(Number(formulaItem.dataset.caseId), formulaItem.dataset.phase, Number(formulaItem.dataset.index));
+                        return;
+                    }
+
+                    // Xóa 1 công thức trong giai đoạn
+                    const removeBtn = e.target.closest('[data-remove-formula]');
+                    if (removeBtn) {
+                        const item = removeBtn.closest('.phase-formula-item');
+                        if (item) this.removeFormulaFromPhase(Number(item.dataset.caseId), item.dataset.phase, Number(item.dataset.index));
+                        return;
+                    }
+
+                    // Xóa mốc lớp đông
+                    const ldDeleteBtn = e.target.closest('[data-ld-delete]');
+                    if (ldDeleteBtn) { this.deleteLopDongRow(Number(ldDeleteBtn.dataset.ldDelete)); return; }
+                });
+
+                // Tìm kiếm biến/hàm trong toolbar
+                this.drawer.addEventListener('input', (e) => {
+                    if (e.target.id === 'toolbarSearchInput') this.renderToolbarChips(e.target.value);
+                });
+
+                // Enter để chốt 1 công thức trong ô nhập của giai đoạn
+                this.drawer.addEventListener('keydown', (e) => {
+                    if (e.target.matches('.phase-cell .formula-input') && e.key === 'Enter') {
+                        e.preventDefault();
+                        this.addFormulaToPhase(Number(e.target.dataset.caseId), e.target.dataset.phase, e.target.value);
+                    }
+                });
+
+                // Theo dõi ô công thức đang active (để toolbar biết chèn vào đâu)
+                this.drawer.addEventListener('focusin', (e) => {
+                    if (e.target.classList && e.target.classList.contains('formula-input')) this.activeEditor = e.target;
+                });
+
+                // Nhập liệu: tên/hình thức/ghi chú trường hợp, và các trường mốc lớp đông
+                this.drawer.addEventListener('input', (e) => {
+                    const target = e.target;
+                    if (target.dataset.caseField && target.dataset.caseId) {
+                        this.updateCaseMetaField(Number(target.dataset.caseId), target.dataset.caseField, target.value);
+                        return;
+                    }
+                    if (target.dataset.ldField && target.dataset.ldId) {
+                        this.updateLopDongField(Number(target.dataset.ldId), target.dataset.ldField, target.value);
+                    }
+                });
+                this.drawer.addEventListener('change', (e) => {
+                    const target = e.target;
+                    if (target.tagName === 'SELECT' && target.dataset.caseField && target.dataset.caseId) {
+                        this.updateCaseMetaField(Number(target.dataset.caseId), target.dataset.caseField, target.value);
+                    }
+                });
+            }
+        }
+
+        /* ---------------------------------------------------------------- */
+        /* KHỞI TẠO DEMO ĐỘC LẬP                                              */
+        /* ---------------------------------------------------------------- */
+        const drawer = new SemanticEditorDrawer('configDrawer');
+
+        document.getElementById('btnOpenDemo').addEventListener('click', () => {
+            drawer.open(101, 'Lý thuyết & Thảo luận - Bài tập - Dự án - Thực hành');
+        });
+
+        drawer.open(101, 'Lý thuyết & Thảo luận - Bài tập - Dự án - Thực hành');
+    </script>
+</body>
+
+</html>

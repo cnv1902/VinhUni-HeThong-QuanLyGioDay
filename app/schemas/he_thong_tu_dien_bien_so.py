@@ -2,7 +2,8 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class TuDienBienSoBase(BaseModel):
-    NhomBien: int
+    ID_He: int
+    NhomBien: str
     TenHienThi: str
     MaBienSo: str
     ThuTuHienThi: int = 0

@@ -2,6 +2,24 @@
   <div class="sidebar-content">
     <ul class="sidebar-menu">
       <li><a href="/" class="{% if active_menu == 'trang_chu' %}active{% endif %}">Trang chủ</a></li>
+
+      <li class="has-submenu" data-menu-id="menu_cha">
+        <div class="menu-item-wrap">
+          <a href="/menu-cha.html" class="{% if active_menu == 'menu_cha' %}active{% endif %}">Menu
+            cha</a>
+          <button class="submenu-toggle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+        </div>
+        <ul class="sidebar-submenu" style="display: none;">
+          <li><a href="menu-con.html" class="{% if active_menu == 'menu_con' %}active{% endif %}">Menu con</a>
+          </li>
+        </ul>
+      </li>
+
       <li class="has-submenu" data-menu-id="menu_chinh_quy">
         <div class="menu-item-wrap">
           <a href="/he_dao_tao_chinh_quy.html" class="{% if active_menu == 'chinh_quy' %}active{% endif %}">Hệ Đào tạo

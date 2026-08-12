@@ -117,21 +117,43 @@ class ComboBox {
     }
 
     // Đưa ra ngoài overlay để tránh bị scroll và đè z-index
-    const rect = this.inputField.getBoundingClientRect();
-    const modalOverlay = this.container.closest('.modal-overlay');
-    
+    // 1. Phải append vào DOM TRƯỚC thì mới đo được offsetHeight thực tế
+    const modalOverlay = this.container.closest('.modal-overlay') || this.container.closest('.drawer-overlay');
     if (modalOverlay) {
       modalOverlay.appendChild(this.dropdownMenu);
-      this.dropdownMenu.style.top = `${rect.bottom}px`;
+    } else {
+      document.body.appendChild(this.dropdownMenu);
+    }
+
+    // 2. Đặt visibility: hidden trước khi block để tránh nháy hình
+    this.dropdownMenu.style.visibility = 'hidden';
+    this.dropdownMenu.style.display = 'block';
+    
+    // 3. Đo đạc tọa độ và kích thước
+    const rect = this.inputField.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const menuHeight = this.dropdownMenu.offsetHeight;
+    const shouldDropup = (spaceBelow < menuHeight && rect.top > menuHeight);
+
+    // 4. Định vị (Positioning)
+    if (modalOverlay) {
+      if (shouldDropup) {
+        this.dropdownMenu.style.top = `${rect.top - menuHeight}px`;
+      } else {
+        this.dropdownMenu.style.top = `${rect.bottom}px`;
+      }
       this.dropdownMenu.style.left = `${rect.left}px`;
     } else {
-      // Fallback nếu không nằm trong modal
-      document.body.appendChild(this.dropdownMenu);
-      this.dropdownMenu.style.top = `${rect.bottom + window.scrollY}px`;
+      if (shouldDropup) {
+        this.dropdownMenu.style.top = `${rect.top + window.scrollY - menuHeight}px`;
+      } else {
+        this.dropdownMenu.style.top = `${rect.bottom + window.scrollY}px`;
+      }
       this.dropdownMenu.style.left = `${rect.left + window.scrollX}px`;
     }
+    
     this.dropdownMenu.style.width = `${rect.width}px`;
-    this.dropdownMenu.style.display = 'block';
+    this.dropdownMenu.style.visibility = 'visible';
   }
 
   hideDropdown() {

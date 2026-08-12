@@ -85,21 +85,7 @@ BEGIN
                             if (@HinhThucHoc=1 or @HinhThucHoc=12 or @HinhThucHoc=13 or @HinhThucHoc =26 or  @HinhThucHoc =0 or @HinhThucHoc=30 )
                                 begin
                                     Set @HeSoNhanLT =0
-                                    -- Dạy online
-                                    if (@HinhThucDay=2)
-                                        begin
-                                            if (@SoPhong>=4)
-                                                set @HeSoNhanLT=3.0
-                                            else
-                                                if (@SoPhong>=3)
-                                                    set @HeSoNhanLT=2.0
-                                                ELSE
-                                                    if (@SoPhong>=2)
-                                                        SET @HeSoNhanLT= 1.5
-                                                    ELSE 
-                                                        SET @HeSoNhanLT= 1.0
-                                        end
-
+                                    
                                     -- Dạy bằng Tiếng Anh thi bằng Tiếng Việt
                                     if (@HinhThucDay=10)
                                         begin
@@ -250,96 +236,6 @@ BEGIN
                             else if NOT (@HinhThucHoc IN (0,1,12,13,26,7,16,5,15,10,27,28,29,23,32)) 
                                 Update tbl_CQ_NhomLopHocPhan Set SoTietLTQD=0,SoTietBTQD=0, SoTietTHQD = 0 WHERE MaNhomLopHP in (SELECT INSERTED.MaNhomLopHP FROM INSERTED);
                         END
-
-                    --- CẬP NHẬT KÊ KHAI		
-                    -- Nếu là thanh toán thỉnh giảng, thì phải xác nhận mới thanh toán được
-                    IF  (UPDATE(ThanhToanThinhGiang) AND (SELECT top 1  ThanhToanThinhGiang FROM INSERTED) =1) AND ((SELECT ID_LanTongHopFile FROM INSERTED) >0)
-                        INSERT INTO [dbo].[tbl_CQ_KeKhai]
-                            ([HS_ID]
-                            ,[MaCB]
-                            ,[MaNhomLopHP]
-                            ,[NgayKeKhai]
-                            ,[MaHocKy]
-                            ,[SoTietLTKK]
-                            ,[SoTietTHKK]
-                            ,[SoTietBTKK]
-                            ,[TuNgay1]
-                            ,[DenNgay1]      
-                            ,[TuNgay2]
-                            ,[DenNgay2]      
-                            ,[XacNhan]
-                            ,LoaiThanhToan
-                            ,[XacNhanThanhToan]
-                            ,[ThoiGianKeKhai]
-                            )     
-                        SELECT  2700
-                            ,2700
-                            ,[MaNhomLopHP]
-                            ,substring(format(year(getdate()),'0#'),3,2) +   format(month(getdate()),'0#') +   format(day(getdate()),'0#')
-                            ,[MaHocKy]
-                            ,[SoTietLTQD]				
-                            ,[SoTietTHQD]  
-                            ,[SoTietBTQD]
-                            ,ltrim([NgayBatDau])
-                            ,ltrim([NgayKetThuc])
-                            ,ltrim([NgayBatDau2])
-                            ,ltrim([NgayKetThuc2])  				
-                            ,1,9,1
-                            ,getdate()     
-                        FROM INSERTED	
-                        WHERE XacNhan =1
-                    else --if (UPDATE(XacNhan) OR UPDATE(XuLyKeThieuGio))     -- Cập nhật kê khai cho cán bộ
-                        begin
-                            --Cập nhật sang phần kê khai
-                            --1. Xóa lớp đã kê khai
-                            DELETE FROM [dbo].[tbl_CQ_KeKhai] WHERE [XacNhanThanhToan] =0  AND NOT (ChuyenXacNhan =1) AND [MaNhomLopHP] = (SELECT [MaNhomLopHP] FROM INSERTED)
-
-                            --2. Insert lại
-                            if  ((SELECT TOP 1 XacNhan FROM INSERTED) >0)
-                                begin
-                                    Set @HS_ID = (SELECT HS_ID FROM INSERTED)
-                                    if (@HS_ID=0 OR @HS_ID IS NULL)
-                                        begin
-                                            IF EXISTS(SELECT HS_ID FROM view_CANBO_HoSo WHERE HS_ID_CMC IN (SELECT IDGiangVien_CMC FROM INSERTED WHERE IDGiangVien_CMC <>'')) 
-                                                Set @HS_ID =(SELECT TOP 1 HS_ID FROM view_CANBO_HoSo WHERE  LHD_ID <3 AND HS_ID_CMC IN (SELECT IDGiangVien_CMC FROM INSERTED))
-                                        end
-                                    if  (@HS_ID >0)
-                                        INSERT INTO [dbo].[tbl_CQ_KeKhai]
-                                            ([HS_ID]
-                                            ,[MaCB]
-                                            ,[MaNhomLopHP]
-                                            ,[NgayKeKhai]
-                                            ,[MaHocKy]
-                                            ,[SoTietLTKK]
-                                            ,[SoTietTHKK]
-                                            ,[SoTietBTKK]
-                                            ,[TuNgay1]
-                                            ,[DenNgay1]      
-                                            ,[TuNgay2]
-                                            ,[DenNgay2]      
-                                            ,[XacNhan]
-                                            -- ,[GhiChu]
-                                            ,[XacNhanThanhToan]
-                                            ,[ThoiGianKeKhai]
-                                            )     
-                                        SELECT  @HS_ID
-                                            ,@HS_ID
-                                            ,[MaNhomLopHP]
-                                            ,substring(format(year(getdate()),'0#'),3,2) +   format(month(getdate()),'0#') +   format(day(getdate()),'0#')
-                                            ,[MaHocKy]
-                                            ,[SoTietLTQD]				
-                                            ,[SoTietTHQD]  
-                                            ,[SoTietBTQD]
-                                            ,ltrim([NgayBatDau])
-                                            ,ltrim([NgayKetThuc])
-                                            ,ltrim([NgayBatDau2])
-                                            ,ltrim([NgayKetThuc2])  				
-                                            ,0,0		
-                                            ,getdate()     
-                                        FROM INSERTED
-                                        WHERE XacNhan=1
-                                end -- of if  ((SELECT TOP 1 XacNhan FROM INSERTED) >0)
-                        end --else if (UPDATE(XacNhan) OR UPDATE(XuLyKeThieuGio))     -- Cập nhật kê khai cho cán bộ
-                END -- of ELSE IF (@MaHocKy >=26)
+                END
         END
 END

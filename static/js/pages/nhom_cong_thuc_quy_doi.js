@@ -5,9 +5,10 @@ let myTable;
 let formModal = null;
 let tagHinhThucHoc = null;
 let cbHeDaoTao = null;
-let cbTuHocKy = null;
-let cbDenHocKy = null;
 let editingId = null; // null = Thêm mới, có giá trị = Sửa
+
+// Biến cho Drawer Cấu hình
+let semanticEditor = null;
 
 // Format "1_2023-2024" => "Kỳ 1 (2023-2024)"
 function formatHocKyName(rawName) {
@@ -60,6 +61,11 @@ async function init() {
 
     bindStaticEvents();
     
+    // Khởi tạo Drawer Component
+    if (typeof SemanticEditorDrawer !== 'undefined') {
+        semanticEditor = new SemanticEditorDrawer('configDrawer');
+    }
+    
     // Khởi tạo Modal Tạo Nhóm
     initFormModal();
   } catch (error) {
@@ -78,52 +84,35 @@ async function initFormModal() {
   if (typeof BaseModal !== 'undefined') {
     formModal = new BaseModal('modalNhomCongThuc');
     
-    // Lấy danh sách Học kỳ từ navbarState khi ContextReady (để tránh race condition)
-    const setupHocKyCombos = () => {
-      const listHocKy = typeof navbarState !== 'undefined' ? navbarState.hocKyList : [];
-      const hocKyData = listHocKy.map(hk => ({ id: hk.MaHocKy, text: formatHocKyName(hk.TenHocKy) }));
-      
-      const currentNavHocKy = sessionStorage.getItem('CTX_HOC_KY_NAM_HOC');
-      let defaultHocKyId = null;
-      if (currentNavHocKy) {
-        const match = listHocKy.find(hk => hk.TenHocKy === currentNavHocKy);
-        if (match) defaultHocKyId = match.MaHocKy;
-      }
-
-      if (typeof ComboBox !== 'undefined') {
-        if (!cbTuHocKy) {
-          cbTuHocKy = new ComboBox('#tuHocKyContainer', {
-            data: hocKyData,
-            fieldName: 'TuMaHocKy',
-            placeholder: 'Chọn Từ học kỳ...',
-            defaultValue: defaultHocKyId
-          });
-        } else {
-          cbTuHocKy.data = hocKyData;
-          cbTuHocKy.setValue(defaultHocKyId);
-        }
-
-        if (!cbDenHocKy) {
-          cbDenHocKy = new ComboBox('#denHocKyContainer', {
-            data: hocKyData,
-            fieldName: 'DenMaHocKy',
-            placeholder: 'Chọn Đến học kỳ (Không bắt buộc)'
-          });
-        } else {
-          cbDenHocKy.data = hocKyData;
-        }
-      }
-    };
-
-    if (typeof navbarState !== 'undefined' && navbarState.hocKyList && navbarState.hocKyList.length > 0) {
-      setupHocKyCombos();
-    } else {
-      window.addEventListener('ContextReady', setupHocKyCombos);
-    }
+    // Đã xóa setupHocKyCombos vì dùng TuNam, DenNam (Input text/number)
 
     // Tải danh sách Hệ đào tạo
     const listHe = await apiCongThuc.getHeDaoTao();
     const heData = listHe.map(he => ({ id: he.ID_He, text: he.Ten_He }));
+    
+    // Đổ dữ liệu vào ô lọc ngoài Grid
+    const filterHeDaoTaoEl = document.getElementById('filterHeDaoTao');
+    if (filterHeDaoTaoEl) {
+      listHe.forEach(he => {
+        const option = document.createElement('option');
+        option.value = he.ID_He;
+        option.textContent = he.Ten_He;
+        if (he.ID_He === 1) option.selected = true; // Mặc định ID = 1
+        filterHeDaoTaoEl.appendChild(option);
+      });
+      
+      // Bắt sự kiện lọc thay đổi
+      filterHeDaoTaoEl.addEventListener('change', () => {
+        loadTableData();
+      });
+    }
+
+    const filterTrangThaiEl = document.getElementById('filterTrangThai');
+    if (filterTrangThaiEl) {
+      filterTrangThaiEl.addEventListener('change', () => {
+        loadTableData();
+      });
+    }
     
     if (typeof ComboBox !== 'undefined') {
       cbHeDaoTao = new ComboBox('#heDaoTaoContainer', {
@@ -149,7 +138,9 @@ async function initFormModal() {
         e.preventDefault();
         
         // Validation form
-        if (!cbHeDaoTao.getValue() || tagHinhThucHoc.getValues().length === 0 || !cbTuHocKy.getValue()) {
+        const tuNamInput = formEl.querySelector('[name="TuNam"]');
+        const tuNamVal = tuNamInput ? tuNamInput.value : '';
+        if (!cbHeDaoTao.getValue() || tagHinhThucHoc.getValues().length === 0 || !tuNamVal) {
           if (typeof showToast !== 'undefined') showToast("Vui lòng nhập đầy đủ các trường bắt buộc (*)", "error");
           return;
         }
@@ -159,8 +150,8 @@ async function initFormModal() {
         
         // Chuẩn hóa data
         data.ID_He = parseInt(data.ID_He) || 0;
-        data.TuMaHocKy = parseInt(data.TuMaHocKy) || 0;
-        data.DenMaHocKy = data.DenMaHocKy ? parseInt(data.DenMaHocKy) : null;
+        data.TuNam = parseInt(data.TuNam) || 0;
+        data.DenNam = data.DenNam ? parseInt(data.DenNam) : null;
         data.TrangThai = data.TrangThai === 'true';
         
         try {
@@ -183,11 +174,8 @@ async function initFormModal() {
           formEl.reset();
           editingId = null;
           
-          // Tải lại bảng theo học kỳ đang chọn trên navbar
-          const currentCtx = sessionStorage.getItem('CTX_HOC_KY_NAM_HOC');
-          if (currentCtx) {
-            loadTableData(currentCtx);
-          }
+          // Tải lại bảng (chỉ lọc theo hệ đào tạo và trạng thái)
+          loadTableData();
           
         } catch (error) {
           if (typeof showToast !== 'undefined') showToast(error.message || "Có lỗi xảy ra khi lưu!", "error");
@@ -204,15 +192,21 @@ async function initFormModal() {
 }
 
 /**
- * Hàm tải dữ liệu bảng lưới dựa trên chuỗi hockyNamhoc
+ * Hàm tải dữ liệu bảng lưới (chỉ lọc theo hệ và trạng thái)
  */
-async function loadTableData(hockyNamhoc) {
+async function loadTableData() {
   try {
     if (myTable) {
       myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
     }
 
-    const data = await apiCongThuc.getCongThucData(hockyNamhoc);
+    const filterHeDaoTao = document.getElementById('filterHeDaoTao');
+    const filterTrangThai = document.getElementById('filterTrangThai');
+    
+    const id_he = filterHeDaoTao ? filterHeDaoTao.value : null;
+    const trang_thai = filterTrangThai ? filterTrangThai.value : null;
+
+    const data = await apiCongThuc.getCongThucData(id_he, trang_thai);
     if (myTable) {
       myTable.setData(data);
     }
@@ -226,15 +220,14 @@ async function loadTableData(hockyNamhoc) {
 }
 
 // Bắt sự kiện khi Navbar đã nạp xong Context (Lần đầu mở trang)
-window.addEventListener('ContextReady', (e) => {
-  const hockyNamhoc = e.detail;
-  loadTableData(hockyNamhoc);
+window.addEventListener('ContextReady', () => {
+  loadTableData();
 });
 
 // Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
-window.addEventListener('ContextChanged', (e) => {
-  const hockyNamhoc = e.detail;
-  loadTableData(hockyNamhoc);
+// Tuỳ nghiệp vụ, có thể không cần reload nếu không liên quan
+window.addEventListener('ContextChanged', () => {
+  loadTableData();
 });
 
 /**
@@ -305,21 +298,11 @@ function bindStaticEvents() {
         document.getElementById('formNhomCongThuc').reset();
         if (tagHinhThucHoc) tagHinhThucHoc.clear();
         if (cbHeDaoTao) cbHeDaoTao.clear();
-        if (cbDenHocKy) cbDenHocKy.clear();
-        if (cbTuHocKy) {
-          const currentNavHocKy = sessionStorage.getItem('CTX_HOC_KY_NAM_HOC');
-          let defId = null;
-          if (currentNavHocKy && cbTuHocKy.data) {
-            const formatted = formatHocKyName(currentNavHocKy);
-            const match = cbTuHocKy.data.find(d => d.text === formatted);
-            if (match) defId = match.id;
-          }
-          if (defId) {
-            cbTuHocKy.setValue(defId);
-          } else {
-            cbTuHocKy.clear();
-          }
-        }
+        
+        // Mặc định ô Từ năm là năm hiện tại
+        const inputTuNam = document.getElementById('TuNam');
+        if (inputTuNam) inputTuNam.value = new Date().getFullYear();
+        
         formModal.open();
       }
     });
@@ -346,8 +329,7 @@ function bindStaticEvents() {
         formEl.reset();
         
         // Đổ dữ liệu vào các ô input cơ bản
-        const inputTen = formEl.querySelector('[name="TenNhomCongThuc"]');
-        if (inputTen) inputTen.value = rowData.TenNhomCongThuc || '';
+
         
         const inputGhiChu = formEl.querySelector('[name="GhiChu_DieuKien"]');
         if (inputGhiChu) inputGhiChu.value = rowData.GhiChu_DieuKien || '';
@@ -357,8 +339,12 @@ function bindStaticEvents() {
         
         // Đổ dữ liệu vào các component phức tạp
         if (cbHeDaoTao) cbHeDaoTao.setValue(rowData.ID_He);
-        if (cbTuHocKy) cbTuHocKy.setValue(rowData.TuMaHocKy);
-        if (cbDenHocKy) cbDenHocKy.setValue(rowData.DenMaHocKy);
+        
+        const inputTuNam = formEl.querySelector('[name="TuNam"]');
+        if (inputTuNam) inputTuNam.value = rowData.TuNam || '';
+        
+        const inputDenNam = formEl.querySelector('[name="DenNam"]');
+        if (inputDenNam) inputDenNam.value = rowData.DenNam || '';
         
         if (tagHinhThucHoc) {
           tagHinhThucHoc.clear();
@@ -374,7 +360,7 @@ function bindStaticEvents() {
       else if (action === 'delete') {
         if (typeof confirmModal !== 'undefined') {
           const isOk = await confirmModal.show(
-            `Bạn có chắc chắn muốn xóa Nhóm công thức <strong>${rowData.TenNhomCongThuc || ''}</strong> không? Hành động này không thể hoàn tác!`,
+            `Bạn có chắc chắn muốn xóa Nhóm công thức này không? Hành động này không thể hoàn tác!`,
             'Xác nhận Xóa',
             'Xóa Nhóm',
             'var(--red-600)'
@@ -394,7 +380,11 @@ function bindStaticEvents() {
         }
       }
       else if (action === 'config') {
-        if (typeof showToast !== 'undefined') showToast("Tính năng cấu hình đang được phát triển!", "info");
+        if (semanticEditor) {
+            semanticEditor.open(id, "Nhóm công thức");
+        } else {
+            if (typeof showToast !== 'undefined') showToast("Component Cấu hình chưa được tải!", "error");
+        }
       }
     });
   }

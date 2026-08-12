@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
-class HocKyThanhToanBase(BaseModel):
+class HocKyBase(BaseModel):
     TenHocKy: Optional[str] = None
     NamHoc: Optional[str] = None
     HocKy: Optional[int] = None
@@ -33,15 +33,7 @@ class HocKyThanhToanBase(BaseModel):
     ThayDoiHinhThucThanhToan_THCS: Optional[int] = 0
     ThayDoiHinhThucThanhToan_Khac: Optional[int] = 0
 
-class HocKyThanhToanResponse(HocKyThanhToanBase):
-    MaHocKy: int
-
-    model_config = ConfigDict(from_attributes=True)
-
-class HocKyHocPhanBase(BaseModel):
-    TenHocKy: Optional[str] = None
-
-class HocKyHocPhanResponse(HocKyHocPhanBase):
+class HocKyResponse(HocKyBase):
     MaHocKy: int
 
     model_config = ConfigDict(from_attributes=True)

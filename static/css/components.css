@@ -290,16 +290,17 @@ textarea.form-input {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px;
-  min-height: 32px;
-  padding: 4px 8px;
+  gap: 6px;
+  min-height: 36px;
+  height: auto;
+  padding: 6px 10px;
   cursor: text;
 }
 
 .tag-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 6px;
 }
 
 .tag-item {

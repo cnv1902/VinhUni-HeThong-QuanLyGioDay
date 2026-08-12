@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cấu hình Công thức Động - Đại học Vinh</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* === GIỮ NGUYÊN BẢNG MÀU CHUẨN === */
+        :root {
+            --brand-800: #0055AF;
+            --brand-700: #1568C4;
+            --brand-900: #003D82;
+            --teal-600: #0E7C7B;
+            --teal-700: #0A5F5E;
+            --teal-50: #E6F4F3;
+            --bg-page: #EEF1F4;
+            --bg-panel: #FFFFFF;
+            --bg-subtle: #F4F6F8;
+            --bg-subtle-2: #EAEDF0;
+            --border: #DCE3E9;
+            --border-strong: #C3CDD5;
+            --text-primary: #182430;
+            --text-secondary: #5B6B78;
+            --text-muted: #96A3AD;
+            --red-600: #B23A2E;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        /* Buttons */
+        .btn {
+            height: 32px;
+            padding: 0 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-family: inherit;
+            font-size: 13px;
+        }
+
+        .btn-primary {
+            background: var(--brand-800);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-700);
+        }
+
+        .btn-ghost {
+            background: var(--bg-panel);
+            border-color: var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .btn-ghost:hover {
+            background: var(--bg-subtle);
+        }
+
+        .btn-sm {
+            height: 26px;
+            padding: 0 10px;
+            font-size: 12px;
+        }
+
+        /* Drawer Master-Detail */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(24, 36, 48, 0.4);
+            display: flex;
+            justify-content: flex-end;
+            z-index: 1000;
+        }
+
+        .drawer-panel {
+            width: 90vw;
+            max-width: 1300px;
+            background: var(--bg-panel);
+            border-left: 1px solid var(--border-strong);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h2 {
+            margin: 0;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .drawer-footer {
+            padding: 16px 20px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-subtle);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .md-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* CỘT TRÁI (MASTER) */
+        .md-master {
+            width: 280px;
+            border-right: 1px solid var(--border);
+            background: var(--bg-subtle);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .md-master-group {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            padding: 16px 16px 8px 16px;
+        }
+
+        .md-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.1s;
+        }
+
+        .md-menu-item:hover {
+            background: var(--bg-subtle-2);
+        }
+
+        .md-menu-item.active {
+            background: var(--bg-panel);
+            border-left-color: var(--teal-600);
+            color: var(--teal-700);
+        }
+
+        .md-menu-item .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--border-strong);
+        }
+
+        .md-menu-item.has-data .status-dot {
+            background: var(--teal-600);
+        }
+
+        /* Khối thêm động Cột trái */
+        .md-add-section {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: var(--bg-subtle-2);
+            margin-top: auto;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 32px;
+            padding: 0 10px;
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 8px;
+        }
+
+        .form-input:focus {
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 3px var(--teal-50);
+        }
+
+        /* CỘT PHẢI (DETAIL) */
+        .md-detail {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-panel);
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .md-detail-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .md-detail-header h3 {
+            margin: 0;
+            font-size: 15px;
+            color: var(--brand-800);
+        }
+
+        /* Toolbar Sticky */
+        .formula-toolbar {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-strong);
+            padding: 16px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        }
+
+        .formula-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .formula-group-title {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            width: 140px;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        .formula-btn-sm {
+            height: 28px;
+            padding: 0 8px;
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-op {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-strong);
+            color: var(--text-primary);
+        }
+
+        .btn-op:hover {
+            background: var(--bg-subtle-2);
+        }
+
+        .btn-func {
+            background: var(--bg-panel);
+            border: 1px solid var(--text-secondary);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .btn-func:hover {
+            background: var(--bg-subtle-2);
+        }
+
+        .btn-var {
+            border: 1px solid var(--teal-600);
+            color: var(--teal-700);
+            background: var(--teal-50);
+        }
+
+        .btn-var:hover {
+            background: var(--bg-panel);
+        }
+
+        /* Vùng nội dung Editor */
+        .detail-content {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 1. Style cho Editor 3 giai đoạn */
+        .editor-block {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            background: var(--bg-subtle-2);
+        }
+
+        .editor-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .editor-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* 2. Style cho Bảng hệ số lớp đông */
+        .row-lop-dong {
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: var(--bg-panel);
+        }
+
+        .row-header {
+            display: flex;
+            gap: 16px;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .input-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        /* Core Input Formula */
+        .formula-target {
+            width: 100%;
+            height: 70px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid var(--border-strong);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            outline: none;
+            line-height: 1.5;
+        }
+
+        .formula-target:focus {
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 3px var(--teal-50);
+        }
+
+        .semantic-preview {
+            margin-top: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            background: var(--bg-panel);
+            border: 1px dashed var(--border-strong);
+            font-size: 13px;
+            color: var(--text-secondary);
+            min-height: 20px;
+            word-wrap: break-word;
+        }
+
+        /* --- UI TỐI ƯU CHO HỆ SỐ LỚP ĐÔNG --- */
+        .ld-card {
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            margin-bottom: 20px;
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            /* Cắt góc gọn gàng */
+        }
+
+        .ld-card-header {
+            background: var(--bg-subtle);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ld-card-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--brand-800);
+        }
+
+        .ld-card-body {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Biểu mẫu câu văn tự nhiên */
+        .ld-condition-phrase {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--teal-50);
+            /* Highlight nhẹ vùng điều kiện */
+            padding: 10px 16px;
+            border-radius: 6px;
+            border: 1px dashed var(--teal-600);
+        }
+
+        .ld-input-number {
+            width: 80px;
+            height: 32px;
+            padding: 0 8px;
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            text-align: center;
+            outline: none;
+        }
+
+        .ld-input-number:focus {
+            border-color: var(--teal-600);
+            box-shadow: 0 0 0 3px var(--teal-50);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="configDrawer" class="drawer-overlay">
+        <div class="drawer-panel">
+            <div class="drawer-header">
+                <h2>Cấu hình Chi tiết Nhóm: Lý Thuyết - Bài tập - Thực hành</h2>
+                <button class="btn btn-ghost" style="border:none; padding:0 8px;">✕</button>
+            </div>
+
+            <div class="md-container">
+                <!-- CỘT TRÁI (MENU ĐỘNG) -->
+                <div class="md-master">
+                    <div class="md-master-group">Cấu hình chung</div>
+                    <div id="menuFixed">
+                        <!-- Menu Hệ số lớp đông được ghim cứng tại đây -->
+                        <div class="md-menu-item active" data-id="lop_dong">
+                            <span>Hệ số Lớp đông</span>
+                            <div class="status-dot"></div>
+                        </div>
+                    </div>
+
+                    <div class="md-master-group">Trường hợp dạy</div>
+                    <div id="menuDynamic" style="flex: 1; overflow-y: auto;">
+                        <!-- JS sẽ render các Trường hợp dạy (Lý thuyết, Thực hành) vào đây -->
+                    </div>
+
+                    <!-- Khu vực thêm mới Trường hợp dạy bằng Datalist combobox -->
+                    <div class="md-add-section">
+                        <label style="font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block;">Thêm
+                            trường hợp dạy</label>
+                        <input type="text" id="inputNewFormat" list="hinhThucSuggest" class="form-input"
+                            placeholder="VD: Đồ án tốt nghiệp...">
+                        <datalist id="hinhThucSuggest">
+                            <option value="Lý thuyết"></option>
+                            <option value="Thực hành"></option>
+                            <option value="Bài tập lớn"></option>
+                            <option value="Dạy học dự án"></option>
+                            <option value="Đồ án môn học"></option>
+                        </datalist>
+                        <button id="btnAddFormat" class="btn btn-ghost" style="width: 100%;">+ Thêm vào danh
+                            sách</button>
+                    </div>
+                </div>
+
+                <!-- CỘT PHẢI (TRÌNH SOẠN THẢO) -->
+                <div class="md-detail">
+
+                    <div class="md-detail-header">
+                        <h3 id="detailTitle">Đang cấu hình: Hệ số Lớp đông</h3>
+                        <button id="btnDeleteCurrent" class="btn btn-ghost btn-sm"
+                            style="color: var(--red-600); display: none;">✕ Xóa trường hợp này</button>
+                    </div>
+
+                    <!-- Toolbar cố định trên đầu cột phải -->
+                    <div class="formula-toolbar" id="masterToolbar">
+                        <div class="formula-group">
+                            <div class="formula-group-title">Các hệ số & Khối lượng</div>
+                            <div id="dictGroup" class="formula-group"></div>
+                        </div>
+                        <div class="formula-group">
+                            <div class="formula-group-title">Hàm tính toán</div>
+                            <button type="button" class="formula-btn-sm btn-func" data-insert="LÀM_TRÒN( , )"
+                                data-offset="-4">LÀM_TRÒN(Số, Số_lẻ)</button>
+                            <button type="button" class="formula-btn-sm btn-func" data-insert="NẾU( , , )"
+                                data-offset="-6">NẾU(Điều_kiện, Đúng, Sai)</button>
+                        </div>
+                        <div class="formula-group">
+                            <div class="formula-group-title">Phép toán logic</div>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="+">+</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="-">-</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="*">*</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="/">/</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="(">(</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert=")">)</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert=">">&gt;</button>
+                            <button type="button" class="formula-btn-sm btn-op" data-insert="<">&lt;</button>
+                        </div>
+                    </div>
+
+                    <!-- KHU VỰC THAY ĐỔI ĐỘNG (Render bằng JS) -->
+                    <div id="detailContent" class="detail-content">
+                        <!-- Nơi chứa Bảng Lớp đông hoặc Bảng 3 Giai đoạn -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="drawer-footer">
+                <button class="btn btn-ghost">Hủy bỏ</button>
+                <button class="btn btn-primary" onclick="console.log(pageState)">Lưu toàn bộ cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================
+         JAVASCRIPT - CORE LOGIC
+         ========================================== -->
+    <script>
+        // === 1. STATE MANAGEMENT ===
+        const pageState = {
+            activeMenuId: 'lop_dong', // Mặc định mở Tab Lớp đông
+            activeEditor: null,
+            dictionary: [
+                { key: 'SoTietLT', label: 'Số tiết LT' },
+                { key: 'HeSoGoc', label: 'Hệ số Gốc' },
+                { key: 'SiSo', label: 'Sĩ số Lớp' }
+            ],
+            // Data 1: Danh sách các mốc Hệ số lớp đông
+            lopDongData: [
+                { id: 'ld_1', min: 41, max: 50, formula: 'HeSoGoc * 1.1' },
+                { id: 'ld_2', min: 51, max: 999, formula: '' }
+            ],
+            // Data 2: Danh sách các Trường hợp dạy động
+            truongHopData: [
+                { id: 'th_1', name: 'Lý thuyết', g1: 'SoTietLT', g2: '1.0', g3: 'GĐ1 * GĐ2' }
+            ]
+        };
+
+        const DOM = {
+            menuDynamic: document.getElementById('menuDynamic'),
+            menuFixed: document.getElementById('menuFixed'),
+            detailTitle: document.getElementById('detailTitle'),
+            detailContent: document.getElementById('detailContent'),
+            dictGroup: document.getElementById('dictGroup'),
+            btnDeleteCurrent: document.getElementById('btnDeleteCurrent')
+        };
+
+        // === 2. INITIALIZATION ===
+        function init() {
+            renderDictionary();
+            renderMenu();
+            renderDetailView();
+            bindEvents();
+        }
+
+        // === 3. UI RENDERING ===
+        function renderDictionary() {
+            DOM.dictGroup.innerHTML = pageState.dictionary.map(item =>
+                `<button type="button" class="formula-btn-sm btn-var" data-insert="${item.key}" title="${item.label}">${item.key}</button>`
+            ).join('');
+        }
+
+        /** Render lại toàn bộ Menu trái */
+        function renderMenu() {
+            // Cập nhật trạng thái Menu Cố định (Lớp đông)
+            const isLopDongActive = pageState.activeMenuId === 'lop_dong' ? 'active' : '';
+            const hasLopDongData = pageState.lopDongData.some(x => x.formula) ? 'has-data' : '';
+            DOM.menuFixed.innerHTML = `
+                <div class="md-menu-item ${isLopDongActive} ${hasLopDongData}" data-id="lop_dong">
+                    <span>Hệ số Lớp đông</span>
+                    <div class="status-dot"></div>
+                </div>
+            `;
+
+            // Render Danh sách Trường hợp dạy
+            DOM.menuDynamic.innerHTML = pageState.truongHopData.map(item => {
+                const isActive = pageState.activeMenuId === item.id ? 'active' : '';
+                const hasData = (item.g1 || item.g2 || item.g3) ? 'has-data' : '';
+                return `
+                    <div class="md-menu-item ${isActive} ${hasData}" data-id="${item.id}">
+                        <span>${item.name}</span>
+                        <div class="status-dot"></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /** Hàm điều phối: Vẽ lại Cột phải tùy thuộc vào Tab đang chọn */
+        function renderDetailView() {
+            if (pageState.activeMenuId === 'lop_dong') {
+                DOM.detailTitle.innerText = "Đang cấu hình: Hệ số Lớp đông";
+                DOM.btnDeleteCurrent.style.display = 'none'; // Không cho xóa tab mặc định
+                renderLopDongTable();
+            } else {
+                const item = pageState.truongHopData.find(x => x.id === pageState.activeMenuId);
+                if (item) {
+                    DOM.detailTitle.innerText = `Đang cấu hình: ${item.name}`;
+                    DOM.btnDeleteCurrent.style.display = 'block'; // Cho phép xóa Trường hợp dạy
+                    renderTruongHopForm(item);
+                }
+            }
+            pageState.activeEditor = null;
+        }
+
+        /** HTML Generator: Dành riêng cho Tab Lớp đông (Đã tối ưu UX) */
+        function renderLopDongTable() {
+            let html = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
+                        Cấu hình các mốc hệ số tùy theo sĩ số lớp thực tế.
+                    </span>
+                    <button class="btn btn-ghost btn-sm" id="btnAddLopDongRow" style="color: var(--brand-800); border-color: var(--brand-800);">
+                        + Thêm mốc sĩ số
+                    </button>
+                </div>`;
+
+            if (pageState.lopDongData.length === 0) {
+                html += `<div style="text-align: center; padding: 40px; color: var(--text-muted); border: 1px dashed var(--border-strong); border-radius: 6px;">
+                    Chưa có mốc sĩ số nào được cấu hình.
+                 </div>`;
+            }
+
+            pageState.lopDongData.forEach((row, index) => {
+                html += `
+                <div class="ld-card" data-rowid="${row.id}">
+                    <!-- Header phân tách rõ ràng -->
+                    <div class="ld-card-header">
+                        <span class="ld-card-title">MỐC SĨ SỐ ${index + 1}</span>
+                        <button class="btn btn-ghost btn-sm btn-delete-row" style="color: var(--red-600); border:none; height: 24px;">✕ Xóa mốc này</button>
+                    </div>
+                    
+                    <div class="ld-card-body">
+                        <!-- Điều kiện (Ngôn ngữ tự nhiên) -->
+                        <div class="ld-condition-phrase">
+                            <span>Áp dụng cho lớp có sĩ số từ</span>
+                            <input type="number" class="ld-input-number dt-sync" data-field="min" placeholder="VD: 41" value="${row.min}">
+                            <span>đến</span>
+                            <input type="number" class="ld-input-number dt-sync" data-field="max" placeholder="VD: 50" value="${row.max}">
+                            <span>sinh viên.</span>
+                        </div>
+
+                        <!-- Vùng nhập công thức -->
+                        <div>
+                            <label style="font-size: 13px; font-weight: 600; margin-bottom: 6px; display:block;">Biểu thức Hệ số Lớp đông</label>
+                            <textarea class="formula-target dt-sync" data-field="formula" placeholder="Nhấp chuột vào đây và sử dụng Toolbar bên trên để gõ công thức...">${row.formula}</textarea>
+                            <div class="semantic-preview">${translateToSemantic(row.formula)}</div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            DOM.detailContent.innerHTML = html;
+        }
+
+        /** HTML Generator: Dành riêng cho 3 Giai đoạn của Trường hợp dạy */
+        function renderTruongHopForm(data) {
+            DOM.detailContent.innerHTML = `
+                <div class="editor-block">
+                    <span class="editor-label">Giai đoạn 1: Điều chỉnh đầu vào</span>
+                    <span class="editor-desc">Quy đổi hoặc lọc số tiết ban đầu.</span>
+                    <textarea class="formula-target dt-sync" data-field="g1">${data.g1}</textarea>
+                    <div class="semantic-preview">${translateToSemantic(data.g1)}</div>
+                </div>
+                <div class="editor-block">
+                    <span class="editor-label">Giai đoạn 2: Hệ số nhân tổng</span>
+                    <span class="editor-desc">Hệ số áp dụng. Mặc định 1.0</span>
+                    <textarea class="formula-target dt-sync" data-field="g2">${data.g2}</textarea>
+                    <div class="semantic-preview">${translateToSemantic(data.g2)}</div>
+                </div>
+                <div class="editor-block">
+                    <span class="editor-label">Giai đoạn 3: Quy đổi chuẩn</span>
+                    <span class="editor-desc">Kết quả cuối cùng.</span>
+                    <textarea class="formula-target dt-sync" data-field="g3">${data.g3}</textarea>
+                    <div class="semantic-preview">${translateToSemantic(data.g3)}</div>
+                </div>
+            `;
+        }
+
+        // === 4. TRANSLATION CORE ===
+        function translateToSemantic(rawString) {
+            if (!rawString) return "<em>(Chưa có công thức)</em>";
+            let result = rawString;
+            pageState.dictionary.forEach(dict => {
+                const regex = new RegExp('\\b' + dict.key + '\\b', 'g');
+                result = result.replace(regex, `[${dict.label}]`);
+            });
+            return result;
+        }
+
+        function updatePreviewEl(editorEl) {
+            const pv = editorEl.nextElementSibling;
+            if (pv && pv.classList.contains('semantic-preview')) {
+                pv.innerHTML = translateToSemantic(editorEl.value);
+            }
+        }
+
+        // === 5. EVENT DELEGATION BINDING ===
+        function bindEvents() {
+
+            // --- 5.1. MENU NAVIGATION ---
+            document.querySelector('.md-master').addEventListener('click', (e) => {
+                const item = e.target.closest('.md-menu-item');
+                if (item) {
+                    pageState.activeMenuId = item.dataset.id;
+                    renderMenu();
+                    renderDetailView();
+                }
+            });
+
+            // --- 5.2. THÊM TRƯỜNG HỢP DẠY MỚI ---
+            document.getElementById('btnAddFormat').addEventListener('click', () => {
+                const input = document.getElementById('inputNewFormat');
+                const val = input.value.trim();
+                if (!val) return alert("Vui lòng nhập tên hình thức dạy!");
+
+                // Tránh trùng lặp
+                if (pageState.truongHopData.some(x => x.name.toLowerCase() === val.toLowerCase())) {
+                    return alert("Trường hợp này đã tồn tại!");
+                }
+
+                const newId = 'th_' + Date.now();
+                pageState.truongHopData.push({ id: newId, name: val, g1: '', g2: '', g3: '' });
+
+                input.value = '';
+                pageState.activeMenuId = newId; // Chuyển sang tab mới luôn
+                renderMenu();
+                renderDetailView();
+            });
+
+            // --- 5.3. XÓA TRƯỜNG HỢP DẠY ---
+            DOM.btnDeleteCurrent.addEventListener('click', () => {
+                if (confirm("Bạn có chắc chắn muốn xóa Trường hợp dạy này? Toàn bộ công thức sẽ bị mất.")) {
+                    pageState.truongHopData = pageState.truongHopData.filter(x => x.id !== pageState.activeMenuId);
+                    pageState.activeMenuId = 'lop_dong'; // Bật về tab mặc định
+                    renderMenu();
+                    renderDetailView();
+                }
+            });
+
+            // --- 5.4. ĐỒNG BỘ DỮ LIỆU TỪ EDITOR VÀO STATE (DATA BINDING) ---
+            DOM.detailContent.addEventListener('input', (e) => {
+                const el = e.target;
+                if (!el.classList.contains('dt-sync')) return;
+
+                const field = el.dataset.field; // g1, min, formula...
+                const val = el.value;
+
+                if (pageState.activeMenuId === 'lop_dong') {
+                    // Cập nhật mảng Lớp đông
+                    const rowId = el.closest('.row-lop-dong').dataset.rowid;
+                    const row = pageState.lopDongData.find(x => x.id === rowId);
+                    if (row) row[field] = val;
+                } else {
+                    // Cập nhật mảng Trường hợp
+                    const th = pageState.truongHopData.find(x => x.id === pageState.activeMenuId);
+                    if (th) th[field] = val;
+                }
+
+                if (el.classList.contains('formula-target')) {
+                    updatePreviewEl(el);
+                }
+
+                // Render lại Menu để cập nhật chấm xanh trạng thái
+                renderMenu();
+            });
+
+            // --- 5.5. TRACKING CON TRỎ CHUỘT CHO TOOLBAR ---
+            DOM.detailContent.addEventListener('focusin', (e) => {
+                if (e.target.classList.contains('formula-target')) {
+                    pageState.activeEditor = e.target;
+                }
+            });
+
+            // --- 5.6. BẤM NÚT TRÊN TOOLBAR CHÈN VÀO EDITOR ---
+            document.getElementById('masterToolbar').addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-insert]');
+                if (!btn) return;
+
+                if (!pageState.activeEditor) {
+                    return alert("Vui lòng nhấp chuột vào một ô cấu hình bên dưới trước khi chèn!");
+                }
+
+                const textToInsert = btn.dataset.insert;
+                const offset = parseInt(btn.dataset.offset || '0', 10);
+
+                const editor = pageState.activeEditor;
+                const startPos = editor.selectionStart;
+                const endPos = editor.selectionEnd;
+
+                editor.value = editor.value.substring(0, startPos) + textToInsert + editor.value.substring(endPos);
+
+                // Bắn event input để kích hoạt hàm Data Binding (5.4)
+                editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+                const newPos = startPos + textToInsert.length + offset;
+                editor.focus();
+                editor.setSelectionRange(newPos, newPos);
+            });
+
+            // --- 5.7. THÊM / XÓA DÒNG LỚP ĐÔNG ---
+            DOM.detailContent.addEventListener('click', (e) => {
+                // Thêm dòng mới
+                if (e.target.id === 'btnAddLopDongRow') {
+                    pageState.lopDongData.push({ id: 'ld_' + Date.now(), min: '', max: '', formula: '' });
+                    renderDetailView();
+                }
+                // Xóa dòng
+                if (e.target.classList.contains('btn-delete-row')) {
+                    if (!confirm("Xóa mốc sĩ số này?")) return;
+                    const rowId = e.target.closest('.row-lop-dong').dataset.rowid;
+                    pageState.lopDongData = pageState.lopDongData.filter(x => x.id !== rowId);
+                    renderMenu();
+                    renderDetailView();
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+
+</html>

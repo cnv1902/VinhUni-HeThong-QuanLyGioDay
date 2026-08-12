@@ -1,0 +1,544 @@
+/* === GIỮ NGUYÊN BẢNG MÀU CHUẨN === */
+:root {
+    --brand-800: #0055AF;
+    --brand-700: #1568C4;
+    --brand-900: #003D82;
+    --teal-600: #0E7C7B;
+    --teal-700: #0A5F5E;
+    --teal-50: #E6F4F3;
+    --bg-page: #EEF1F4;
+    --bg-panel: #FFFFFF;
+    --bg-subtle: #F4F6F8;
+    --bg-subtle-2: #EAEDF0;
+    --border: #DCE3E9;
+    --border-strong: #C3CDD5;
+    --text-primary: #182430;
+    --text-secondary: #5B6B78;
+    --text-muted: #96A3AD;
+    --red-600: #B23A2E;
+}
+
+body {
+    margin: 0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+/* Buttons */
+.btn {
+    height: 32px;
+    padding: 0 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: inherit;
+    font-size: 13px;
+}
+
+.btn-primary {
+    background: var(--brand-800);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background: var(--brand-700);
+}
+
+.btn-ghost {
+    background: var(--bg-panel);
+    border-color: var(--border-strong);
+    color: var(--text-primary);
+}
+
+.btn-ghost:hover {
+    background: var(--bg-subtle);
+}
+
+.btn-sm {
+    height: 26px;
+    padding: 0 10px;
+    font-size: 12px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.icon-btn:hover {
+    background: transparent;
+    color: var(--red-600);
+}
+
+/* Drawer Master-Detail */
+.drawer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(24, 36, 48, 0.4);
+    display: flex;
+    justify-content: flex-end;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.drawer-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.drawer-panel {
+    width: 90vw;
+    max-width: 1300px;
+    background: var(--bg-panel);
+    border-left: 1px solid var(--border-strong);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.drawer-overlay.active .drawer-panel {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.drawer-header h2 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.drawer-footer {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-subtle);
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: center;
+}
+
+.md-container {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* CỘT TRÁI (MASTER) */
+.md-master {
+    width: 280px;
+    border-right: 1px solid var(--border);
+    background: var(--bg-subtle);
+    display: flex;
+    flex-direction: column;
+}
+
+.md-master-group {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    padding: 16px 16px 8px 16px;
+}
+
+.md-menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    font-weight: 400;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.1s;
+    position: relative;
+}
+
+.md-menu-item .btn-delete-case {
+    color: var(--red-600);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    display: none;
+}
+
+.md-menu-item:hover .btn-delete-case {
+    display: inline-block;
+}
+
+.md-menu-item:hover {
+    background: var(--bg-subtle-2);
+}
+
+.md-menu-item.active {
+    background: var(--bg-panel);
+    border-left-color: var(--teal-600);
+    color: var(--teal-700);
+}
+
+.md-menu-item .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+}
+
+.md-menu-item.has-data .status-dot {
+    background: var(--teal-600);
+}
+
+/* Khối thêm động Cột trái */
+.md-add-section {
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    background: var(--bg-subtle-2);
+    margin-top: auto;
+}
+
+#inputNewFormat {
+    margin-bottom: 8px;
+}
+
+/* CỘT PHẢI (DETAIL) */
+.md-detail {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-panel);
+    position: relative;
+    overflow: hidden;
+}
+
+.md-detail-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.md-detail-header h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--brand-800);
+}
+
+/* Toolbar */
+.formula-toolbar {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.formula-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+}
+
+.formula-group-title {
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    width: 140px;
+    flex-shrink: 0;
+    text-transform: uppercase;
+}
+
+.formula-btn-sm {
+    height: 28px;
+    padding: 0 8px;
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-op {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    color: var(--text-primary);
+}
+
+.btn-op:hover {
+    background: var(--bg-subtle-2);
+}
+
+.btn-func {
+    background: var(--bg-panel);
+    border: 1px solid var(--text-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.btn-func:hover {
+    background: var(--bg-subtle-2);
+}
+
+.btn-var {
+    border: 1px solid var(--teal-600);
+    color: var(--teal-700);
+    background: var(--teal-50);
+}
+
+.btn-var:hover {
+    background: var(--bg-panel);
+}
+
+/* Vùng nội dung Editor */
+.detail-content {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* 1. Style cho Editor 3 giai đoạn */
+.editor-block {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px;
+    background: var(--bg-subtle-2);
+}
+
+.editor-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.editor-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+/* 2. Style cho Bảng hệ số lớp đông */
+.row-lop-dong {
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: var(--bg-panel);
+}
+
+.row-header {
+    display: flex;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.input-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.input-group label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* Core Input Formula */
+.formula-target {
+    width: 100%;
+    height: 34px;
+    min-height: 34px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-strong);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+    line-height: 1.5;
+    overflow-y: hidden;
+}
+
+.formula-target:focus {
+    border-color: var(--teal-600);
+    box-shadow: 0 0 0 3px var(--teal-50);
+}
+
+.semantic-preview {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 4px;
+    background: var(--bg-panel);
+    border: 1px dashed var(--border-strong);
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-height: 20px;
+    word-wrap: break-word;
+}
+
+/* --- UI TỐI ƯU CHO HỆ SỐ LỚP ĐÔNG --- */
+.ld-card {
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    margin-bottom: 20px;
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.ld-card-header {
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ld-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--brand-800);
+}
+
+.ld-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Biểu mẫu câu văn tự nhiên */
+.ld-condition-phrase {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-primary);
+    background: var(--teal-50);
+    /* Highlight nhẹ vùng điều kiện */
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: 1px dashed var(--teal-600);
+}
+
+.ld-input-number {
+    width: 80px;
+    height: 32px;
+    padding: 0 8px;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    text-align: center;
+    outline: none;
+}
+
+.ld-input-number:focus {
+    border-color: var(--teal-600);
+    box-shadow: 0 0 0 3px var(--teal-50);
+}
+
+/* =========================================
+   COMPACT GRID LAYOUT (HỆ SỐ LỚP ĐÔNG)
+========================================= */
+.ld-grid-container {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border-strong);
+    border-radius: 6px;
+    background: var(--bg-panel);
+    /* Loại bỏ padding dày cộp */
+}
+
+.ld-grid-header {
+    display: grid;
+    grid-template-columns: 100px 100px 1fr 32px;
+    gap: 12px;
+    padding: 12px 16px;
+    background: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-strong);
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-primary);
+    text-transform: uppercase;
+}
+
+.ld-grid-row {
+    display: grid;
+    grid-template-columns: 100px 100px 1fr 32px;
+    gap: 12px;
+    align-items: start;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    flex-shrink: 0; /* Ngăn trình duyệt bóp méo dòng khi thu nhỏ */
+}
+
+.ld-grid-row:last-child {
+    border-bottom: none;
+}
+
+.ld-grid-row .btn-delete-row {
+    align-self: flex-start;
+    margin-top: 0px;
+    color: var(--text-secondary);
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.ld-grid-row .btn-delete-row:hover {
+    background: transparent;
+    color: var(--red-600);
+}
