@@ -141,7 +141,7 @@ async function initFormModal() {
       tagHinhThucHoc = new TagInput('#dsHinhThucHocContainer', {
         data: tagData,
         fieldName: 'DsMaHTHoc',
-        placeholder: 'Gõ để tìm Hình thức học...'
+        placeholder: 'Gõ để tìm Hình thức học...'  
       });
 
       const formEl = document.getElementById('formNhomCongThuc');

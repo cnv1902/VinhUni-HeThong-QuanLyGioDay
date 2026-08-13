@@ -42,13 +42,31 @@
 
 
 
-<div class="quick-row" style="display: flex; justify-content: space-between; align-items: center;">
-  <div class="search-box">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M21 21l-4.3-4.3" />
-    </svg>
-    <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
+<div class="quick-row" style="display: flex; justify-content: space-between; align-items: flex-end;">
+  <div class="quick-actions">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7" />
+        <path d="M21 21l-4.3-4.3" />
+      </svg>
+      <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
+    </div>
+
+    <button class="btn btn-primary" id="btnToggleBulkUpdate" type="button" aria-expanded="false">
+      Cập nhật hàng loạt
+    </button>
+  </div>
+
+  <div class="bulk-update-controls" id="bulkUpdatePanel" hidden>
+    <div class="bulk-field">
+      <label>Hình thức học</label>
+      <div id="bulkHinhThucHocContainer"></div>
+    </div>
+
+    <div class="bulk-field">
+      <label>Hình thức dạy</label>
+      <div id="bulkHinhThucDayContainer"></div>
+    </div>
   </div>
 
   <button class="btn btn-primary" id="btnSaveChanges" style="display: none; background-color: var(--teal-600); border-color: var(--teal-600);">
@@ -68,6 +86,7 @@
 {% block scripts %}
 <script src="/static/js/components/tableConfig.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/components/datatable.js?v={{ CACHE_BUSTER() }}"></script>
+<script src="/static/js/components/combo_box.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/api/lopHocPhanApi.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/pages/quan_ly_nhom_lop_hoc_phan.js?v={{ CACHE_BUSTER() }}"></script>
 {% endblock %}

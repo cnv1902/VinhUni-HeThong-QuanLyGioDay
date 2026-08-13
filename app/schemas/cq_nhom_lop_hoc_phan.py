@@ -42,3 +42,7 @@ class CQNhomLopUpdateItem(BaseModel):
 class CQNhomLopBulkUpdate(BaseModel):
     TenBang: str
     items: List[CQNhomLopUpdateItem]
+
+class CQNhomLopBulkUpdateResponse(RoundedFloatBaseModel):
+    message: str
+    updated_rows: List[Dict[str, Any]]

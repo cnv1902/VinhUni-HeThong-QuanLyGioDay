@@ -45,6 +45,7 @@ class TagInput {
     // Focus wrapper khi click
     this.wrapper.addEventListener('click', () => {
       this.inputField.focus();
+      this.showDropdown(this.inputField.value);
     });
 
     // Bắt sự kiện gõ phím
@@ -95,6 +96,7 @@ class TagInput {
   }
 
   showDropdown(query) {
+
     const q = query.toLowerCase().trim();
     // Lọc data chưa được chọn
     const available = this.data.filter(item => 

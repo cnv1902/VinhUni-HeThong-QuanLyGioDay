@@ -1,3 +1,4 @@
+from app.core import logger
 from sqlalchemy.orm import Session
 from typing import Optional
 from typing import List, Dict, Any
@@ -58,6 +59,7 @@ def update_danh_sach(db: Session, updates_data: List[Dict[str, Any]]):
     CRUD chỉ nhận List[dict] có chứa khóa chính (MaNhomLopHP) và thực hiện gán giá trị (Explicit Assignment).
     Mọi tính toán (như SoSinhVien) phải do Service cung cấp trong dict.
     """
+    from app.core.logger import app_logger as logger
     for data in updates_data:
         ma_nhom_lop_hp = data.get("MaNhomLopHP")
         if not ma_nhom_lop_hp:
@@ -67,5 +69,12 @@ def update_danh_sach(db: Session, updates_data: List[Dict[str, Any]]):
         if db_item:
             for key, value in data.items():
                 if key != "MaNhomLopHP" and hasattr(db_item, key):
+                    
+                    logger.error(
+                        f"[DEBUG_BULK_HTHOC_CRUD] SET item={ma_nhom_lop_hp}, "
+                        f"key={key}, old={getattr(db_item, key, None)}, new={value}"
+                    )
                     setattr(db_item, key, value)
+                    
     db.commit()
+    logger.error("[DEBUG_BULK_HTHOC_CRUD] COMMIT_DONE")

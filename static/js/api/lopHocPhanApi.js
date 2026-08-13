@@ -25,6 +25,18 @@ const apiLopHocPhan = {
       console.error('Lỗi khi lấy dữ liệu danh sách:', error);
       return [];
     }
+  },
+
+  async getHinhThucHoc() {
+    const response = await fetch(`${window.API_PREFIX}/hinh-thuc-hoc/`);
+    if (!response.ok) throw new Error('Không thể lấy danh sách hình thức học');
+    return await response.json();
+  },
+
+  async getHinhThucDay() {
+    const response = await fetch(`${window.API_PREFIX}/hinh-thuc-day/`);
+    if (!response.ok) throw new Error('Không thể lấy danh sách hình thức dạy');
+    return await response.json();
   }
 };
 

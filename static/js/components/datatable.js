@@ -92,13 +92,14 @@ class DataTable {
    * @param {Function} [config.onSelectionChange] - Callback khi chọn/bỏ chọn checkbox dòng
    * @param {Function} [config.onRenderComplete] - Callback khi bảng vẽ xong (dùng để update footer)
    * @param {Function} [config.customCellRender] - Callback tùy chỉnh hiển thị ô
+   * @param {Function} [config.getCellEditorOptions] - Callback tải danh sách gợi ý khi sửa ô
    */
   constructor(config) {
     this.container = document.getElementById(config.tableId);
     this.tbody = this.container.querySelector('tbody');
     this.thead = this.container.querySelector('thead');
     this.paginationEl = document.getElementById(config.paginationId);
-
+    this.getCellEditorOptions = config.getCellEditorOptions || null;
     this.state = {
       data: [], columns: [], sortKey: null, sortDir: 1, filters: {}, search: '',
       selected: new Set(), currentPage: 1, pageSize: config.pageSize || 100,
@@ -538,7 +539,7 @@ class DataTable {
    * @param {string} rowId - Khóa chính của dòng
    * @param {string} colId - Khóa chính của cột
    */
-  startEdit(td, rowId, colId) {
+  async startEdit(td, rowId, colId) {
     const row = this.state.data.find(r => String(r.MaNhomLopHP) === String(rowId));
     const col = this.state.columns.find(c => c.MaTruong === colId);
     if (!row || !col) return;
@@ -558,8 +559,26 @@ class DataTable {
     };
 
     td.classList.add('editing');
+    let externalOptions = null;
+    if (this.getCellEditorOptions) {
+      try {
+        externalOptions = await this.getCellEditorOptions(row, col);
+      } catch (error) {
+        console.error('Không thể tải danh sách lựa chọn cho ô:', error);
+        if (typeof showToast !== 'undefined') showToast('Không thể tải danh sách lựa chọn.', true);
+      }
+    }
+
     let inputHtml;
-    if (col.KieuTruong === 'select' || col.KieuTruong === 'badge') {
+    if (Array.isArray(externalOptions)) {
+      const currentValue = String(row[col.MaTruong] ?? '');
+      const options = externalOptions.includes(currentValue)
+        ? externalOptions
+        : [currentValue, ...externalOptions].filter(Boolean);
+      inputHtml = `<select class="cell-editor">` +
+        `${options.map(o => `<option value="${esc(o)}" ${String(o) === currentValue ? 'selected' : ''}>${esc(o)}</option>`).join('')}` +
+        `</select>`;
+    } else if (col.KieuTruong === 'select' || col.KieuTruong === 'badge') {
       const listId = 'dl_' + col.MaTruong;
       const allOptions = Array.from(new Set(this.state.data.map(r => String(r[col.MaTruong] || '')))).filter(Boolean);
       inputHtml = `<input type="text" class="cell-editor" list="${listId}" value="${esc(row[col.MaTruong])}">` +
@@ -607,7 +626,7 @@ class DataTable {
       if (ev.key === 'Enter') { input.blur(); }
       else if (ev.key === 'Escape') { input.removeEventListener('blur', commit); cancel(); }
     });
-    if (col.KieuTruong === 'select' || col.KieuTruong === 'badge') {
+    if (Array.isArray(externalOptions) || col.KieuTruong === 'select' || col.KieuTruong === 'badge') {
       input.addEventListener('change', () => input.blur());
     }
   }

@@ -89,6 +89,18 @@
       background: var(--navy-700);
     }
 
+    .btn-danger {
+      background: var(--red-600);
+      border-color: var(--red-600);
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: var(--red-600);
+      border-color: var(--red-600);
+      color: #fff;
+    }
+
     .btn-teal {
       border-color: var(--teal-600);
       color: var(--teal-700);
@@ -132,6 +144,13 @@
       flex: 0 0 auto;
     }
 
+    .quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex: 0 0 auto;
+    }
+
     .search-box {
       position: relative;
       flex: 0 0 320px;
@@ -152,4 +171,35 @@
       padding-left: 32px;
     }
 
+/* Bulk controls */
+.bulk-update-controls {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex: 1;
+}
 
+.bulk-update-controls[hidden] {
+  display: none;
+}
+
+.bulk-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.bulk-field label {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.bulk-field > div {
+  min-width: 180px;
+}

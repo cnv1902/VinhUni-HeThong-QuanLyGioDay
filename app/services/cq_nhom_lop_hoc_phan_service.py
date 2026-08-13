@@ -15,6 +15,8 @@ from app.utils.string_utils import check_id_in_string_list
 from app.utils.formula_parser import parse_he_so_lop_dong, evaluate_formula_json
 import time
 import asyncio
+from app.services import hinh_thuc_hoc_service
+from app.services import hinh_thuc_day_service
 
 CACHE_PREFIX = "cache:cq_nhom_lop_hoc_phan:"
 CACHE_TTL = 3600
@@ -70,12 +72,16 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
     - Chuẩn bị dữ liệu List[dict] rồi đẩy xuống CRUD.
     """
     allowed_fields = crud_he_thong_dm_truong_duoc_su_dung.get_editable_fields(db, payload.TenBang)
-    
+
+    logger.error(f"[DEBUG_BULK_HTHOC] allowed_fields={allowed_fields}")
+    logger.error(f"[DEBUG_BULK_HTHOC] payload_items={[{'MaNhomLopHP': item.MaNhomLopHP, 'updates': item.updates} for item in payload.items]}")
+
     if not allowed_fields:
         raise BadRequestException(detail=f"Bảng {payload.TenBang} không có cấu hình cột nào được phép sửa.")
 
     final_updates = []
-
+    ten_ht_hoc_map = None
+    ten_ht_day_map = None
     # Cache bộ nhớ (RAM) tạm thời để tránh hit DB nhiều lần trong vòng lặp
     try:
         nhom_cong_thuc_list = await he_thong_nhom_cong_thuc_service.get_danh_sach(db, redis_client)
@@ -103,9 +109,20 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
         db_item = db_items_map.get(item.MaNhomLopHP)
         if not db_item:
             continue
-        hinh_thuc_hoc = getattr(db_item, "MaHTHoc")
+        hinh_thuc_hoc = (
+            item.updates.get("MaHTHoc")
+            if "MaHTHoc" in allowed_fields and "MaHTHoc" in item.updates
+            else getattr(db_item, "MaHTHoc")
+        )
+
+        hinh_thuc_day = (
+            item.updates.get("MaHTDay")
+            if "MaHTDay" in allowed_fields and "MaHTDay" in item.updates
+            else getattr(db_item, "MaHTDay")
+        )
         nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
-        if hinh_thuc_hoc:
+        if hinh_thuc_hoc is not None:
+
             for nhom_ct in nhom_cong_thuc_list:
                 ds_ma = nhom_ct.get("DsMaHTHoc", "")
                 tu_nam = nhom_ct.get("TuNam") or 0
@@ -133,6 +150,12 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             
         update_data: Dict[str, Any] = {"MaNhomLopHP": item.MaNhomLopHP}
         is_siso_changed = False
+
+        logger.error(
+            f"[DEBUG_BULK_HTHOC] START item={item.MaNhomLopHP}, "
+            f"raw_updates={item.updates}, db_MaHTHoc={getattr(db_item, 'MaHTHoc', None)}, "
+            f"db_MaHTDay={getattr(db_item, 'MaHTDay', None)}"
+        )
         
         # 2. Lọc các field được phép update
         for key, value in item.updates.items():
@@ -140,7 +163,18 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                 update_data[key] = value
                 if key in ["SiSoChuyenDoi", "SiSoDKH"]:
                     is_siso_changed = True
-                    
+            else:
+                logger.error(
+                    f"[DEBUG_BULK_HTHOC] SKIP_FIELD item={item.MaNhomLopHP}, "
+                    f"key={key}, value={value}, in_allowed={key in allowed_fields}, "
+                    f"has_attr={hasattr(db_item, key)}"
+                )
+
+        logger.error(
+            f"[DEBUG_BULK_HTHOC] AFTER_FILTER item={item.MaNhomLopHP}, "
+            f"update_data={update_data}, has_MaHTHoc={'MaHTHoc' in update_data}"
+        )
+        
         # 3. Tính toán Sĩ số nếu có thay đổi
         if is_siso_changed:
             siso_cd = int(update_data.get("SiSoChuyenDoi", getattr(db_item, "SiSoChuyenDoi")) or 0)
@@ -151,14 +185,50 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             so_sinh_vien = int(getattr(db_item, "SoSinhVien") or 0)
             
         # 4. Tính toán công thức động (Formula Engine)
-        hinh_thuc_hoc = getattr(db_item, "MaHTHoc")
-        hinh_thuc_day = getattr(db_item, "MaHTDay")
+        hinh_thuc_hoc = update_data.get("MaHTHoc", getattr(db_item, "MaHTHoc"))
+        hinh_thuc_day = update_data.get("MaHTDay", getattr(db_item, "MaHTDay"))
+        if hinh_thuc_hoc is not None:
+            hinh_thuc_hoc = int(hinh_thuc_hoc)
+
+        if hinh_thuc_day is not None:
+            hinh_thuc_day = int(hinh_thuc_day)
+
+        if "MaHTHoc" in update_data and hinh_thuc_hoc is not None:
+            if ten_ht_hoc_map is None:
+                try:
+                    hinh_thuc_hoc_list = await hinh_thuc_hoc_service.get_danh_sach(db, redis_client)
+                    ten_ht_hoc_map = {
+                        int(item["MaHTHoc"]): item.get("TenHTHoc")
+                        for item in hinh_thuc_hoc_list
+                        if item.get("MaHTHoc") is not None
+                    }
+                except Exception as e:
+                    logger.error(f"Lỗi load Hình thức học Cache: {e}")
+                    ten_ht_hoc_map = {}
+
+            update_data["TenHTHoc"] = ten_ht_hoc_map.get(hinh_thuc_hoc)
+
+        if "MaHTDay" in update_data and hinh_thuc_day is not None:
+            if ten_ht_day_map is None:
+                try:
+                    hinh_thuc_day_list = await hinh_thuc_day_service.get_danh_sach(db, redis_client)
+                    ten_ht_day_map = {
+                        int(item["MaHTDay"]): item.get("TenHTDay")
+                        for item in hinh_thuc_day_list
+                        if item.get("MaHTDay") is not None
+                    }
+                except Exception as e:
+                    logger.error(f"Lỗi load Hình thức dạy Cache: {e}")
+                    ten_ht_day_map = {}
+
+            update_data["TenHTDay"] = ten_ht_day_map.get(hinh_thuc_day)
+
         nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
         id_he_dao_tao = getattr(db_item, "HeSo_HeDaoTao")
         if id_he_dao_tao is not None:
             id_he_dao_tao = int(id_he_dao_tao)
         
-        if hinh_thuc_hoc and hinh_thuc_day:
+        if hinh_thuc_hoc is not None and hinh_thuc_day is not None:
             # 4.1. Tìm Nhóm Công Thức (Duyệt trên RAM - Dict)
             id_nhom_ct = None
             for nhom_ct in nhom_cong_thuc_list:
@@ -180,7 +250,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             if id_nhom_ct:
                 # 4.2. Tìm Trường Hợp Công Thức (Dùng Cache RAM - Không còn await)
                 th_list = local_truong_hop_cache.get(id_nhom_ct, [])
-                truong_hop_ct = next((th for th in th_list if th.get("MaHTDay") == hinh_thuc_day), None)
+                truong_hop_ct = next((th for th in th_list if int(th.get("MaHTDay") or 0) == hinh_thuc_day), None)
                 
                 if truong_hop_ct:
                     # 4.3. Tính Hệ số lớp đông
@@ -213,9 +283,16 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                             if hasattr(db_item, k):
                                 update_data[k] = v
         
+        logger.error(
+            f"[DEBUG_BULK_HTHOC] BEFORE_APPEND item={item.MaNhomLopHP}, "
+            f"len_update_data={len(update_data)}, update_data={update_data}"
+        )
         if len(update_data) > 1:
             final_updates.append(update_data)
+        else:
+            logger.error(f"[DEBUG_BULK_HTHOC] NOT_APPENDED item={item.MaNhomLopHP}, update_data={update_data}")
 
+    logger.error(f"[DEBUG_BULK_HTHOC] FINAL_UPDATES={final_updates}")
     if final_updates:
         # 5. Đẩy xuống CRUD chỉ thực hiện DB Update
         curd_cq_nhom_lop_hoc_phan.update_danh_sach(db, final_updates)

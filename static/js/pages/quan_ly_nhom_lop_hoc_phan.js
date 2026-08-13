@@ -1,19 +1,27 @@
 // ==========================================
 // QUẢN LÝ NHÓM LỚP HỌC PHẦN (Page-Level JS)
 // ==========================================
+let cbBulkHinhThucHoc = null;
+let cbBulkHinhThucDay = null;
+let isBulkPanelOpen = false;
+let isBulkComboboxLoaded = false;
+let hinhThucHocOptions = null;
+let hinhThucDayOptions = null;
+let bulkMaHTHoc = null;
+let bulkMaHTDay = null;
 let myTable;
 let modifiedRows = {};
 let allowLeavePage = false;
 let originalRowsById = {};
 
 function hasUnsavedChanges() {
-  return Object.keys(modifiedRows).length > 0;
+  return Object.keys(modifiedRows).length > 0 || bulkMaHTHoc !== null || bulkMaHTDay !== null;
 }
 
 function updateSaveButtonVisibility() {
   const btnSave = document.getElementById('btnSaveChanges');
   if (!btnSave) return;
-  btnSave.style.display = Object.keys(modifiedRows).length === 0 ? 'none' : 'inline-flex';
+  btnSave.style.display = hasUnsavedChanges() ? 'inline-flex' : 'none';
 }
 
 function valuesAreSame(a, b) {
@@ -24,6 +32,92 @@ function snapshotRows(rows) {
   originalRowsById = {};
   rows.forEach(row => {
     originalRowsById[row.MaNhomLopHP] = { ...row };
+  });
+}
+
+async function initBulkComboboxes() {
+  const [hinhThucHocData, hinhThucDayData] = await Promise.all([
+    ensureHinhThucHocOptions(),
+    ensureHinhThucDayOptions()
+  ]);
+
+  cbBulkHinhThucHoc = new ComboBox('#bulkHinhThucHocContainer', {
+    data: [
+      { id: '__NO_CHANGE__', text: 'Không thay đổi' },
+      ...hinhThucHocData
+    ],
+    defaultValue: '__NO_CHANGE__',
+    fieldName: 'bulkMaHTHoc',
+    placeholder: 'Không thay đổi'
+  });
+
+  cbBulkHinhThucDay = new ComboBox('#bulkHinhThucDayContainer', {
+    data: [
+      { id: '__NO_CHANGE__', text: 'Không thay đổi' },
+      ...hinhThucDayData
+    ],
+    defaultValue: '__NO_CHANGE__',
+    fieldName: 'bulkMaHTDay',
+    placeholder: 'Không thay đổi'
+  });
+
+  wireBulkCombo(cbBulkHinhThucHoc, value => {
+    bulkMaHTHoc = value;
+  });
+
+  wireBulkCombo(cbBulkHinhThucDay, value => {
+    bulkMaHTDay = value;
+  });
+}
+
+async function ensureHinhThucHocOptions() {
+  if (hinhThucHocOptions) return hinhThucHocOptions;
+
+  const data = await apiLopHocPhan.getHinhThucHoc();
+  hinhThucHocOptions = data.map(item => ({
+    id: item.MaHTHoc,
+    text: item.TenHTHoc
+  }));
+
+  return hinhThucHocOptions;
+}
+
+async function ensureHinhThucDayOptions() {
+  if (hinhThucDayOptions) return hinhThucDayOptions;
+
+  const data = await apiLopHocPhan.getHinhThucDay();
+  hinhThucDayOptions = data.map(item => ({
+    id: item.MaHTDay,
+    text: item.TenHTDay
+  }));
+
+  return hinhThucDayOptions;
+}
+
+async function ensureBulkComboboxesLoaded() {
+  if (isBulkComboboxLoaded) return;
+
+  await initBulkComboboxes();
+  isBulkComboboxLoaded = true;
+}
+
+function wireBulkCombo(combo, setter) {
+  if (!combo) return;
+
+  const originalSetValue = combo.setValue.bind(combo);
+
+  combo.setValue = (id) => {
+    originalSetValue(id);
+    const selectedValue = combo.getValue();
+    setter(selectedValue === '__NO_CHANGE__' ? null : selectedValue);
+    updateSaveButtonVisibility();
+  };
+
+  combo.inputField.addEventListener('input', () => {
+    if (combo.inputField.value.trim() === '') {
+      combo.setValue('__NO_CHANGE__');
+      updateSaveButtonVisibility();
+    }
   });
 }
 
@@ -66,9 +160,54 @@ async function init() {
         }
         return null; // Trả về null để datatable dùng cách hiển thị mặc định
       },
+      getCellEditorOptions: async (row, col) => {
+        if (col.MaTruong === 'TenHTHoc') {
+          const options = await ensureHinhThucHocOptions();
+          return options.map(item => item.text);
+        }
+
+        if (col.MaTruong === 'TenHTDay') {
+          const options = await ensureHinhThucDayOptions();
+          return options.map(item => item.text);
+        }
+
+        return null;
+      },
       onRowDirty: (row, key, val) => {
         const rowId = row.MaNhomLopHP;
         const originalRow = originalRowsById[rowId] || {};
+
+        if (key === 'TenHTHoc') {
+          const matched = hinhThucHocOptions?.find(item => item.text === val);
+          if (!matched) {
+            row.TenHTHoc = originalRow.TenHTHoc;
+            row._dirty = Boolean(modifiedRows[rowId]);
+            if (typeof showToast !== 'undefined') showToast('Vui lòng chọn hình thức học trong danh sách.', true);
+            updateSaveButtonVisibility();
+            return;
+          }
+
+          row.TenHTHoc = matched.text;
+          row.MaHTHoc = matched.id;
+          key = 'MaHTHoc';
+          val = matched.id;
+        }
+
+        if (key === 'TenHTDay') {
+          const matched = hinhThucDayOptions?.find(item => item.text === val);
+          if (!matched) {
+            row.TenHTDay = originalRow.TenHTDay;
+            row._dirty = Boolean(modifiedRows[rowId]);
+            if (typeof showToast !== 'undefined') showToast('Vui lòng chọn hình thức dạy trong danh sách.', true);
+            updateSaveButtonVisibility();
+            return;
+          }
+
+          row.TenHTDay = matched.text;
+          row.MaHTDay = matched.id;
+          key = 'MaHTDay';
+          val = matched.id;
+        }
 
         if (valuesAreSame(originalRow[key], val)) {
           if (modifiedRows[rowId]) {
@@ -112,7 +251,6 @@ async function init() {
     });
 
     myTable.setColumns(colsConfig, rawColsConfig);
-
     bindStaticEvents();
   } catch (error) {
     console.error("Lỗi khi tải cấu hình cột:", error);
@@ -154,7 +292,7 @@ window.addEventListener('ContextReady', (e) => {
 // Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
 window.addEventListener('ContextChanged', (e) => {
   const hoc_ky = e.detail;
-  if (Object.keys(modifiedRows).length > 0) {
+  if (hasUnsavedChanges()) {
     if (typeof confirmModal !== 'undefined') {
       confirmModal.show("Có dữ liệu chưa lưu. Việc đổi học kỳ sẽ làm mất thay đổi. Tiếp tục?", "Cảnh báo", "Tiếp tục").then(isOk => {
         if (isOk) {
@@ -249,6 +387,32 @@ function bindStaticEvents() {
     });
   }
 
+  const btnToggleBulkUpdate = document.getElementById('btnToggleBulkUpdate');
+  const bulkUpdatePanel = document.getElementById('bulkUpdatePanel');
+  if (btnToggleBulkUpdate && bulkUpdatePanel) {
+    btnToggleBulkUpdate.addEventListener('click', async () => {
+      isBulkPanelOpen = !isBulkPanelOpen;
+
+      bulkUpdatePanel.hidden = !isBulkPanelOpen;
+      btnToggleBulkUpdate.setAttribute('aria-expanded', String(isBulkPanelOpen));
+      btnToggleBulkUpdate.textContent = isBulkPanelOpen ? 'Đóng cập nhật hàng loạt' : 'Cập nhật hàng loạt';
+      btnToggleBulkUpdate.classList.toggle('btn-primary', !isBulkPanelOpen);
+      btnToggleBulkUpdate.classList.toggle('btn-danger', isBulkPanelOpen);
+
+      if (isBulkPanelOpen) {
+        await ensureBulkComboboxesLoaded();
+      } else {
+        bulkMaHTHoc = null;
+        bulkMaHTDay = null;
+
+        if (cbBulkHinhThucHoc) cbBulkHinhThucHoc.setValue('__NO_CHANGE__');
+        if (cbBulkHinhThucDay) cbBulkHinhThucDay.setValue('__NO_CHANGE__');
+
+        updateSaveButtonVisibility();
+      }
+    });
+  }
+
   window.addEventListener('beforeunload', (event) => {
     if (allowLeavePage) return;
     if (!hasUnsavedChanges()) return;
@@ -296,14 +460,27 @@ function bindStaticEvents() {
 
   // Sự kiện Lưu thay đổi
   const btnSaveChanges = document.getElementById('btnSaveChanges');
-  if (btnSaveChanges) {
-    btnSaveChanges.addEventListener('click', async () => {
-      console.log("Dang goij click luu thay doi")
-      const keys = Object.keys(modifiedRows);
-      if (keys.length === 0) return;
+    if (btnSaveChanges) {
+      btnSaveChanges.addEventListener('click', async () => {
+      const editedCount = Object.keys(modifiedRows).length;
+      const hasBulkChange = bulkMaHTHoc !== null || bulkMaHTDay !== null;
+
+      if (editedCount === 0 && !hasBulkChange) return;
+
+      const visibleRows = myTable.getRows().filter(row => row.XacNhan !== true);
+      const affectedCount = hasBulkChange ? visibleRows.length : editedCount;
+
+      if (hasBulkChange && affectedCount === 0) {
+        if (typeof showToast !== 'undefined') showToast('Không có bản ghi đang hiển thị có thể cập nhật.', true);
+        return;
+      }
+
+      const message = hasBulkChange
+        ? `Bạn có chắc chắn muốn lưu thay đổi cho ${affectedCount} bản ghi đang hiển thị?`
+        : `Bạn có chắc chắn muốn lưu ${editedCount} thay đổi?`;
 
       if (typeof confirmModal !== 'undefined') {
-        confirmModal.show("Bạn có chắc chắn muốn lưu " + keys.length + " thay đổi?", "Xác nhận Lưu").then(async isOk => {
+        confirmModal.show(message, "Xác nhận Lưu").then(async isOk => {
           if (isOk) {
             await submitSaveChanges();
           }
@@ -311,6 +488,7 @@ function bindStaticEvents() {
       }
     });
   }
+
   history.pushState({ guardUnsaved: true }, '', window.location.href);
 
   window.addEventListener('popstate', async () => {
@@ -345,12 +523,39 @@ async function submitSaveChanges() {
   btnSaveChanges.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...';
 
   try {
+    const hasBulkChange = bulkMaHTHoc !== null || bulkMaHTDay !== null;
+    const sourceRows = hasBulkChange
+      ? myTable.getRows().filter(row => row.XacNhan !== true)
+      : Object.keys(modifiedRows).map(id => ({ MaNhomLopHP: id }));
+
+    const items = sourceRows.map(row => {
+      const rowId = String(row.MaNhomLopHP);
+      const updates = { ...(modifiedRows[rowId] || {}) };
+
+      if (bulkMaHTHoc !== null) {
+        updates.MaHTHoc = bulkMaHTHoc;
+      }
+
+      if (bulkMaHTDay !== null) {
+        updates.MaHTDay = bulkMaHTDay;
+      }
+
+      return {
+        MaNhomLopHP: rowId,
+        updates
+      };
+    }).filter(item => Object.keys(item.updates).length > 0);
+
+    if (items.length === 0) {
+      btnSaveChanges.disabled = false;
+      btnSaveChanges.innerHTML = originalHTML;
+      updateSaveButtonVisibility();
+      return;
+    }
+
     const payload = {
       TenBang: "CQ_NhomLopHocPhan",
-      items: Object.keys(modifiedRows).map(id => ({
-        MaNhomLopHP: id,
-        updates: modifiedRows[id]
-      }))
+      items
     };
 
     const res = await fetch('/api/v1/cq-nhom-lop-hoc-phan/bulk-update', {
@@ -363,6 +568,10 @@ async function submitSaveChanges() {
       const data = await res.json();
       if (typeof showToast !== 'undefined') showToast("Đã lưu thay đổi thành công!");
       modifiedRows = {};
+      bulkMaHTHoc = null;
+      bulkMaHTDay = null;
+      if (cbBulkHinhThucHoc) cbBulkHinhThucHoc.setValue('__NO_CHANGE__');
+      if (cbBulkHinhThucDay) cbBulkHinhThucDay.setValue('__NO_CHANGE__');
       btnSaveChanges.disabled = false;
       btnSaveChanges.innerHTML = originalHTML;
 
