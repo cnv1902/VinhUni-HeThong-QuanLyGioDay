@@ -4,15 +4,17 @@ class SemanticEditorDrawer {
         this.drawer = document.getElementById(drawerId);
 
         // --- State Management ---
-        this.activeMenuId = 'lop_dong'; // 'lop_dong' hoặc caseId
+        this.activeMenuId = null; // ID của Trường hợp công thức hoặc 'lop_dong'
         this.activeEditor = null;
 
         // Dữ liệu từ API
         this.tuDienBienSo = [];
         this.hinhThucDayData = [];
         this.truongHopData = [];
-        this.lopDongData = [];
-        this.originalData = null;
+        this.danhSachHeSoLopDong = []; // Dành cho dropdown
+        this.fullHeSoData = null; // Lazy load full JSON
+
+        this.originalData = null; // Dùng để kiểm tra dirty state
 
         this.cbHinhThucDay = null;
 
@@ -47,7 +49,13 @@ class SemanticEditorDrawer {
 
         await this.loadDrawerData(groupId);
 
-        this.activeMenuId = 'lop_dong';
+        // Mặc định chọn Tab Trường hợp công thức đầu tiên
+        if (this.truongHopData.length > 0) {
+            this.activeMenuId = this.truongHopData[0].id;
+        } else {
+            this.activeMenuId = null;
+        }
+
         this.renderMenu();
         this.renderDetailView();
 
@@ -69,16 +77,21 @@ class SemanticEditorDrawer {
 
     checkIsDirty() {
         if (!this.originalData) return false;
-        const currentSnapshot = JSON.stringify({
-            lopDong: this.lopDongData,
-            truongHop: this.truongHopData
-        });
-        return currentSnapshot !== this.originalData;
+
+        let currentSnapshot = "";
+        if (this.activeMenuId === 'lop_dong') {
+            currentSnapshot = JSON.stringify(this.fullHeSoData);
+            return currentSnapshot !== this.originalData;
+        } else {
+            currentSnapshot = JSON.stringify(this.truongHopData);
+            return currentSnapshot !== this.originalData;
+        }
     }
 
     handleClose() {
         if (this.checkIsDirty()) {
-            const isConfirm = confirm("Tab đang mở có dữ liệu thay đổi chưa được lưu. Bạn có chắc chắn muốn đóng và HỦY BỎ toàn bộ thay đổi này không?");
+            // Dùng Toast không chặn luồng được, nên đành dùng window.confirm theo mặc định, nhưng đổi câu văn 
+            const isConfirm = window.confirm("Cấu hình có thay đổi chưa được lưu. Bạn có chắc chắn đóng không?");
             if (!isConfirm) return;
         }
         this.close();
@@ -89,6 +102,7 @@ class SemanticEditorDrawer {
             this.drawer.classList.remove('active');
         }
         this.currentGroupId = null;
+        this.fullHeSoData = null; // Clear lazy load data
 
         // Mở lại cuộn trang nền
         document.body.style.overflow = '';
@@ -107,17 +121,10 @@ class SemanticEditorDrawer {
                     const dataHTD = await apiCongThuc.getHinhThucDay();
                     this.hinhThucDayData = dataHTD.data || dataHTD;
                 }
-            } else {
-                throw new Error('apiCongThuc is not defined');
             }
         } catch (err) {
-            console.warn("Không tải được từ điển biến số từ API, dùng dữ liệu mẫu:", err);
-            this.tuDienBienSo = [
-                { MaBienSo: 'SoSV', TenHienThi: 'Số SV', NhomBien: 1 },
-                { MaBienSo: 'SoTietLT', TenHienThi: 'Số tiết LT', NhomBien: 1 },
-                { MaBienSo: 'SoTietTH', TenHienThi: 'Số tiết TH', NhomBien: 1 },
-                { MaBienSo: 'HeSoLopDong', TenHienThi: 'Hệ số lớp đông', NhomBien: 2 }
-            ];
+            console.warn("Lỗi load dictionary:", err);
+            this.tuDienBienSo = [];
             this.hinhThucDayData = [];
         }
     }
@@ -125,27 +132,17 @@ class SemanticEditorDrawer {
     async loadDrawerData(groupId) {
         try {
             const apiBase = (window.API_PREFIX || '/api/v1');
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-            // 1. Fetch Lớp đông
-            const resLD = await fetch(`${apiBase}/he-so-lop-dong/nhom-cong-thuc/${groupId}`, { signal: controller.signal }).catch(e => null);
-            if (resLD && resLD.ok) {
-                const dataLD = await resLD.json();
-                this.lopDongData = (dataLD.data || dataLD).map(item => ({
-                    id: item.ID_HeSo_LD,
-                    min: item.GiaTri_Min,
-                    max: item.GiaTri_Max,
-                    formula: item.BieuThuc_HeSoLopDong || ''
-                }));
+            // Lấy danh sách rút gọn Hệ số lớp đông cho Combobox
+            const resHSDG = await fetch(`${apiBase}/he-so-lop-dong/danh-sach-don-gian`).catch(e => null);
+            if (resHSDG && resHSDG.ok) {
+                this.danhSachHeSoLopDong = await resHSDG.json();
             } else {
-                this.lopDongData = [];
+                this.danhSachHeSoLopDong = [];
             }
 
-            // 2. Fetch Trường hợp dạy
-            const resTH = await fetch(`${apiBase}/truong-hop-cong-thuc/nhom-cong-thuc/${groupId}`, { signal: controller.signal }).catch(e => null);
-            clearTimeout(timeoutId);
-
+            // Fetch Trường hợp dạy
+            const resTH = await fetch(`${apiBase}/truong-hop-cong-thuc/nhom-cong-thuc/${groupId}`).catch(e => null);
             if (resTH && resTH.ok) {
                 const dataTH = await resTH.json();
                 this.truongHopData = (dataTH.data || dataTH).map(item => {
@@ -157,26 +154,55 @@ class SemanticEditorDrawer {
                     } catch (e) {
                         console.warn("Lỗi parse BieuThuc_JSON", e);
                     }
-                    
+
                     return {
                         id: item.ID_TruongHop_CT,
                         name: item.TenHTDay || `Hình thức dạy ${item.MaHTDay}`,
                         MaHTDay: item.MaHTDay,
+                        ID_HeSo_LD: item.ID_HeSo_LD,
                         expressions: expressions
                     };
                 });
             } else {
                 this.truongHopData = [];
             }
+
+            this.originalData = JSON.stringify(this.truongHopData);
+
         } catch (e) {
             console.error("Lỗi khi fetch data cấu hình:", e);
             this.truongHopData = [];
-            this.lopDongData = [];
-        } finally {
-            this.originalData = JSON.stringify({
-                lopDong: this.lopDongData,
-                truongHop: this.truongHopData
-            });
+        }
+    }
+
+    async lazyLoadHeSoLopDong() {
+        if (this.fullHeSoData !== null) return; // Đã load
+
+        try {
+            const apiBase = (window.API_PREFIX || '/api/v1');
+            const res = await fetch(`${apiBase}/he-so-lop-dong/`);
+            if (res.ok) {
+                const data = await res.json();
+                this.fullHeSoData = data.map(item => {
+                    let rows = [];
+                    try {
+                        if (item.CauHinh_Json) {
+                            rows = JSON.parse(item.CauHinh_Json);
+                        }
+                    } catch (e) { }
+                    return {
+                        ID_HeSo_LD: item.ID_HeSo_LD,
+                        Ten_HeSo_LD: item.Ten_HeSo_LD,
+                        TrangThai: item.TrangThai,
+                        rows: rows
+                    };
+                });
+            } else {
+                this.fullHeSoData = [];
+            }
+        } catch (e) {
+            console.error(e);
+            this.fullHeSoData = [];
         }
     }
 
@@ -199,7 +225,7 @@ class SemanticEditorDrawer {
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 6px;">
                 ${grouped[groupName].map(item =>
-            `<button type="button" class="formula-btn-sm btn-var" data-insert="[${item.MaBienSo}]" title="${item.TenHienThi}">${item.TenHienThi}</button>`
+            `<button type="button" class="formula-btn-sm btn-var" data-insert="[${item.TenHienThi}]" title="${item.TenHienThi}">${item.TenHienThi}</button>`
         ).join('')}
             </div>
         `).join('');
@@ -210,11 +236,9 @@ class SemanticEditorDrawer {
 
     renderMenu() {
         const isLopDongActive = this.activeMenuId === 'lop_dong' ? 'active' : '';
-        const hasLopDongData = this.lopDongData.some(x => x.formula) ? 'has-data' : '';
         this.DOM.menuFixed.innerHTML = `
-            <div class="md-menu-item ${isLopDongActive} ${hasLopDongData}" data-id="lop_dong">
+            <div class="md-menu-item ${isLopDongActive}" data-id="lop_dong">
                 <span>Hệ số Lớp đông</span>
-                <div class="status-dot"></div>
             </div>
         `;
 
@@ -229,16 +253,26 @@ class SemanticEditorDrawer {
         }).join('');
     }
 
-    renderDetailView() {
+    async renderDetailView() {
         this.rescueToolbar();
 
         if (this.activeMenuId === 'lop_dong') {
-            this.DOM.detailTitle.innerText = "Đang cấu hình: Hệ số Lớp đông";
+            this.DOM.detailTitle.innerText = "Cấu hình Từ điển Hệ số Lớp đông";
+            await this.lazyLoadHeSoLopDong();
+            this.originalData = JSON.stringify(this.fullHeSoData);
             this.renderLopDongTable();
+        } else if (this.activeMenuId === null) {
+            this.DOM.detailTitle.innerText = "";
+            this.DOM.detailContent.innerHTML = `
+                <div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px;">
+                    Chưa có công thức nào được áp dụng.
+                </div>
+            `;
         } else {
             const item = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
             if (item) {
                 this.DOM.detailTitle.innerText = `Đang cấu hình: ${item.name}`;
+                this.originalData = JSON.stringify(this.truongHopData);
                 this.renderTruongHopForm(item);
             }
         }
@@ -246,69 +280,117 @@ class SemanticEditorDrawer {
     }
 
     rescueToolbar() {
-        // Cứu Toolbar khỏi bị phá hủy khi innerHTML của detailContent thay đổi
-        if (this.DOM.masterToolbar && this.DOM.masterToolbar.parentNode) {
+        if (this.DOM.masterToolbar) {
             this.DOM.masterToolbar.style.display = 'none';
-            // Tạm cất Toolbar ra ngoài an toàn (cùng cấp với detailContent)
-            this.DOM.detailContent.parentNode.insertBefore(this.DOM.masterToolbar, this.DOM.detailContent);
+            // Không dời DOM nữa, toolbar sẽ luôn nằm yên ở cuối .md-detail
         }
     }
 
     renderLopDongTable() {
-        let html = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
-                    Cấu hình các mốc hệ số tùy theo sĩ số lớp thực tế.
-                </span>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnAddLopDongRow" style="color: var(--brand-800); border-color: var(--brand-800);">
-                    + Thêm mốc sĩ số
-                </button>
-            </div>`;
+        let html = '';
 
-        html += `
-            <div class="ld-grid-container">
-                <div class="ld-grid-header">
-                    <div>Từ</div>
-                    <div>Đến</div>
-                    <div>Biểu thức hệ số</div>
-                    <div></div>
-                </div>`;
-
-        if (this.lopDongData.length === 0) {
+        // Thêm nút Tạo mẫu mới lên header
+        const detailTitle = document.getElementById('detailTitle');
+        if (detailTitle && detailTitle.parentNode) {
+            let headerWrapper = detailTitle.parentNode;
+            if (!headerWrapper.querySelector('#btnAddHsldGroup')) {
+                headerWrapper.style.display = 'flex';
+                headerWrapper.style.justifyContent = 'space-between';
+                headerWrapper.style.alignItems = 'center';
+                const btnHtml = `<button type="button" class="btn btn-ghost btn-sm" id="btnAddHsldGroup" style="color: var(--brand-800); border-color: var(--border-strong);">
+                                    + Tạo mẫu mới
+                                </button>`;
+                headerWrapper.insertAdjacentHTML('beforeend', btnHtml);
+            } else {
+                headerWrapper.querySelector('#btnAddHsldGroup').style.display = 'block';
+            }
+        }
+        if (!this.fullHeSoData || this.fullHeSoData.length === 0) {
             html += `<div style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 13px;">
-                Chưa có mốc sĩ số nào. Hãy nhấn "+ Thêm mốc sĩ số".
+                Chưa có mẫu hệ số lớp đông nào. Hãy tạo mẫu mới.
              </div>`;
+        } else {
+            this.fullHeSoData.forEach((group, gIndex) => {
+                html += `
+                <div class="hsld-group-block" style="margin-bottom: 24px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border);">
+                    <!-- Header -->
+                    <div style="background: var(--bg-subtle-2); border-left: 4px solid var(--brand-800); padding-top: 6px; padding-bottom: 6px; padding-left: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        ${group.Ten_HeSo_LD ?
+                        `<input type="text" class="form-input dt-sync-group hsld-title-input" data-gindex="${gIndex}" data-field="Ten_HeSo_LD" value="${group.Ten_HeSo_LD}" style="font-weight: 600; width: 250px; background: transparent; border-color: transparent; box-shadow: none; font-size: 14px;" title="Sửa tên nhóm"></input>` :
+                        `<input type="text" class="form-input dt-sync-group hsld-title-input" data-gindex="${gIndex}" data-field="Ten_HeSo_LD" value="${'Nhấp để đặt tên nhóm'}" style="width: 250px; background: transparent; border-color: transparent; box-shadow: none; font-size: 14px;" title="Sửa tên nhóm"></input>`
+                    }
+                        <div>
+                            <button type="button" class="btn btn-ghost btn-sm btn-add-hsld-row" data-gindex="${gIndex}" style="margin-right: 8px;">
+                                + Thêm mốc sĩ số
+                            </button>
+                            <button type="button" class="btn btn-ghost btn-sm btn-delete-hsld-group" data-gindex="${gIndex}" style="color: var(--red-600); border-color: transparent;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg> Xóa
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Body -->
+                    <div style="padding: 16px; padding-left: 20px; background: var(--bg-panel);">
+                        <div class="ld-grid-container" style="border: none; padding: 0;">
+                            <div class="ld-grid-header">
+                                <div>Từ</div>
+                                <div>Đến</div>
+                                <div>Biểu thức hệ số</div>
+                                <div></div>
+                            </div>`;
+
+                if (!group.rows || group.rows.length === 0) {
+                    html += `<div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 13px;">Chưa có mốc sĩ số.</div>`;
+                } else {
+                    group.rows.forEach((row, rIndex) => {
+                        html += `
+                        <div class="ld-grid-row" style="background: transparent;">
+                            <div>
+                                <input type="number" class="form-input ld-input-number dt-sync-row" data-gindex="${gIndex}" data-rindex="${rIndex}" data-field="min" value="${row.min !== null && row.min !== undefined && row.min !== '' ? row.min : ''}">
+                            </div>
+                            <div>
+                                <input type="number" class="form-input ld-input-number dt-sync-row" data-gindex="${gIndex}" data-rindex="${rIndex}" data-field="max" value="${row.max !== null && row.max !== undefined && row.max !== '' ? row.max : ''}" placeholder="∞">
+                            </div>
+                            <div>
+                                <textarea class="formula-target dt-sync-row" data-gindex="${gIndex}" data-rindex="${rIndex}" data-field="formula" placeholder="Nhấp chuột vào đây...">${row.semantic_formula || this.toSemanticText(row.formula)}</textarea>
+                                <div class="semantic-preview">${this.previewHTML(row.semantic_formula || this.toSemanticText(row.formula))}</div>
+                            </div>
+                            <button type="button" class="btn-delete-row" data-gindex="${gIndex}" data-rindex="${rIndex}" title="Xóa mốc này">&times;</button>
+                        </div>`;
+                    });
+                }
+
+                html += `
+                        </div>
+                    </div>
+                </div>`;
+            });
         }
 
-        this.lopDongData.forEach((row, index) => {
-            html += `
-            <div class="ld-grid-row" data-rowid="${row.id}">
-                <div>
-                    <input type="number" class="form-input ld-input-number dt-sync" data-field="min" value="${row.min || ''}">
-                </div>
-                <div>
-                    <input type="number" class="form-input ld-input-number dt-sync" data-field="max" value="${row.max || ''}">
-                </div>
-                <div>
-                    <textarea class="formula-target dt-sync" data-field="formula" placeholder="Nhấp chuột vào đây và sử dụng Toolbar...">${row.formula || ''}</textarea>
-                    <div class="semantic-preview">${row.semantic_formula || this.translateToSemantic(row.formula)}</div>
-                </div>
-                <button type="button" class="btn-delete-row" title="Xóa mốc này">&times;</button>
-            </div>`;
-        });
-
-        html += `</div>`; // Đóng ld-grid-container
-
-        this.rescueToolbar();
         this.DOM.detailContent.innerHTML = html;
     }
 
     renderTruongHopForm(item) {
+        // Ẩn nút tạo mẫu ở header nếu đang ở tab Trường hợp
+        const headerBtn = document.getElementById('btnAddHsldGroup');
+        if (headerBtn) headerBtn.style.display = 'none';
+
         this.rescueToolbar();
-        let html = `<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        let html = `
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; display: block;">Áp dụng Hệ số lớp đông (Tùy chọn)</label>
+                <select class="form-input dt-sync-th" data-field="ID_HeSo_LD" style="max-width: 400px; height: 32px; border-radius: 6px;">
+                    <option value="">-- Không áp dụng Hệ số lớp đông --</option>
+                    ${this.danhSachHeSoLopDong.map(opt => `
+                        <option value="${opt.ID_HeSo_LD}" ${String(item.ID_HeSo_LD) === String(opt.ID_HeSo_LD) ? 'selected' : ''}>${opt.Ten_HeSo_LD}</option>
+                    `).join('')}
+                </select>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                 <span style="font-size: 13px; font-weight: 500; color: var(--text-secondary);">
-                    Danh sách các biểu thức tính toán cho trường hợp này. Các biểu thức sẽ được thực hiện tuần tự từ trên xuống dưới.
+                    Danh sách phép tính (Thực hiện tuần tự)
                 </span>
-                <button type="button" class="btn btn-ghost btn-sm" id="btnAddTruongHopRow" style="color: var(--brand-800); border-color: var(--brand-800);">
+                <button type="button" class="btn btn-ghost btn-sm" id="btnAddTruongHopRow" style="color: var(--brand-800); border-color: var(--border-strong);">
                     + Thêm dòng phép tính
                 </button>
             </div>`;
@@ -322,15 +404,15 @@ class SemanticEditorDrawer {
         (item.expressions || []).forEach((expr, index) => {
             html += `
             <div class="ld-card" data-index="${index}">
-                <div class="ld-card-header">
+                <div class="ld-card-header" style="background: var(--bg-subtle-2);">
                     <span class="ld-card-title">PHÉP TÍNH ${index + 1}</span>
                     <button type="button" class="btn btn-ghost btn-sm btn-delete-expr" style="color: var(--red-600); border:none; height: 24px;">✕ Xóa dòng</button>
                 </div>
                 
                 <div class="ld-card-body">
                     <div>
-                        <textarea class="formula-target dt-sync" data-field="formula" placeholder="Nhấp chuột vào đây và sử dụng Toolbar bên dưới để gõ công thức...">${expr.raw_formula || ''}</textarea>
-                        <div class="semantic-preview">${expr.semantic_formula || this.translateToSemantic(expr.raw_formula)}</div>
+                        <textarea class="formula-target dt-sync-expr" data-field="formula" placeholder="Nhấp chuột vào đây...">${expr.semantic_formula || this.toSemanticText(expr.raw_formula)}</textarea>
+                        <div class="semantic-preview">${this.previewHTML(expr.semantic_formula || this.toSemanticText(expr.raw_formula))}</div>
                     </div>
                 </div>
             </div>`;
@@ -342,18 +424,43 @@ class SemanticEditorDrawer {
     // ==========================================
     // SEMANTIC TRANSLATOR
     // ==========================================
-    translateToSemantic(rawString) {
-        if (!rawString || !rawString.trim()) return `<em>— Chưa có công thức —</em>`;
-        let escaped = rawString.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    toSemanticText(rawString) {
+        if (!rawString) return "";
+        let text = rawString;
+        this.tuDienBienSo.forEach(dict => {
+            const search = `[${dict.MaBienSo}]`;
+            const replace = `[${dict.TenHienThi}]`;
+            text = text.split(search).join(replace);
+        });
+        text = text.split('ROUND').join('LÀM_TRÒN').split('IF').join('NẾU').split('IIF').join('NẾU');
+        return text;
+    }
+
+    toRawText(semanticString) {
+        if (!semanticString) return "";
+        let raw = semanticString;
+        this.tuDienBienSo.forEach(dict => {
+            const search = `[${dict.TenHienThi}]`;
+            const replace = `[${dict.MaBienSo}]`;
+            raw = raw.split(search).join(replace);
+        });
+        raw = raw.split('LÀM_TRÒN').join('ROUND').split('NẾU').join('IF');
+        return raw;
+    }
+
+    previewHTML(semanticText) {
+        if (!semanticText || !semanticText.trim()) return `<em>— Chưa có công thức —</em>`;
+        let escaped = semanticText.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         this.tuDienBienSo.forEach(dict => {
-            const regex = new RegExp('\\b' + dict.MaBienSo + '\\b', 'g');
-            escaped = escaped.replace(regex, `<span class="tk tk-var">${dict.TenHienThi}</span>`);
+            const search = `[${dict.TenHienThi}]`;
+            const replace = `[<span class="tk tk-var">${dict.TenHienThi}</span>]`;
+            escaped = escaped.split(search).join(replace);
         });
 
         escaped = escaped
-            .replace(/\bROUND\b/g, '<span class="tk tk-func">LÀM_TRÒN</span>')
-            .replace(/\bIIF\b/g, '<span class="tk tk-func">NẾU</span>');
+            .split('LÀM_TRÒN').join('<span class="tk tk-func">LÀM_TRÒN</span>')
+            .split('NẾU').join('<span class="tk tk-func">NẾU</span>');
         return escaped;
     }
 
@@ -370,12 +477,9 @@ class SemanticEditorDrawer {
         const btnSave = document.getElementById('btnSaveConfig');
         if (btnSave) btnSave.addEventListener('click', () => this.saveConfig());
 
-        // --- CLICK OUTSIDE TO CLOSE ---
         if (this.drawer) {
             this.drawer.addEventListener('mousedown', (e) => {
-                if (e.target === this.drawer) {
-                    this.handleClose();
-                }
+                if (e.target === this.drawer) this.handleClose();
             });
         }
 
@@ -384,16 +488,25 @@ class SemanticEditorDrawer {
             if (e.target.classList.contains('btn-delete-case')) {
                 e.stopPropagation();
                 const caseId = e.target.dataset.id;
-                if (!confirm("Xóa trường hợp dạy này? Hành động này sẽ xóa ngay lập tức trên hệ thống!")) return;
+
+                let isOk = false;
+                if (typeof confirmModal !== 'undefined') {
+                    isOk = await confirmModal.show("Xóa trường hợp dạy này? Hành động này sẽ xóa ngay lập tức trên hệ thống!", "Xóa Trường Hợp");
+                } else {
+                    isOk = window.confirm("Xóa trường hợp dạy này? Hành động này sẽ xóa ngay lập tức trên hệ thống!");
+                }
+                if (!isOk) return;
 
                 if (typeof caseId === 'string' && !caseId.startsWith('th_')) {
                     try {
                         const url = `${window.API_PREFIX || '/api/v1'}/truong-hop-cong-thuc/${caseId}`;
                         const res = await fetch(url, { method: 'DELETE' });
-                        if (!res.ok) throw new Error("Lỗi khi xóa từ server");
+                        if (!res.ok) {
+                            const errorData = await res.json().catch(() => null);
+                            throw new Error(errorData && errorData.detail ? errorData.detail : "Lỗi khi xóa từ server");
+                        }
                     } catch (err) {
-                        console.error(err);
-                        if (typeof showToast !== 'undefined') showToast("Xóa thất bại!", "error");
+                        if (typeof showToast !== 'undefined') showToast("Xóa thất bại: " + err.message);
                         return;
                     }
                 }
@@ -404,7 +517,7 @@ class SemanticEditorDrawer {
                     this.renderDetailView();
                 }
                 this.renderMenu();
-                if (typeof showToast !== 'undefined') showToast("Đã xóa trường hợp!", "success");
+                if (typeof showToast !== 'undefined') showToast("Đã xóa trường hợp!");
                 return;
             }
 
@@ -419,13 +532,16 @@ class SemanticEditorDrawer {
         // --- THÊM TRƯỜNG HỢP DẠY MỚI ---
         document.getElementById('btnAddFormat').addEventListener('click', () => {
             if (!this.cbHinhThucDay) return;
-            // Combo box trả về selectedId (getValue) và text của input
             const selectedId = this.cbHinhThucDay.getValue();
             const val = this.cbHinhThucDay.inputField.value.trim();
-            if (!val) return alert("Vui lòng chọn hoặc nhập tên hình thức dạy!");
+            if (!val) {
+                if (typeof showToast !== 'undefined') showToast("Vui lòng chọn hoặc nhập tên hình thức dạy!");
+                return;
+            }
 
             if (this.truongHopData.some(x => x.name.toLowerCase() === val.toLowerCase())) {
-                return alert("Trường hợp này đã tồn tại!");
+                if (typeof showToast !== 'undefined') showToast("Trường hợp này đã tồn tại!");
+                return;
             }
 
             const newId = 'th_' + Date.now();
@@ -433,6 +549,7 @@ class SemanticEditorDrawer {
                 id: newId,
                 name: val,
                 MaHTDay: selectedId || null,
+                ID_HeSo_LD: null,
                 expressions: []
             });
 
@@ -442,232 +559,264 @@ class SemanticEditorDrawer {
             this.renderDetailView();
         });
 
-        // --- DATA BINDING THỦ CÔNG ---
+        // --- DATA BINDING THỦ CÔNG & DIRTY STATE ---
         this.DOM.detailContent.addEventListener('input', (e) => {
             const el = e.target;
-            if (!el.classList.contains('dt-sync')) return;
-
             const field = el.dataset.field;
             const val = el.value;
 
-            if (this.activeMenuId === 'lop_dong') {
-                const rowEl = el.closest('.ld-grid-row');
-                if (rowEl) {
-                    const rowId = rowEl.dataset.rowid;
-                    const row = this.lopDongData.find(x => String(x.id) === rowId);
-                    if (row) row[field] = val;
+            // Đánh dấu dirty ui rules (nền amber-50)
+            const rowEl = el.closest('.ld-grid-row') || el.closest('.ld-card') || el.closest('.hsld-group-block');
+            if (rowEl) rowEl.style.backgroundColor = 'var(--amber-50)';
+
+            if (el.classList.contains('dt-sync-group')) {
+                const gIndex = el.dataset.gindex;
+                if (this.fullHeSoData[gIndex]) {
+                    this.fullHeSoData[gIndex][field] = val;
                 }
-            } else {
+            } else if (el.classList.contains('dt-sync-row')) {
+                const gIndex = el.dataset.gindex;
+                const rIndex = el.dataset.rindex;
+                const row = this.fullHeSoData[gIndex].rows[rIndex];
+                if (row) {
+                    if (field === 'formula') {
+                        row.formula = this.toRawText(val);
+                        row.semantic_formula = val;
+                    } else {
+                        row[field] = val;
+                    }
+                }
+            } else if (el.classList.contains('dt-sync-th')) {
+                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
+                if (th) {
+                    th[field] = val ? parseInt(val) : null;
+                }
+            } else if (el.classList.contains('dt-sync-expr')) {
                 const index = el.closest('.ld-card').dataset.index;
                 const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
                 if (th && th.expressions[index]) {
-                    th.expressions[index].raw_formula = val;
-                    th.expressions[index].semantic_formula = this.translateToSemantic(val);
+                    th.expressions[index].raw_formula = this.toRawText(val);
+                    th.expressions[index].semantic_formula = val;
                 }
             }
 
             if (el.classList.contains('formula-target')) {
                 const previewEl = el.parentNode.querySelector('.semantic-preview');
-                if (previewEl) previewEl.innerHTML = this.translateToSemantic(val);
+                if (previewEl) previewEl.innerHTML = this.previewHTML(val);
             }
-
-            this.renderMenu(); // Cập nhật chấm xanh
         });
 
-        // --- TRACKING CON TRỎ VÀ DI CHUYỂN TOOLBAR ---
+        // --- CÁC NÚT ĐỘNG TRONG DETAIL CONTENT VÀ HEADER ---
+        this.DOM.detailContent.parentNode.addEventListener('click', (e) => {
+            // Thêm mốc hệ số lớp đông
+            if (e.target.closest('.btn-add-hsld-row')) {
+                const gIndex = e.target.closest('.btn-add-hsld-row').dataset.gindex;
+                this.fullHeSoData[gIndex].rows.push({ id: 'ld_' + Date.now(), min: '', max: '', formula: '', semantic_formula: '' });
+                this.renderDetailView();
+            }
+            // Xóa mốc hệ số lớp đông
+            else if (e.target.closest('.btn-delete-row')) {
+                const gIndex = e.target.closest('.btn-delete-row').dataset.gindex;
+                const rIndex = e.target.closest('.btn-delete-row').dataset.rindex;
+                this.fullHeSoData[gIndex].rows.splice(rIndex, 1);
+                this.renderDetailView();
+            }
+            // Xóa nhóm hệ số lớp đông
+            else if (e.target.closest('.btn-delete-hsld-group')) {
+                const gIndex = e.target.closest('.btn-delete-hsld-group').dataset.gindex;
+                if (typeof confirmModal !== 'undefined') {
+                    confirmModal.show("Bạn có chắc chắn muốn xóa mẫu này? Sẽ cần bấm Lưu để áp dụng trên máy chủ.", "Xóa Mẫu Cấu Hình").then(isOk => {
+                        if (isOk) {
+                            this.fullHeSoData.splice(gIndex, 1);
+                            this.renderDetailView();
+                        }
+                    });
+                } else {
+                    if (!window.confirm("Xóa toàn bộ cấu hình mẫu này?")) return;
+                    this.fullHeSoData.splice(gIndex, 1);
+                    this.renderDetailView();
+                }
+            }
+            // Tạo nhóm hệ số lớp đông mới
+            else if (e.target.closest('#btnAddHsldGroup')) {
+                // Focus vào input tên ngay sau khi tạo
+                this.fullHeSoData.unshift({ // Cho lên đầu danh sách để thấy ngay
+                    ID_HeSo_LD: null,
+                    Ten_HeSo_LD: '', // Tên rỗng để buộc nhập
+                    TrangThai: true,
+                    rows: []
+                });
+                this.renderDetailView().then(() => {
+                    const firstInput = this.DOM.detailContent.querySelector('.hsld-title-input');
+                    if (firstInput) {
+                        firstInput.focus();
+                        firstInput.closest('.hsld-group-block').style.backgroundColor = 'var(--amber-50)';
+                    }
+                });
+            }
+            // Thêm phép tính trường hợp
+            else if (e.target.closest('#btnAddTruongHopRow')) {
+                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
+                if (th) {
+                    if (!th.expressions) th.expressions = [];
+                    th.expressions.push({ id: 'expr_' + Date.now(), raw_formula: '', semantic_formula: '' });
+                    this.renderDetailView();
+                }
+            }
+            // Xóa phép tính trường hợp
+            else if (e.target.closest('.btn-delete-expr')) {
+                const index = e.target.closest('.ld-card').dataset.index;
+                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
+                if (th) {
+                    th.expressions.splice(index, 1);
+                    this.renderDetailView();
+                }
+            }
+        });
+
+        // --- XỬ LÝ FOCUS TEXTAREA HIỂN THỊ TOOLBAR ---
         this.DOM.detailContent.addEventListener('focusin', (e) => {
             if (e.target.classList.contains('formula-target')) {
                 this.activeEditor = e.target;
-
-                // Cắt Toolbar hiện tại và chèn vào ngay sau thẻ Textarea đang focus
-                if (this.DOM.masterToolbar.parentNode !== e.target.parentNode || this.DOM.masterToolbar.previousElementSibling !== e.target) {
-                    e.target.parentNode.insertBefore(this.DOM.masterToolbar, e.target.nextSibling);
+                if (this.DOM.masterToolbar) {
+                    this.DOM.masterToolbar.style.display = 'flex'; // Dùng flex vì theo CSS mới
                 }
-
-                this.DOM.masterToolbar.style.display = 'flex';
             }
         });
 
         this.DOM.detailContent.addEventListener('focusout', (e) => {
             if (e.target.classList.contains('formula-target')) {
-                // Không ẩn ngay lập tức để xử lý click mousedown vào toolbar
-                // Sẽ ẩn sau 1 khoảng nhỏ, nếu focus thực sự đã ra ngoài
-                setTimeout(() => {
-                    if (document.activeElement !== this.activeEditor && !this.DOM.masterToolbar.contains(document.activeElement)) {
-                        this.DOM.masterToolbar.style.display = 'none';
-                    }
-                }, 50);
-            }
-        });
-
-        // BẮT BUỘC: Xử lý bug mất focus khi click Toolbar
-        this.DOM.masterToolbar.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-        });
-
-        // --- CHÈN TỪ TOOLBAR ---
-        this.DOM.masterToolbar.addEventListener('click', (e) => {
-            const btn = e.target.closest('button[data-insert]');
-            if (!btn) return;
-
-            if (!this.activeEditor) {
-                alert("Vui lòng nhấp vào một ô công thức trước khi chèn!");
-                return;
-            }
-
-            const textToInsert = btn.dataset.insert;
-            const offset = parseInt(btn.dataset.offset || '0', 10);
-
-            const editor = this.activeEditor;
-            const startPos = editor.selectionStart;
-            const endPos = editor.selectionEnd;
-
-            editor.value = editor.value.substring(0, startPos) + textToInsert + editor.value.substring(endPos);
-            editor.dispatchEvent(new Event('input', { bubbles: true }));
-
-            editor.focus();
-            const newPos = startPos + textToInsert.length + offset;
-            editor.setSelectionRange(newPos, newPos);
-        });
-
-        // --- HÀNH ĐỘNG CHO CÁC ROW (LỚP ĐÔNG & TRƯỜNG HỢP) ---
-        this.DOM.detailContent.addEventListener('click', async (e) => {
-            if (e.target.id === 'btnAddLopDongRow') {
-                this.lopDongData.push({
-                    id: 'ld_' + Date.now(),
-                    min: '', max: '', formula: ''
-                });
-                this.renderLopDongTable();
-                this.renderMenu();
-            }
-            if (e.target.id === 'btnAddTruongHopRow') {
-                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
-                if (th) {
-                    if (!th.expressions) th.expressions = [];
-                    th.expressions.push({
-                        id: 'expr_' + Date.now(),
-                        raw_formula: '',
-                        semantic_formula: ''
-                    });
-                    this.renderTruongHopForm(th);
-                    this.renderMenu();
-                }
-            }
-            if (e.target.classList.contains('btn-delete-row')) {
-                let isOk = false;
-                if (typeof confirmModal !== 'undefined') {
-                    isOk = await confirmModal.show("Bạn có chắc chắn muốn xóa mốc sĩ số này không?", "Xác nhận xóa mốc sĩ số");
-                } else {
-                    isOk = confirm("Bạn có chắc chắn muốn xóa mốc sĩ số này không?");
-                }
-                
-                if (!isOk) return;
-
-                const rowEl = e.target.closest('.ld-grid-row');
-                if (rowEl) {
-                    const rowId = rowEl.dataset.rowid;
-                    this.lopDongData = this.lopDongData.filter(x => String(x.id) !== String(rowId));
-                    this.renderLopDongTable();
-                    this.renderMenu();
-                }
-            }
-            if (e.target.classList.contains('btn-delete-expr')) {
-                let isOk = false;
-                if (typeof confirmModal !== 'undefined') {
-                    isOk = await confirmModal.show("Bạn có chắc chắn muốn xóa phép tính này không?", "Xác nhận xóa phép tính");
-                } else {
-                    isOk = confirm("Bạn có chắc chắn muốn xóa phép tính này không?");
-                }
-                
-                if (!isOk) return;
-
-                const index = parseInt(e.target.closest('.ld-card').dataset.index, 10);
-                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
-                if (th && th.expressions) {
-                    th.expressions.splice(index, 1);
-                    this.renderTruongHopForm(th);
-                    this.renderMenu();
+                if (this.DOM.masterToolbar) {
+                    this.DOM.masterToolbar.style.display = 'none';
                 }
             }
         });
+
+        // --- NÚT TRÊN TOOLBAR (CHÈN BIẾN/HÀM) ---
+        if (this.DOM.masterToolbar) {
+            this.DOM.masterToolbar.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Tránh mất focus textarea
+                const btn = e.target.closest('button');
+                if (!btn || !this.activeEditor) return;
+
+                const insertText = btn.dataset.insert;
+                const offset = parseInt(btn.dataset.offset || "0");
+
+                if (insertText) {
+                    const start = this.activeEditor.selectionStart;
+                    const end = this.activeEditor.selectionEnd;
+                    const text = this.activeEditor.value;
+
+                    const before = text.substring(0, start);
+                    const after = text.substring(end);
+
+                    this.activeEditor.value = before + insertText + after;
+                    this.activeEditor.selectionStart = this.activeEditor.selectionEnd = start + insertText.length + offset;
+
+                    // Trigger sự kiện input thủ công
+                    this.activeEditor.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+            });
+        }
     }
 
     // ==========================================
-    // LƯU CẤU HÌNH (SAVE)
+    // SAVE LOGIC
     // ==========================================
     async saveConfig() {
-        if (!this.currentGroupId) return;
         const btnSave = document.getElementById('btnSaveConfig');
-        const originalText = btnSave.textContent;
+        const originalText = btnSave.innerHTML;
+        btnSave.innerHTML = '<span class="spinner" style="width: 14px; height: 14px; margin-right: 6px; display: inline-block; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite;"></span> Đang lưu...';
+        btnSave.disabled = true;
 
         try {
-            btnSave.disabled = true;
-            btnSave.textContent = 'Đang lưu...';
+            const apiBase = (window.API_PREFIX || '/api/v1');
 
-            // 1. Chuẩn bị dữ liệu Hệ số lớp đông
-            const he_so_lop_dong = this.lopDongData.map(item => ({
-                ID_HeSo_LD: typeof item.id === 'string' ? null : parseInt(item.id, 10),
-                GiaTri_Min: parseInt(item.min, 10) || 0,
-                GiaTri_Max: parseInt(item.max, 10) || 0,
-                BieuThuc_HeSoLopDong: item.formula || ""
-            })).filter(x => x.BieuThuc_HeSoLopDong.trim() !== "");
+            if (this.activeMenuId === 'lop_dong') {
+                // 1. LƯU HỆ SỐ LỚP ĐÔNG
+                const payload = this.fullHeSoData.map(group => {
+                    const validRows = group.rows
+                        .filter(r => (r.min !== '' && r.min !== null) && r.formula && r.formula.trim() !== '')
+                        .map(r => ({
+                            ...r,
+                            min: Number(r.min),
+                            max: (r.max === '' || r.max === null) ? null : Number(r.max)
+                        }));
+                    return {
+                        ID_HeSo_LD: group.ID_HeSo_LD,
+                        Ten_HeSo_LD: group.Ten_HeSo_LD,
+                        CauHinh_Json: validRows.length > 0 ? JSON.stringify(validRows) : null,
+                        TrangThai: group.TrangThai
+                    };
+                });
 
-            // 2. Chuẩn bị dữ liệu Trường hợp công thức
-            const truong_hop_cong_thuc = this.truongHopData.map(item => {
-                const validExpressions = (item.expressions || []).filter(e => e.raw_formula && e.raw_formula.trim() !== '');
-                const bieuThucText = validExpressions.map(e => e.raw_formula).join('\n');
-                let bieuThucJson = null;
+                const res = await fetch(`${apiBase}/he-so-lop-dong/bulk-update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ he_so_lop_dong: payload })
+                });
 
-                if (validExpressions.length > 0) {
-                    validExpressions.forEach(e => {
-                        e.semantic_formula = this.translateToSemantic(e.raw_formula).replace(/(<([^>]+)>)/gi, "");
-                    });
-                    bieuThucJson = JSON.stringify(validExpressions);
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => null);
+                    const errMsg = errorData && errorData.detail ? errorData.detail : "Lỗi khi lưu Hệ số lớp đông";
+                    throw new Error(errMsg);
                 }
 
-                return {
-                    ID_TruongHop_CT: typeof item.id === 'string' ? null : parseInt(item.id, 10),
-                    MaHTDay: item.MaHTDay || null,
-                    BieuThuc_JSON: bieuThucJson,
-                    BieuThuc_Text: bieuThucText,
-                    TrangThai: true
-                };
-            });
+                if (typeof showToast !== 'undefined') showToast("Đã lưu Hệ số lớp đông thành công!");
 
-            const payload = {
-                he_so_lop_dong: he_so_lop_dong,
-                truong_hop_cong_thuc: truong_hop_cong_thuc
-            };
+                // Tải lại
+                this.fullHeSoData = null;
+                await this.lazyLoadHeSoLopDong();
+                this.originalData = JSON.stringify(this.fullHeSoData);
+                this.renderDetailView();
 
-            const url = `${window.API_PREFIX || '/api/v1'}/nhom-cong-thuc/${this.currentGroupId}/bulk-update`;
-            
-            const response = await fetch(url, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+            } else {
+                // 2. LƯU TRƯỜNG HỢP CÔNG THỨC
+                const th = this.truongHopData.find(x => String(x.id) === String(this.activeMenuId));
+                if (!th) throw new Error("Không tìm thấy trường hợp công thức");
 
-            if (!response.ok) {
-                throw new Error("Lỗi lưu cấu hình: " + await response.text());
+                // Chuẩn hóa dữ liệu toàn bộ nhóm
+                const validTruongHop = this.truongHopData.map(t => {
+                    const validExpressions = (t.expressions || []).filter(e => e.raw_formula && e.raw_formula.trim() !== '');
+                    return {
+                        ID_TruongHop_CT: typeof t.id === 'string' && t.id.startsWith('th_') ? null : parseInt(t.id),
+                        ID_HeSo_LD: t.ID_HeSo_LD ? parseInt(t.ID_HeSo_LD) : null,
+                        MaHTDay: t.MaHTDay ? parseInt(t.MaHTDay) : null,
+                        BieuThuc_JSON: validExpressions.length > 0 ? JSON.stringify(validExpressions) : null,
+                        BieuThuc_Text: null,
+                        TrangThai: true
+                    };
+                });
+
+                const res = await fetch(`${apiBase}/truong-hop-cong-thuc/nhom-cong-thuc/${this.currentGroupId}/bulk-update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ truong_hop_cong_thuc: validTruongHop })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => null);
+                    const errMsg = errorData && errorData.detail ? errorData.detail : "Lỗi khi lưu Trường hợp công thức";
+                    throw new Error(errMsg);
+                }
+
+                if (typeof showToast !== 'undefined') showToast("Đã lưu danh sách Trường hợp công thức thành công!");
+
+                // Cập nhật lại ID từ server (nếu tạo mới)
+                await this.loadDrawerData(this.currentGroupId);
+                // Giữ nguyên tab đang chọn
+                const newTh = this.truongHopData.find(x => x.MaHTDay === th.MaHTDay);
+                if (newTh) this.activeMenuId = newTh.id;
+                this.renderMenu();
+                this.renderDetailView();
             }
-
-            if (typeof showToast !== 'undefined') showToast("Lưu cấu hình thành công!", "success");
-            
-            // Xóa trạng thái Dirty bằng cách chụp lại snapshot mới
-            this.originalData = JSON.stringify({
-                lopDong: this.lopDongData,
-                truongHop: this.truongHopData
-            });
-            // Tuyệt đối không đóng Drawer
-
-
         } catch (error) {
             console.error(error);
-            if (typeof showToast !== 'undefined') showToast(error.message || "Có lỗi xảy ra khi lưu!", "error");
+            if (typeof showToast !== 'undefined') showToast("Lỗi: " + error.message);
+            else alert("Lỗi: " + error.message);
         } finally {
+            btnSave.innerHTML = originalText;
             btnSave.disabled = false;
-            btnSave.textContent = originalText;
         }
     }
 }
-

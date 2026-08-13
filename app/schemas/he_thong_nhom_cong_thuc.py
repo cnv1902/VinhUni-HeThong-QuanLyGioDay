@@ -29,19 +29,14 @@ class NhomCongThucResponse(NhomCongThucBase):
 
     model_config = ConfigDict(from_attributes=True)
 
-class HeSoLopDongItem(BaseModel):
-    ID_HeSo_LD: Optional[int] = None
-    GiaTri_Min: int
-    GiaTri_Max: int
-    BieuThuc_HeSoLopDong: str
 
 class TruongHopCongThucItem(BaseModel):
     ID_TruongHop_CT: Optional[int] = None
+    ID_HeSo_LD: Optional[int] = None
     MaHTDay: Optional[int] = None
     BieuThuc_JSON: Optional[str] = None
     BieuThuc_Text: Optional[str] = None
     TrangThai: Optional[bool] = True
 
 class NhomCongThucBulkUpdate(BaseModel):
-    he_so_lop_dong: List[HeSoLopDongItem]
     truong_hop_cong_thuc: List[TruongHopCongThucItem]

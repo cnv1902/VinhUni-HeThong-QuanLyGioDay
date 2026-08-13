@@ -4,6 +4,12 @@
 <head>
   <meta charset="UTF-8">
   <title>{% block title %}Hệ thống quản lý giờ dạy Đại học Vinh{% endblock %}</title>
+  
+  <script>
+    window.APP_VERSION = "{{ CACHE_BUSTER() }}";
+  </script>
+  <script src="/static/js/core/cache_manager.js?v={{ CACHE_BUSTER() }}"></script>
+
   <link rel="icon" type="image/ico" href="/static/images/logo/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link
@@ -38,6 +44,7 @@
 
   <script src="/static/js/core/constants.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/core/utils.js?v={{ CACHE_BUSTER() }}"></script>
+  <script src="/static/js/core/modal.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/components/toast.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/components/confirm_modal.js?v={{ CACHE_BUSTER() }}"></script>
   {% block scripts %}{% endblock %}

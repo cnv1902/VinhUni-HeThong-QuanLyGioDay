@@ -228,19 +228,18 @@ body {
 /* CỘT PHẢI (DETAIL) */
 .md-detail {
     flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-panel);
+    background: #fff;
+    padding: 24px;
+    padding-bottom: 0;
+    overflow-y: auto;
     position: relative;
-    overflow: hidden;
+    border-radius: 0 12px 12px 0;
 }
 
 .md-detail-header {
-    padding: 16px 24px;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    padding-bottom: 16px;
+    margin-bottom: 24px;
 }
 
 .md-detail-header h3 {
@@ -249,18 +248,24 @@ body {
     color: var(--brand-800);
 }
 
+.detail-content {
+    padding-bottom: 150px; /* Nhường chỗ cho sticky toolbar */
+}
+
 /* Toolbar */
 .formula-toolbar {
     background: var(--bg-panel);
-    border: 1px solid var(--border-strong);
-    border-radius: 6px;
+    border-top: 1px solid var(--border-strong);
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
     gap: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    margin-top: 8px;
-    margin-bottom: 8px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 .formula-group {

@@ -5,6 +5,7 @@ from app.api.dependencies import get_db
 from app.core.redis import get_redis
 from app.services import he_thong_truong_hop_cong_thuc_service
 from app.schemas.he_thong_truong_hop_cong_thuc import TruongHopCongThucResponse, TruongHopCongThucCreate, TruongHopCongThucUpdate
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucBulkUpdate
 
 router = APIRouter()
 
@@ -19,6 +20,16 @@ async def create_truong_hop_cong_thuc(obj_in: TruongHopCongThucCreate, db: Sessi
     """Tạo mới trường hợp công thức"""
     new_obj = await he_thong_truong_hop_cong_thuc_service.create(db, redis_client, obj_in=obj_in)
     return new_obj
+
+@router.put("/nhom-cong-thuc/{id_nhom_ct}/bulk-update")
+async def bulk_update_cong_thuc(
+    id_nhom_ct: int,
+    obj_in: NhomCongThucBulkUpdate,
+    db: Session = Depends(get_db),
+    redis_client = Depends(get_redis)
+):
+    """Cập nhật hàng loạt (Thêm/Sửa/Xóa) Trường hợp công thức theo Nhóm"""
+    return await he_thong_truong_hop_cong_thuc_service.bulk_update_cong_thuc(db, redis_client, id_nhom_ct, obj_in)
 
 @router.put("/{id}", response_model=TruongHopCongThucResponse)
 async def update_truong_hop_cong_thuc(id: int, obj_in: TruongHopCongThucUpdate, db: Session = Depends(get_db), redis_client = Depends(get_redis)):

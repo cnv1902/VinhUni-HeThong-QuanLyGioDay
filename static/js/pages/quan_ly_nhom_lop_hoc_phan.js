@@ -2,6 +2,7 @@
 // QUẢN LÝ NHÓM LỚP HỌC PHẦN (Page-Level JS)
 // ==========================================
 let myTable;
+let modifiedRows = {};
 
 /**
  * Khởi tạo dữ liệu cốt lõi (Cấu hình cột) 1 lần duy nhất khi mở trang.
@@ -21,8 +22,41 @@ async function init() {
       pageSize: 100,
       isRowSelectable: (row) => row.XacNhan !== true, // Không cho chọn nếu đã xác nhận
       isRowEditable: (row) => row.XacNhan !== true,   // Không cho sửa nếu đã xác nhận
+      customCellRender: (row, col) => {
+        // Chỉ custom cột có type là badge và không phải trạng thái cố định
+        if (col.MaTruong === 'LopChuyen') {
+          const val = row[col.MaTruong];
+          if (val === true || String(val).toLowerCase() === 'true') {
+            return `<span class="badge badge-true">✓</span>`;
+          } else if (val === false || String(val).toLowerCase() === 'false') {
+            return `<span class="badge badge-false">✗</span>`;
+          }
+        }
+        if (col.MaTruong === 'XacNhan') {
+          const val = row[col.MaTruong];
+          if (val === true || String(val).toLowerCase() === 'true') {
+            return `<span class="badge badge-true">Đã xác nhận</span>`;
+          } else if (val === false || String(val).toLowerCase() === 'false') {
+            return `<span class="badge badge-false">Chưa xác nhận</span>`;
+          }
+        }
+        return null; // Trả về null để datatable dùng cách hiển thị mặc định
+      },
       onRowDirty: (row, key, val) => {
-        // Có thể gọi API để auto-save nếu muốn
+        const rowId = row.MaNhomLopHP;
+        if (!modifiedRows[rowId]) {
+          modifiedRows[rowId] = {};
+        }
+        modifiedRows[rowId][key] = val;
+
+        if (key === 'SiSoChuyenDoi' || key === 'SiSoDKH') {
+          const sisoCD = parseFloat(row.SiSoChuyenDoi) || 0;
+          const sisoDKH = parseFloat(row.SiSoDKH) || 0;
+          row.SoSinhVien = sisoCD + sisoDKH;
+        }
+
+        const btnSave = document.getElementById('btnSaveChanges');
+        if (btnSave) btnSave.disabled = Object.keys(modifiedRows).length === 0;
       },
       onSelectionChange: (selectedSet) => {
         updateFooter(myTable.getRows(), selectedSet);
@@ -82,6 +116,18 @@ window.addEventListener('ContextReady', (e) => {
 // Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
 window.addEventListener('ContextChanged', (e) => {
   const hoc_ky = e.detail;
+  if (Object.keys(modifiedRows).length > 0) {
+    if (typeof confirmModal !== 'undefined') {
+      confirmModal.show("Có dữ liệu chưa lưu. Việc đổi học kỳ sẽ làm mất thay đổi. Tiếp tục?", "Cảnh báo", "Tiếp tục").then(isOk => {
+        if (isOk) {
+          modifiedRows = {};
+          document.getElementById('btnSaveChanges').disabled = true;
+          loadTableData(hoc_ky);
+        }
+      });
+      return;
+    }
+  }
   loadTableData(hoc_ky);
 });
 
@@ -175,6 +221,67 @@ function bindStaticEvents() {
         myTable.setColumns(newCols);
       });
     });
+  }
+
+  // Sự kiện Lưu thay đổi
+  const btnSaveChanges = document.getElementById('btnSaveChanges');
+  if (btnSaveChanges) {
+    btnSaveChanges.addEventListener('click', async () => {
+      console.log("Dang goij click luu thay doi")
+      const keys = Object.keys(modifiedRows);
+      if (keys.length === 0) return;
+
+      if (typeof confirmModal !== 'undefined') {
+        confirmModal.show("Bạn có chắc chắn muốn lưu " + keys.length + " thay đổi?", "Xác nhận Lưu").then(async isOk => {
+          if (isOk) {
+            await submitSaveChanges();
+          }
+        });
+      }
+    });
+  }
+}
+
+async function submitSaveChanges() {
+  const btnSaveChanges = document.getElementById('btnSaveChanges');
+  btnSaveChanges.disabled = true;
+  const originalHTML = btnSaveChanges.innerHTML;
+  btnSaveChanges.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Đang lưu...';
+
+  try {
+    const payload = {
+      TenBang: "CQ_NhomLopHocPhan",
+      items: Object.keys(modifiedRows).map(id => ({
+        MaNhomLopHP: id,
+        updates: modifiedRows[id]
+      }))
+    };
+
+    const res = await fetch('/api/v1/cq-nhom-lop-hoc-phan/bulk-update', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+      if (typeof showToast !== 'undefined') showToast("Đã lưu thay đổi thành công!");
+      modifiedRows = {};
+      btnSaveChanges.disabled = true;
+      btnSaveChanges.innerHTML = originalHTML;
+
+      // Remove dirty flag and visual highlight
+      myTable.state.data.forEach(r => r._dirty = false);
+      myTable.renderAll();
+    } else {
+      const err = await res.json();
+      if (typeof showToast !== 'undefined') showToast("Lỗi khi lưu: " + (err.detail || "Không xác định"), true);
+      btnSaveChanges.disabled = false;
+      btnSaveChanges.innerHTML = originalHTML;
+    }
+  } catch (error) {
+    if (typeof showToast !== 'undefined') showToast("Lỗi kết nối máy chủ", true);
+    btnSaveChanges.disabled = false;
+    btnSaveChanges.innerHTML = originalHTML;
   }
 }
 

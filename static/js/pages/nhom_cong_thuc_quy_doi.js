@@ -37,7 +37,7 @@ async function init() {
       tableId: 'dataTable',
       paginationId: 'tablePagination',
       pageSize: 100,
-      isRowSelectable: () => true, 
+      isRowSelectable: () => true,
       isRowEditable: () => false,   // Tạm thời chưa code sửa
       onSelectionChange: (selectedSet) => {
         updateFooter(myTable.getRows(), selectedSet);
@@ -53,6 +53,21 @@ async function init() {
             <span data-action="delete" data-id="${row.ID_Nhom_CT}" style="color: var(--red-600); cursor: pointer; font-weight: 500;">Xóa</span>
           `;
         }
+        if (col.MaTruong === 'TrangThai') {
+          const val = row[col.MaTruong];
+          if (val === true || String(val).toLowerCase() === 'true') {
+            return `<span class="badge badge-true">Đang áp dụng</span>`;
+          } else if (val === false || String(val).toLowerCase() === 'false') {
+            return `<span class="badge badge-false">Ngừng áp dụng</span>`;
+          }
+        }
+
+        if (col.MaTruong === 'DenNam') {
+          const val = row[col.MaTruong];
+          if (val === null || String(val).toLowerCase() === 'null') {
+            return `<span class="num-text">∞</span>`;
+          }
+        }
         return null; // Trả về null để datatable dùng render mặc định cho các cột khác
       }
     });
@@ -60,12 +75,12 @@ async function init() {
     myTable.setColumns(colsConfig, rawColsConfig);
 
     bindStaticEvents();
-    
+
     // Khởi tạo Drawer Component
     if (typeof SemanticEditorDrawer !== 'undefined') {
-        semanticEditor = new SemanticEditorDrawer('configDrawer');
+      semanticEditor = new SemanticEditorDrawer('configDrawer');
     }
-    
+
     // Khởi tạo Modal Tạo Nhóm
     initFormModal();
   } catch (error) {
@@ -83,13 +98,13 @@ async function init() {
 async function initFormModal() {
   if (typeof BaseModal !== 'undefined') {
     formModal = new BaseModal('modalNhomCongThuc');
-    
+
     // Đã xóa setupHocKyCombos vì dùng TuNam, DenNam (Input text/number)
 
     // Tải danh sách Hệ đào tạo
     const listHe = await apiCongThuc.getHeDaoTao();
     const heData = listHe.map(he => ({ id: he.ID_He, text: he.Ten_He }));
-    
+
     // Đổ dữ liệu vào ô lọc ngoài Grid
     const filterHeDaoTaoEl = document.getElementById('filterHeDaoTao');
     if (filterHeDaoTaoEl) {
@@ -100,7 +115,7 @@ async function initFormModal() {
         if (he.ID_He === 1) option.selected = true; // Mặc định ID = 1
         filterHeDaoTaoEl.appendChild(option);
       });
-      
+
       // Bắt sự kiện lọc thay đổi
       filterHeDaoTaoEl.addEventListener('change', () => {
         loadTableData();
@@ -113,7 +128,7 @@ async function initFormModal() {
         loadTableData();
       });
     }
-    
+
     if (typeof ComboBox !== 'undefined') {
       cbHeDaoTao = new ComboBox('#heDaoTaoContainer', {
         data: heData,
@@ -125,18 +140,18 @@ async function initFormModal() {
     // Tải danh sách Hình thức học & Khởi tạo TagInput
     const listHinhThuc = await apiCongThuc.getHinhThucHoc();
     const tagData = listHinhThuc.map(h => ({ id: h.MaHTHoc, text: h.TenHTHoc }));
-    
+
     if (typeof TagInput !== 'undefined') {
       tagHinhThucHoc = new TagInput('#dsHinhThucHocContainer', {
         data: tagData,
         fieldName: 'DsMaHTHoc',
         placeholder: 'Gõ để tìm Hình thức học...'
       });
-      
+
       const formEl = document.getElementById('formNhomCongThuc');
       formEl.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         // Validation form
         const tuNamInput = formEl.querySelector('[name="TuNam"]');
         const tuNamVal = tuNamInput ? tuNamInput.value : '';
@@ -147,13 +162,13 @@ async function initFormModal() {
 
         const formData = new FormData(formEl);
         const data = Object.fromEntries(formData.entries());
-        
+
         // Chuẩn hóa data
         data.ID_He = parseInt(data.ID_He) || 0;
         data.TuNam = parseInt(data.TuNam) || 0;
         data.DenNam = data.DenNam ? parseInt(data.DenNam) : null;
         data.TrangThai = data.TrangThai === 'true';
-        
+
         try {
           const btnSubmit = formEl.querySelector('button[type="submit"]');
           if (btnSubmit) {
@@ -169,14 +184,14 @@ async function initFormModal() {
             await apiCongThuc.createNhomCongThuc(data);
             if (typeof showToast !== 'undefined') showToast("Thêm mới nhóm công thức thành công!", "success");
           }
-          
+
           formModal.close();
           formEl.reset();
           editingId = null;
-          
+
           // Tải lại bảng (chỉ lọc theo hệ đào tạo và trạng thái)
           loadTableData();
-          
+
         } catch (error) {
           if (typeof showToast !== 'undefined') showToast(error.message || "Có lỗi xảy ra khi lưu!", "error");
         } finally {
@@ -202,7 +217,7 @@ async function loadTableData() {
 
     const filterHeDaoTao = document.getElementById('filterHeDaoTao');
     const filterTrangThai = document.getElementById('filterTrangThai');
-    
+
     const id_he = filterHeDaoTao ? filterHeDaoTao.value : null;
     const trang_thai = filterTrangThai ? filterTrangThai.value : null;
 
@@ -293,16 +308,16 @@ function bindStaticEvents() {
       if (formModal) {
         editingId = null; // Reset trạng thái về Thêm mới
         document.getElementById('modalNhomCongThuc').querySelector('.modal-title').textContent = 'Thêm Nhóm Công Thức';
-        
+
         // Xóa form cũ nếu cần
         document.getElementById('formNhomCongThuc').reset();
         if (tagHinhThucHoc) tagHinhThucHoc.clear();
         if (cbHeDaoTao) cbHeDaoTao.clear();
-        
+
         // Mặc định ô Từ năm là năm hiện tại
         const inputTuNam = document.getElementById('TuNam');
         if (inputTuNam) inputTuNam.value = new Date().getFullYear();
-        
+
         formModal.open();
       }
     });
@@ -313,7 +328,7 @@ function bindStaticEvents() {
     myTable.tbody.addEventListener('click', async (e) => {
       const btn = e.target.closest('[data-action]');
       if (!btn) return;
-      
+
       const action = btn.dataset.action;
       const id = parseInt(btn.dataset.id);
       if (!id || isNaN(id)) return;
@@ -324,28 +339,28 @@ function bindStaticEvents() {
       if (action === 'edit') {
         editingId = id;
         document.getElementById('modalNhomCongThuc').querySelector('.modal-title').textContent = 'Sửa Nhóm Công Thức';
-        
+
         const formEl = document.getElementById('formNhomCongThuc');
         formEl.reset();
-        
+
         // Đổ dữ liệu vào các ô input cơ bản
 
-        
+
         const inputGhiChu = formEl.querySelector('[name="GhiChu_DieuKien"]');
         if (inputGhiChu) inputGhiChu.value = rowData.GhiChu_DieuKien || '';
-        
+
         const inputTrangThai = formEl.querySelector('[name="TrangThai"]');
         if (inputTrangThai) inputTrangThai.checked = !!rowData.TrangThai;
-        
+
         // Đổ dữ liệu vào các component phức tạp
         if (cbHeDaoTao) cbHeDaoTao.setValue(rowData.ID_He);
-        
+
         const inputTuNam = formEl.querySelector('[name="TuNam"]');
         if (inputTuNam) inputTuNam.value = rowData.TuNam || '';
-        
+
         const inputDenNam = formEl.querySelector('[name="DenNam"]');
         if (inputDenNam) inputDenNam.value = rowData.DenNam || '';
-        
+
         if (tagHinhThucHoc) {
           tagHinhThucHoc.clear();
           const dsIds = (rowData.DsMaHTHoc || '').split(',').filter(x => x);
@@ -354,9 +369,9 @@ function bindStaticEvents() {
             if (hId) tagHinhThucHoc.addTag(hId, dsNames[index] || hId);
           });
         }
-        
+
         formModal.open();
-      } 
+      }
       else if (action === 'delete') {
         if (typeof confirmModal !== 'undefined') {
           const isOk = await confirmModal.show(
@@ -365,7 +380,7 @@ function bindStaticEvents() {
             'Xóa Nhóm',
             'var(--red-600)'
           );
-          
+
           if (isOk) {
             try {
               await apiCongThuc.deleteNhomCongThuc(id);
@@ -381,9 +396,9 @@ function bindStaticEvents() {
       }
       else if (action === 'config') {
         if (semanticEditor) {
-            semanticEditor.open(id, "Nhóm công thức");
+          semanticEditor.open(id, "Nhóm công thức");
         } else {
-            if (typeof showToast !== 'undefined') showToast("Component Cấu hình chưa được tải!", "error");
+          if (typeof showToast !== 'undefined') showToast("Component Cấu hình chưa được tải!", "error");
         }
       }
     });

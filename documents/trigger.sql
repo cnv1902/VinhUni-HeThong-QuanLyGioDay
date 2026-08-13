@@ -84,8 +84,6 @@ BEGIN
                         BEGIN
                             if (@HinhThucHoc=1 or @HinhThucHoc=12 or @HinhThucHoc=13 or @HinhThucHoc =26 or  @HinhThucHoc =0 or @HinhThucHoc=30 )
                                 begin
-                                    Set @HeSoNhanLT =0
-                                    
                                     -- Dạy bằng Tiếng Anh thi bằng Tiếng Việt
                                     if (@HinhThucDay=10)
                                         begin

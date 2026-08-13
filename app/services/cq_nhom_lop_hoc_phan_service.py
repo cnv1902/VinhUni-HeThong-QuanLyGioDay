@@ -1,12 +1,20 @@
 import json
 from sqlalchemy.orm import Session
 from app.crud import curd_cq_nhom_lop_hoc_phan
-from typing import Optional
+from typing import Optional, Dict, Any
 from app.core.exceptions import BadRequestException
 from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopResponse
 from app.core.logger import app_logger as logger
+from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopBulkUpdate
 from app.services import hoc_ky_service
+from app.services import he_thong_nhom_cong_thuc_service
+from app.services import he_thong_truong_hop_cong_thuc_service
+from app.services import he_thong_he_so_lop_dong_service
+from app.crud import crud_he_thong_dm_truong_duoc_su_dung
+from app.utils.string_utils import check_id_in_string_list
+from app.utils.formula_parser import parse_he_so_lop_dong, evaluate_formula_json
 import time
+import asyncio
 
 CACHE_PREFIX = "cache:cq_nhom_lop_hoc_phan:"
 CACHE_TTL = 3600
@@ -20,8 +28,9 @@ async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, hoc_ky: Optional[s
             if hoc_ky:
                 await redis_client.delete(f"{CACHE_PREFIX}{hoc_ky}")
             else:
-                # TODO: Xóa nhiều key nếu cần khi không có hoc_ky
-                pass
+                keys = await redis_client.keys(f"{CACHE_PREFIX}*")
+                if keys:
+                    await redis_client.delete(*keys)
         except Exception as e:
             logger.error(f"Lỗi xóa Cache Redis (Nhóm lớp): {e}")
 
@@ -52,3 +61,165 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client,
             logger.error(f"Lỗi lưu Cache Redis (Nhóm lớp {hoc_ky}): {e}")
         
     return columns_dict
+
+
+async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
+    """
+    Cập nhật hàng loạt (Smart Diff & Dynamic Fields)
+    - Xử lý toàn bộ logic tính toán (If/Else, Sĩ số, Hệ số, Công thức).
+    - Chuẩn bị dữ liệu List[dict] rồi đẩy xuống CRUD.
+    """
+    allowed_fields = crud_he_thong_dm_truong_duoc_su_dung.get_editable_fields(db, payload.TenBang)
+    
+    if not allowed_fields:
+        raise BadRequestException(detail=f"Bảng {payload.TenBang} không có cấu hình cột nào được phép sửa.")
+
+    final_updates = []
+
+    # Cache bộ nhớ (RAM) tạm thời để tránh hit DB nhiều lần trong vòng lặp
+    try:
+        nhom_cong_thuc_list = await he_thong_nhom_cong_thuc_service.get_danh_sach(db, redis_client)
+    except Exception as e:
+        logger.error(f"Lỗi load Nhóm Công Thức Cache: {e}")
+        nhom_cong_thuc_list = []
+        
+    # Preload tất cả Hệ số lớp đông
+    local_he_so_ld_cache = {}
+    try:
+        he_so_ld_list = await he_thong_he_so_lop_dong_service.get_all(db, redis_client)
+        if he_so_ld_list:
+            local_he_so_ld_cache = {item['ID_HeSo_LD']: item for item in he_so_ld_list}
+    except Exception as e:
+        logger.error(f"Lỗi load Hệ số Lớp đông Cache: {e}")
+
+    # Lấy toàn bộ dữ liệu gốc lên RAM bằng 1 câu truy vấn (Fix N+1 Query)
+    list_ma_nhom_lop = [item.MaNhomLopHP for item in payload.items]
+    db_items_list = curd_cq_nhom_lop_hoc_phan.get_by_list_ma_nhom_lop(db, list_ma_nhom_lop)
+    db_items_map = {getattr(db_item, "MaNhomLopHP"): db_item for db_item in db_items_list}
+    
+    # Chuẩn bị danh sách ID Nhóm công thức cần lấy Trường Hợp (Loại bỏ await trong vòng lặp)
+    unique_nhom_ct_ids = set()
+    for item in payload.items:
+        db_item = db_items_map.get(item.MaNhomLopHP)
+        if not db_item:
+            continue
+        hinh_thuc_hoc = getattr(db_item, "MaHTHoc")
+        nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
+        if hinh_thuc_hoc:
+            for nhom_ct in nhom_cong_thuc_list:
+                ds_ma = nhom_ct.get("DsMaHTHoc", "")
+                tu_nam = nhom_ct.get("TuNam") or 0
+                den_nam = nhom_ct.get("DenNam") or 9999
+                
+                if check_id_in_string_list(str(hinh_thuc_hoc), str(ds_ma)):
+                    if tu_nam <= nam_tai_chinh <= den_nam:
+                        unique_nhom_ct_ids.add(int(nhom_ct.get("ID_Nhom_CT")))
+                        break
+                    
+    # Lấy đồng thời (Concurrent) tất cả Trường Hợp Công Thức cần thiết
+    async def fetch_truong_hop(id_ct):
+        th_list = await he_thong_truong_hop_cong_thuc_service.get_danh_sach_theo_nhom(db, redis_client, id_ct)
+        return id_ct, th_list
+        
+    tasks = [fetch_truong_hop(id_ct) for id_ct in unique_nhom_ct_ids]
+    truong_hop_results = await asyncio.gather(*tasks) if tasks else []
+    local_truong_hop_cache = {res[0]: res[1] for res in truong_hop_results}
+
+    for item in payload.items:
+        # 1. Lấy dữ liệu gốc từ RAM (Map O(1))
+        db_item = db_items_map.get(item.MaNhomLopHP)
+        if not db_item:
+            continue
+            
+        update_data: Dict[str, Any] = {"MaNhomLopHP": item.MaNhomLopHP}
+        is_siso_changed = False
+        
+        # 2. Lọc các field được phép update
+        for key, value in item.updates.items():
+            if key in allowed_fields and hasattr(db_item, key):
+                update_data[key] = value
+                if key in ["SiSoChuyenDoi", "SiSoDKH"]:
+                    is_siso_changed = True
+                    
+        # 3. Tính toán Sĩ số nếu có thay đổi
+        if is_siso_changed:
+            siso_cd = int(update_data.get("SiSoChuyenDoi", getattr(db_item, "SiSoChuyenDoi")) or 0)
+            siso_dkh = int(update_data.get("SiSoDKH", getattr(db_item, "SiSoDKH")) or 0)
+            so_sinh_vien = siso_cd + siso_dkh
+            update_data["SoSinhVien"] = so_sinh_vien
+        else:
+            so_sinh_vien = int(getattr(db_item, "SoSinhVien") or 0)
+            
+        # 4. Tính toán công thức động (Formula Engine)
+        hinh_thuc_hoc = getattr(db_item, "MaHTHoc")
+        hinh_thuc_day = getattr(db_item, "MaHTDay")
+        nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
+        id_he_dao_tao = getattr(db_item, "HeSo_HeDaoTao")
+        if id_he_dao_tao is not None:
+            id_he_dao_tao = int(id_he_dao_tao)
+        
+        if hinh_thuc_hoc and hinh_thuc_day:
+            # 4.1. Tìm Nhóm Công Thức (Duyệt trên RAM - Dict)
+            id_nhom_ct = None
+            for nhom_ct in nhom_cong_thuc_list:
+                ds_ma = nhom_ct.get("DsMaHTHoc", "")
+                tu_nam = nhom_ct.get("TuNam") or 0
+                den_nam = nhom_ct.get("DenNam") or 9999
+                nhom_id_he = nhom_ct.get("ID_He")
+                
+                # Lọc theo ID_He (ánh xạ với HeSo_HeDaoTao của lớp)
+                if id_he_dao_tao is not None and nhom_id_he is not None:
+                    if id_he_dao_tao != int(nhom_id_he):
+                        continue
+                
+                if check_id_in_string_list(str(hinh_thuc_hoc), str(ds_ma)):
+                    if tu_nam <= nam_tai_chinh <= den_nam:
+                        id_nhom_ct = int(nhom_ct.get("ID_Nhom_CT"))
+                        break
+                    
+            if id_nhom_ct:
+                # 4.2. Tìm Trường Hợp Công Thức (Dùng Cache RAM - Không còn await)
+                th_list = local_truong_hop_cache.get(id_nhom_ct, [])
+                truong_hop_ct = next((th for th in th_list if th.get("MaHTDay") == hinh_thuc_day), None)
+                
+                if truong_hop_ct:
+                    # 4.3. Tính Hệ số lớp đông
+                    he_so_lop_dong_val = None
+                    id_hs_ld = truong_hop_ct.get("ID_HeSo_LD")
+                    if id_hs_ld:
+                        id_hs = int(id_hs_ld)
+                        he_so_ld_config = local_he_so_ld_cache.get(id_hs)
+                        if he_so_ld_config:
+                            cau_hinh_json = he_so_ld_config.get("CauHinh_Json", "")
+                            he_so_lop_dong_val = parse_he_so_lop_dong(so_sinh_vien, str(cau_hinh_json))
+                            update_data["HeSo_LopDong"] = he_so_lop_dong_val
+                            
+                    if he_so_lop_dong_val is None:
+                        he_so_lop_dong_val = getattr(db_item, "HeSo_LopDong") or 0.0
+                                                
+                    # 4.4 Phân giải và Tính toán Biểu thức JSON
+                    bieu_thuc_json = truong_hop_ct.get("BieuThuc_JSON")
+                    if bieu_thuc_json:
+                        # Tạo context_data trộn dữ liệu mới và cũ
+                        context_data = {c.name: getattr(db_item, c.name) for c in db_item.__table__.columns}
+                        context_data.update(update_data)
+                        context_data["HeSo_LopDong"] = he_so_lop_dong_val
+                        
+                        # Tính toán
+                        calculated_fields = evaluate_formula_json(str(bieu_thuc_json), context_data)
+                        
+                        # Chỉ giữ lại các kết quả thay đổi (có cập nhật)
+                        for k, v in calculated_fields.items():
+                            if hasattr(db_item, k):
+                                update_data[k] = v
+        
+        if len(update_data) > 1:
+            final_updates.append(update_data)
+
+    if final_updates:
+        # 5. Đẩy xuống CRUD chỉ thực hiện DB Update
+        curd_cq_nhom_lop_hoc_phan.update_danh_sach(db, final_updates)
+    
+    await invalidate_cq_nhom_lop_hoc_phan_cache(redis_client)
+            
+    return {"message": "Cập nhật thành công."}

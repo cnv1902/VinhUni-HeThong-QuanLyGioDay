@@ -76,38 +76,4 @@ def delete_nhom_cong_thuc(db: Session, db_obj: HeThongNhomCongThuc):
     db.commit()
     return db_obj
 
-def execute_bulk_transaction(
-    db: Session, 
-    id_nhom_ct: int,
-    ld_inserts: list,
-    ld_deletes: list,
-    th_inserts: list,
-    th_deletes: list
-):
-    """Thực thi thao tác DB (thêm mới, xóa) và commit trong 1 transaction duy nhất"""
-    for payload in ld_inserts:
-        new_ld = HeThongHeSoLopDong(
-            ID_Nhom_CT=id_nhom_ct,
-            GiaTri_Min=payload.GiaTri_Min,
-            GiaTri_Max=payload.GiaTri_Max,
-            BieuThuc_HeSoLopDong=payload.BieuThuc_HeSoLopDong
-        )
-        db.add(new_ld)
-        
-    for db_item in ld_deletes:
-        db.delete(db_item)
-        
-    for payload in th_inserts:
-        new_th = HeThongTruongHopCongThuc(
-            ID_Nhom_CT=id_nhom_ct,
-            MaHTDay=payload.MaHTDay,
-            BieuThuc_JSON=payload.BieuThuc_JSON,
-            BieuThuc_Text=payload.BieuThuc_Text,
-            TrangThai=payload.TrangThai
-        )
-        db.add(new_th)
-        
-    for db_item in th_deletes:
-        db.delete(db_item)
-        
-    db.commit()
+

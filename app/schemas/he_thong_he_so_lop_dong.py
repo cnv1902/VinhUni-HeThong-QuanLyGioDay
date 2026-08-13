@@ -1,21 +1,28 @@
-﻿from typing import Optional, List
+from typing import Optional, List
 from pydantic import BaseModel, ConfigDict
 
 class HeSoLopDongBase(BaseModel):
-    ID_Nhom_CT: int
-    GiaTri_Min: int
-    GiaTri_Max: int
-    BieuThuc_HeSoLopDong: str
+    Ten_HeSo_LD: Optional[str] = None
+    CauHinh_Json: str
+    TrangThai: Optional[bool] = True
 
 class HeSoLopDongCreate(HeSoLopDongBase):
     pass
 
 class HeSoLopDongUpdate(BaseModel):
-    GiaTri_Min: Optional[int] = None
-    GiaTri_Max: Optional[int] = None
-    BieuThuc_HeSoLopDong: Optional[str] = None
+    ID_HeSo_LD: Optional[int] = None
+    Ten_HeSo_LD: Optional[str] = None
+    CauHinh_Json: Optional[str] = None
+    TrangThai: Optional[bool] = None
 
 class HeSoLopDongResponse(HeSoLopDongBase):
     ID_HeSo_LD: int
     model_config = ConfigDict(from_attributes=True)
 
+class HeSoLopDongSimple(BaseModel):
+    ID_HeSo_LD: int
+    Ten_HeSo_LD: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
+
+class HeSoLopDongBulkUpdate(BaseModel):
+    he_so_lop_dong: List[HeSoLopDongUpdate]

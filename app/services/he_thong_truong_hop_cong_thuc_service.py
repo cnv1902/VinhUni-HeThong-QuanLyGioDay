@@ -1,8 +1,9 @@
 import json
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from app.crud import crud_he_thong_truong_hop_cong_thuc
+from app.crud import crud_he_thong_truong_hop_cong_thuc, crud_he_thong_nhom_cong_thuc
 from app.schemas.he_thong_truong_hop_cong_thuc import TruongHopCongThucCreate, TruongHopCongThucUpdate, TruongHopCongThucResponse
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucBulkUpdate
 from app.core.logger import app_logger as logger
 
 CACHE_PREFIX = "cache:he_thong_truong_hop_cong_thuc:"
@@ -44,6 +45,50 @@ async def create(db: Session, redis_client, obj_in: TruongHopCongThucCreate):
     new_obj = crud_he_thong_truong_hop_cong_thuc.create(db, obj_in=obj_in)
     await invalidate_cache(redis_client, new_obj.ID_Nhom_CT)
     return new_obj
+
+async def bulk_update_cong_thuc(db: Session, redis_client, id_nhom_ct: int, payload: NhomCongThucBulkUpdate):
+    """
+    Thực hiện cập nhật (Thêm/Sửa/Xóa) hàng loạt cho Trường hợp công thức.
+    """
+    # 1. Kiểm tra tồn tại
+    nhom_ct = crud_he_thong_nhom_cong_thuc.get_by_id(db, id_nhom_ct)
+    if not nhom_ct:
+        raise HTTPException(status_code=404, detail="Không tìm thấy nhóm công thức")
+
+    # 2. Phân tích Smart Diff cho Trường hợp công thức
+    th_db = crud_he_thong_truong_hop_cong_thuc.get_danh_sach_theo_nhom(db, id_nhom_ct)
+    th_map = {item.ID_TruongHop_CT: item for item in th_db}
+    
+    th_inserts = []
+    th_deletes = []
+    th_incoming_ids = set()
+
+    for item in payload.truong_hop_cong_thuc:
+        if item.ID_TruongHop_CT is not None:
+            th_incoming_ids.add(item.ID_TruongHop_CT)
+            if item.ID_TruongHop_CT in th_map:
+                db_item = th_map[item.ID_TruongHop_CT]
+                if item.MaHTDay is not None: setattr(db_item, 'MaHTDay', item.MaHTDay)
+                if item.BieuThuc_JSON is not None: setattr(db_item, 'BieuThuc_JSON', item.BieuThuc_JSON)
+                if item.BieuThuc_Text is not None: setattr(db_item, 'BieuThuc_Text', item.BieuThuc_Text)
+                if item.TrangThai is not None: setattr(db_item, 'TrangThai', item.TrangThai)
+                if hasattr(item, 'ID_HeSo_LD'): setattr(db_item, 'ID_HeSo_LD', item.ID_HeSo_LD)
+        else:
+            th_inserts.append(item)
+
+    for db_id, db_item in th_map.items():
+        if db_id not in th_incoming_ids:
+            th_deletes.append(db_item)
+
+    # 3. Ủy quyền cho CRUD thực hiện Transaction
+    crud_he_thong_truong_hop_cong_thuc.execute_bulk_transaction(
+        db, id_nhom_ct, th_inserts, th_deletes
+    )
+    
+    # 4. Xóa cache của nhóm công thức này
+    await invalidate_cache(redis_client, id_nhom_ct)
+
+    return {"message": "Cập nhật cấu hình công thức thành công"}
 
 async def update(db: Session, redis_client, id_truong_hop: int, obj_in: TruongHopCongThucUpdate):
     db_obj = crud_he_thong_truong_hop_cong_thuc.get_by_id(db, id_truong_hop=id_truong_hop)

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, ConfigDict
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 class CQNhomLopBase(BaseModel):
     MaNhomLopHP: str
@@ -26,8 +26,17 @@ class CQNhomLopBase(BaseModel):
     ID_LanTongHopFile: Optional[int] = None
     HeSoHocDi: Optional[float] = None
     XacNhan: Optional[bool] = None
+    NamTaiChinh: Optional[int] = None
 
 class CQNhomLopResponse(CQNhomLopBase):
     ID: int
 
     model_config = ConfigDict(from_attributes=True)
+
+class CQNhomLopUpdateItem(BaseModel):
+    MaNhomLopHP: str
+    updates: Dict[str, Any]
+
+class CQNhomLopBulkUpdate(BaseModel):
+    TenBang: str
+    items: List[CQNhomLopUpdateItem]

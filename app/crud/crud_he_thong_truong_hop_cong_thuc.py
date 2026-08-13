@@ -34,7 +34,30 @@ def update(db: Session, db_obj: HeThongTruongHopCongThuc):
     return db_obj
 
 def delete(db: Session, db_obj: HeThongTruongHopCongThuc):
-    """Xóa trường hợp công thức"""
+    """Xóa cấu hình trường hợp công thức"""
     db.delete(db_obj)
     db.commit()
     return db_obj
+
+def execute_bulk_transaction(
+    db: Session,
+    id_nhom_ct: int,
+    inserts: list,
+    deletes: list
+):
+    """Thực thi thao tác DB (thêm mới, xóa) và commit trong 1 transaction duy nhất cho THCT"""
+    for payload in inserts:
+        new_th = HeThongTruongHopCongThuc(
+            ID_Nhom_CT=id_nhom_ct,
+            ID_HeSo_LD=payload.ID_HeSo_LD,
+            MaHTDay=payload.MaHTDay,
+            BieuThuc_JSON=payload.BieuThuc_JSON,
+            BieuThuc_Text=payload.BieuThuc_Text,
+            TrangThai=payload.TrangThai
+        )
+        db.add(new_th)
+        
+    for db_item in deletes:
+        db.delete(db_item)
+        
+    db.commit()

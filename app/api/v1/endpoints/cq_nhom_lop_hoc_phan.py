@@ -16,3 +16,14 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session = Depends(get_
     """
     columns = await services_cq_nhom_lop.get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db, redis_client, hoc_ky=hoc_ky)
     return columns
+
+from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopBulkUpdate
+
+@router.put("/bulk-update")
+async def bulk_update_nhom_lop_hoc_phan(
+    obj_in: CQNhomLopBulkUpdate, 
+    db: Session = Depends(get_db), 
+    redis_client = Depends(get_redis)
+):
+    """Cập nhật hàng loạt (Smart Diff & Dynamic Fields) Nhóm Lớp Học Phần"""
+    return await services_cq_nhom_lop.bulk_update(db, redis_client, obj_in)

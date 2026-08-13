@@ -1,6 +1,5 @@
 from sqlalchemy import Column, Integer, String, NVARCHAR, Boolean, ForeignKey
 from app.models.he_thong_truong_hop_cong_thuc import HeThongTruongHopCongThuc
-from app.models.he_thong_he_so_lop_dong import HeThongHeSoLopDong
 from sqlalchemy.orm import relationship
 from app.models.base import Base
 
@@ -18,4 +17,3 @@ class HeThongNhomCongThuc(Base):
     # Relationships
     he_dao_tao = relationship("HeThongDMHeDaoTao", back_populates="nhom_cong_thuc")
     truong_hop_cong_thuc = relationship("HeThongTruongHopCongThuc", back_populates="nhom_cong_thuc", cascade="all, delete")
-    he_so_lop_dong = relationship("HeThongHeSoLopDong", back_populates="nhom_cong_thuc", cascade="all, delete")

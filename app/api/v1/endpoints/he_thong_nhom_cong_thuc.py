@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.api.dependencies import get_db
 from app.core.redis import get_redis
-from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate, NhomCongThucBulkUpdate
+from app.schemas.he_thong_nhom_cong_thuc import NhomCongThucResponse, NhomCongThucCreate, NhomCongThucUpdate
 from app.services import he_thong_nhom_cong_thuc_service
 
 router = APIRouter()
@@ -69,14 +69,3 @@ async def delete_nhom_cong_thuc(
     """
     return await he_thong_nhom_cong_thuc_service.delete_nhom_cong_thuc(db, redis_client, id_nhom_ct)
 
-@router.put("/{id_nhom_ct}/bulk-update")
-async def bulk_update_nhom_cong_thuc(
-    id_nhom_ct: int,
-    obj_in: NhomCongThucBulkUpdate,
-    db: Session = Depends(get_db),
-    redis_client = Depends(get_redis)
-):
-    """
-    Cập nhật hàng loạt Hệ số lớp đông và Trường hợp công thức theo Nhóm
-    """
-    return await he_thong_nhom_cong_thuc_service.bulk_update_cong_thuc(db, redis_client, id_nhom_ct, obj_in)

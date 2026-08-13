@@ -7,16 +7,16 @@
  * Trả về chuỗi SVG cho icon ổ khóa (Đã khóa/Thanh toán)
  * @returns {string} Chuỗi HTML của icon
  */
-function iconLock() { 
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>'; 
+function iconLock() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="9" rx="1.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 }
 
 /**
  * Trả về chuỗi SVG cho icon làm mới (Tính lại)
  * @returns {string} Chuỗi HTML của icon
  */
-function iconRefresh() { 
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M5 9a8 8 0 0 1 14-2M19 15a8 8 0 0 1-14 2"/></svg>'; 
+function iconRefresh() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5"/><path d="M20 20v-5h-5"/><path d="M5 9a8 8 0 0 1 14-2M19 15a8 8 0 0 1-14 2"/></svg>';
 }
 
 /**
@@ -41,7 +41,7 @@ function badgeHtml(v) {
  * Lớp quản lý bảng dữ liệu động, bao gồm logic Lọc, Sắp xếp, Chỉnh sửa, và Phân trang.
  */
 class DataTable {
-  
+
   // --- A. INITIALIZATION ---
 
   /**
@@ -60,26 +60,26 @@ class DataTable {
     this.tbody = this.container.querySelector('tbody');
     this.thead = this.container.querySelector('thead');
     this.paginationEl = document.getElementById(config.paginationId);
-    
+
     this.state = {
       data: [], columns: [], sortKey: null, sortDir: 1, filters: {}, search: '',
       selected: new Set(), currentPage: 1, pageSize: config.pageSize || 100,
       rawColumns: []
     };
-    
+
     this.stickyOffsets = {};
     this.filterDropdownEl = null;
     this.openFilterKey = null;
-    this.onRowDirty = config.onRowDirty || function(){};
-    this.onSelectionChange = config.onSelectionChange || function(){};
-    this.onRenderComplete = config.onRenderComplete || function(){};
+    this.onRowDirty = config.onRowDirty || function () { };
+    this.onSelectionChange = config.onSelectionChange || function () { };
+    this.onRenderComplete = config.onRenderComplete || function () { };
     this.pageSizeEl = document.getElementById(config.pageSizeId) || null;
     this.customCellRender = config.customCellRender || null;
     this.isRowSelectable = config.isRowSelectable || (() => true);
     this.isRowEditable = config.isRowEditable || (() => true);
 
     this.outsideClickHandler = this.outsideClickHandler.bind(this);
-    
+
     this.bindEvents();
   }
 
@@ -137,7 +137,7 @@ class DataTable {
         const allowed = this.state.filters[key];
         const valStr = String(r[key]);
         const valNum = parseFloat(valStr) || 0;
-        
+
         if (allowed && typeof allowed === 'object' && allowed.type === 'mixed') {
           if (allowed.min !== null && valNum < allowed.min) return false;
           if (allowed.max !== null && valNum > allowed.max) return false;
@@ -151,9 +151,9 @@ class DataTable {
       }
       return true;
     });
-    
-    
-    
+
+
+
     if (this.state.sortKey) {
       const key = this.state.sortKey, dir = this.state.sortDir;
       const col = this.state.columns.find(c => c.MaTruong === key);
@@ -166,7 +166,7 @@ class DataTable {
           let nB = parseFloat(bv) || 0;
           return (nA - nB) * dir;
         }
-        av = String(av ?? '').toLowerCase(); 
+        av = String(av ?? '').toLowerCase();
         bv = String(bv ?? '').toLowerCase();
         return av.localeCompare(bv, 'vi', { numeric: true }) * dir;
       });
@@ -248,17 +248,17 @@ class DataTable {
    */
   badgeListHtml(v, col) {
     if (!v) return '<span class="text-muted">Chưa cấu hình</span>';
-    
+
     // Tách chuỗi theo dấu phẩy, loại bỏ khoảng trắng và các phần tử rỗng
     const items = String(v).split(',').map(s => s.trim()).filter(s => s);
-    
+
     if (items.length === 0) return '<span class="text-muted">Chưa cấu hình</span>';
-    
+
     // Xác định lề
     let justify = 'flex-start';
     if (col && col.CanLe === 'center') justify = 'center';
     else if (col && col.CanLe === 'right') justify = 'flex-end';
-    
+
     // Gộp các badge lại thành chuỗi HTML
     const badges = items.map(item => `<span class="badge badge-gray">${esc(item)}</span>`);
     return `<div class="badge-list-container" style="display:flex; flex-wrap:wrap; gap:4px; justify-content: ${justify};">${badges.join('')}</div>`;
@@ -269,20 +269,20 @@ class DataTable {
    */
   formatFormulaHtml(v) {
     if (!v) return '<span class="text-muted">Chưa cấu hình</span>';
-    
+
     // 1. Format biến số [VAR:Tên Biến]
     let html = String(v).replace(/\[VAR:([^\]]+)\]/g, '<span class="fm-var">$1</span>');
-    
+
     // 2. Format hàm (max, min, round)
     html = html.replace(/\b(max|min|round)\b/gi, '<span class="fm-func">$1</span>');
-    
+
     // 3. Format hằng số
     html = html.replace(/(?<!\[VAR:.*?)\b(\d+(\.\d+)?)\b/g, '<span class="fm-num">$1</span>');
-    
+
     // 4. Format phép toán
     html = html.replace(/([+\-*/])/g, '<span class="fm-op">$1</span>');
     html = html.replace(/([(),])/g, '<span class="fm-paren">$1</span>');
-    
+
     return `<div style="white-space:normal; line-height:1.6; word-wrap:break-word;">${html}</div>`;
   }
 
@@ -355,7 +355,7 @@ class DataTable {
   renderRowHTML(row) {
     const selectable = this.isRowSelectable(row);
     const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(String(row.MaNhomLopHP)) ? 'checked' : ''} ${!selectable ? 'disabled' : ''}></td>`;
-    
+
     const editable = this.isRowEditable(row);
     const cells = this.state.columns.map(col => {
       const stickyStyle = col.sticky ? `left:${this.stickyOffsets[col.MaTruong]}px;` : '';
@@ -375,20 +375,20 @@ class DataTable {
     const totalRows = allRows.length;
     const totalPages = Math.ceil(totalRows / this.state.pageSize) || 1;
     if (this.state.currentPage > totalPages) this.state.currentPage = totalPages;
-    
+
     const startIdx = (this.state.currentPage - 1) * this.state.pageSize;
     const endIdx = Math.min(startIdx + this.state.pageSize, totalRows);
     const pageRows = allRows.slice(startIdx, endIdx);
-    
+
     if (totalRows === 0) {
       this.tbody.innerHTML = `<tr><td colspan="${this.state.columns.length + 1}" style="text-align:center;padding:32px;color:var(--text-muted);">Không tìm thấy dữ liệu phù hợp</td></tr>`;
     } else {
       this.tbody.innerHTML = pageRows.map(r => this.renderRowHTML(r)).join('');
     }
-    
+
     this.thead.innerHTML = `<tr>${this.buildHeaderHTML()}</tr>`;
     this.renderPagination(totalRows, startIdx, endIdx, totalPages);
-    
+
     if (this.onRenderComplete) this.onRenderComplete(allRows, this.state.selected);
   }
 
@@ -415,7 +415,7 @@ class DataTable {
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
     `;
-    
+
     for (let i = 1; i <= totalPages; i++) {
       if (i === 1 || i === totalPages || (i >= this.state.currentPage - 1 && i <= this.state.currentPage + 1)) {
         html += `<button class="page-btn ${i === this.state.currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
@@ -423,22 +423,22 @@ class DataTable {
         html += `<span style="padding: 0 4px">...</span>`;
       }
     }
-    
+
     html += `
         <button class="page-btn" data-page="${this.state.currentPage + 1}" ${this.state.currentPage === totalPages ? 'disabled' : ''}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
         </button>
       </div>
     `;
-    
+
     this.paginationEl.innerHTML = html;
-    
+
     this.paginationEl.querySelector('#pageSizeSelect').addEventListener('change', e => {
       this.state.pageSize = parseInt(e.target.value);
       this.state.currentPage = 1;
       this.renderAll();
     });
-    
+
     this.paginationEl.querySelectorAll('.page-btn:not(:disabled)').forEach(btn => {
       btn.addEventListener('click', () => {
         const p = parseInt(btn.dataset.page);
@@ -462,12 +462,12 @@ class DataTable {
     const row = this.state.data.find(r => String(r.MaNhomLopHP) === String(rowId));
     const col = this.state.columns.find(c => c.MaTruong === colId);
     if (!row || !col) return;
-    
-    if (row.TrangThai === 'Đã thanh toán') { 
-      if (typeof showToast !== 'undefined') showToast('Không thể sửa: nhóm lớp này đã thanh toán'); 
-      return; 
+
+    if (row.TrangThai === 'Đã thanh toán') {
+      if (typeof showToast !== 'undefined') showToast('Không thể sửa: nhóm lớp này đã thanh toán');
+      return;
     }
-    
+
     td.classList.add('editing');
     let inputHtml;
     if (col.KieuTruong === 'select' || col.KieuTruong === 'badge') {
@@ -481,12 +481,12 @@ class DataTable {
     } else {
       inputHtml = `<input type="text" class="cell-editor" value="${esc(row[col.MaTruong])}">`;
     }
-    
+
     td.innerHTML = inputHtml;
     const input = td.querySelector('.cell-editor');
     input.focus();
     if (input.select) input.select();
-    
+
     const commit = () => {
       let val = input.value;
       if (col.KieuTruong === 'number' || col.KieuTruong === 'capacity') {
@@ -497,12 +497,12 @@ class DataTable {
       this.onRowDirty(row, col.MaTruong, val);
       this.renderAll();
     };
-    
+
     const cancel = () => {
       td.classList.remove('editing');
       td.innerHTML = this.cellDisplay(row, col);
     };
-    
+
     input.addEventListener('blur', commit, { once: true });
     input.addEventListener('keydown', ev => {
       if (ev.key === 'Enter') { input.blur(); }
@@ -522,7 +522,7 @@ class DataTable {
     this.closeFilterDropdown();
     const col = this.state.columns.find(c => c.MaTruong === key);
     if (!col) return;
-    
+
     const isNum = (col.KieuTruong === 'number' || col.KieuTruong === 'capacity');
     const currentAllowed = this.state.filters[key];
     const rect = btn.getBoundingClientRect();
@@ -530,15 +530,30 @@ class DataTable {
     div.className = 'filter-dropdown';
     div.style.top = (rect.bottom + 6) + 'px';
     div.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 256)) + 'px';
-    
+
     // Checkbox list setup
     const allValues = Array.from(new Set(this.state.data.map(r => String(r[key])))).sort((a, b) => a.localeCompare(b));
     let checkedSet = null;
     if (currentAllowed instanceof Set) checkedSet = currentAllowed;
     else if (currentAllowed && currentAllowed.values) checkedSet = currentAllowed.values;
-    
-    const mapItems = allValues.map(v => `<label class="fd-item"><input type="checkbox" class="fd-cb" value="${esc(v)}" ${(!checkedSet || checkedSet.has(v)) ? 'checked' : ''}>${esc(v) || '(trống)'}</label>`).join('');
-    
+
+    const getFilterLabel = (valStr) => {
+      if (!valStr) return '(trống)';
+      const fakeRow = {};
+      // Khôi phục kiểu boolean cơ bản để hàm render nhận diện chính xác
+      if (valStr.toLowerCase() === 'true') fakeRow[key] = true;
+      else if (valStr.toLowerCase() === 'false') fakeRow[key] = false;
+      else fakeRow[key] = valStr;
+
+      try {
+        const cellHtml = this.cellDisplay(fakeRow, col);
+        if (cellHtml) return cellHtml;
+      } catch(e) {}
+      return esc(valStr);
+    };
+
+    const mapItems = allValues.map(v => `<label class="fd-item" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="fd-cb" value="${esc(v)}" ${(!checkedSet || checkedSet.has(v)) ? 'checked' : ''}>${getFilterLabel(v)}</label>`).join('');
+
     let html = `
       <input type="text" class="fd-search" placeholder="Tìm giá trị...">
       <label class="fd-all"><input type="checkbox" class="fd-selectall" ${(!checkedSet || checkedSet.size === allValues.length) ? 'checked' : ''}> Chọn tất cả</label>
@@ -549,7 +564,7 @@ class DataTable {
       const step = (col.MaTruong === 'HeSoHocDi') ? '0.1' : '1';
       let defaultMin = (currentAllowed && currentAllowed.min !== undefined && currentAllowed.min !== null) ? currentAllowed.min : '';
       let defaultMax = (currentAllowed && currentAllowed.max !== undefined && currentAllowed.max !== null) ? currentAllowed.max : '';
-      
+
       html += `
         <div style="padding: 12px 12px 4px 12px; border-top: 1px solid var(--border); margin-top: 4px;">
           <div style="font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Lọc bổ sung theo khoảng:</div>
@@ -563,28 +578,28 @@ class DataTable {
 
     html += `<div class="fd-actions"><button class="fd-clear">Xoá lọc</button><button class="fd-apply">Áp dụng</button></div>`;
     div.innerHTML = html;
-    
+
     document.body.appendChild(div);
-    this.filterDropdownEl = div; 
+    this.filterDropdownEl = div;
     this.openFilterKey = key;
-    
+
     div.querySelector('.fd-search').addEventListener('input', e => {
       const q = e.target.value.toLowerCase();
       div.querySelectorAll('.fd-item').forEach(lbl => { lbl.style.display = lbl.textContent.toLowerCase().includes(q) ? 'flex' : 'none'; });
     });
-    
+
     div.querySelector('.fd-selectall').addEventListener('change', e => {
       div.querySelectorAll('.fd-cb').forEach(cb => cb.checked = e.target.checked);
     });
-    
+
     div.querySelector('.fd-clear').addEventListener('click', () => {
-      delete this.state.filters[key]; 
-      this.closeFilterDropdown(); 
-      this.state.currentPage = 1; 
-      this.renderAll(); 
+      delete this.state.filters[key];
+      this.closeFilterDropdown();
+      this.state.currentPage = 1;
+      this.renderAll();
       this.updateFilterCountBadge();
     });
-    
+
     div.querySelector('.fd-apply').addEventListener('click', () => {
       const checked = Array.from(div.querySelectorAll('.fd-cb:checked')).map(cb => cb.value);
       let minVal = null, maxVal = null;
@@ -594,19 +609,19 @@ class DataTable {
         minVal = minStr === '' ? null : parseFloat(minStr);
         maxVal = maxStr === '' ? null : parseFloat(maxStr);
       }
-      
+
       if (checked.length === allValues.length && minVal === null && maxVal === null) {
-        delete this.state.filters[key]; 
-      } else { 
-        this.state.filters[key] = { type: 'mixed', values: new Set(checked), min: minVal, max: maxVal }; 
+        delete this.state.filters[key];
+      } else {
+        this.state.filters[key] = { type: 'mixed', values: new Set(checked), min: minVal, max: maxVal };
       }
-      
-      this.closeFilterDropdown(); 
-      this.state.currentPage = 1; 
-      this.renderAll(); 
+
+      this.closeFilterDropdown();
+      this.state.currentPage = 1;
+      this.renderAll();
       this.updateFilterCountBadge();
     });
-    
+
     setTimeout(() => document.addEventListener('click', this.outsideClickHandler), 0);
   }
 
@@ -615,11 +630,11 @@ class DataTable {
    * Ẩn bảng Dropdown lọc hiện tại
    */
   closeFilterDropdown() {
-    if (this.filterDropdownEl) { 
-      this.filterDropdownEl.remove(); 
-      this.filterDropdownEl = null; 
-      this.openFilterKey = null; 
-      document.removeEventListener('click', this.outsideClickHandler); 
+    if (this.filterDropdownEl) {
+      this.filterDropdownEl.remove();
+      this.filterDropdownEl = null;
+      this.openFilterKey = null;
+      document.removeEventListener('click', this.outsideClickHandler);
     }
   }
 
@@ -629,8 +644,8 @@ class DataTable {
   updateFilterCountBadge() {
     const n = Object.keys(this.state.filters).length + (this.state.search ? 1 : 0);
     const badge = document.getElementById('filterCount');
-    if(badge) {
-      if (n > 0) { badge.style.display = 'inline-block'; badge.textContent = n; } 
+    if (badge) {
+      if (n > 0) { badge.style.display = 'inline-block'; badge.textContent = n; }
       else { badge.style.display = 'none'; }
     }
   }
@@ -657,7 +672,7 @@ class DataTable {
       const tr = td.closest('tr');
       if (tr) this.startEdit(td, tr.dataset.id, td.dataset.col);
     });
-    
+
     this.tbody.addEventListener('change', e => {
       const cb = e.target.closest('input.row-check');
       if (!cb) return;
@@ -672,7 +687,7 @@ class DataTable {
         selectAllCb.checked = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
       }
     });
-    
+
     this.thead.addEventListener('click', e => {
       const sortBtn = e.target.closest('.sort-btn');
       if (sortBtn) { this.toggleSort(sortBtn.dataset.key); return; }
@@ -684,10 +699,10 @@ class DataTable {
       if (e.target.id === 'selectAll') {
         const checked = e.target.checked;
         const rows = this.getRows();
-        rows.forEach(r => { 
+        rows.forEach(r => {
           if (this.isRowSelectable(r)) {
-            if (checked) this.state.selected.add(String(r.MaNhomLopHP)); 
-            else this.state.selected.delete(String(r.MaNhomLopHP)); 
+            if (checked) this.state.selected.add(String(r.MaNhomLopHP));
+            else this.state.selected.delete(String(r.MaNhomLopHP));
           }
         });
         this.onSelectionChange(this.state.selected);
