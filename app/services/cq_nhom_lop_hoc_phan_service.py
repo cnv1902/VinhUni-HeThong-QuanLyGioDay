@@ -222,4 +222,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
     
     await invalidate_cq_nhom_lop_hoc_phan_cache(redis_client)
             
-    return {"message": "Cập nhật thành công."}
+    return {
+        "message": "Cập nhật thành công.",
+        "updated_rows": final_updates
+    }

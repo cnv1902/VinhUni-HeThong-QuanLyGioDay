@@ -20,6 +20,44 @@ function iconRefresh() {
 }
 
 /**
+ * Trả về chuỗi SVG cho icon bánh răng cấu hình.
+ * @returns {string} Chuỗi HTML của icon
+ */
+function iconGear() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1A2 2 0 1 1 4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.3 7A2 2 0 1 1 7.1 4.2l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1A2 2 0 1 1 19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.1a2 2 0 1 1 0 4H21a1.7 1.7 0 0 0-1.6 1z"/></svg>';
+}
+
+/**
+ * Trả về chuỗi SVG cho icon bút chì chỉnh sửa.
+ * @returns {string} Chuỗi HTML của icon
+ */
+function iconPencil() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>';
+}
+
+/**
+ * Trả về chuỗi SVG cho icon thùng rác xóa.
+ * @returns {string} Chuỗi HTML của icon
+ */
+function iconTrash() {
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+}
+
+/**
+ * Tạo cụm nút thao tác cho dòng cấu hình công thức.
+ * @param {Object} row - Dòng dữ liệu hiện tại
+ * @returns {string} Chuỗi HTML của cụm nút thao tác
+ */
+function actionButtonsHtml(row) {
+  const id = esc(row.ID_Nhom_CT ?? row.id ?? '');
+  return `
+    <button class="mini-btn mini-btn-action mini-btn-config" data-action="config" data-id="${id}" title="Cấu hình" aria-label="Cấu hình">${iconGear()}</button>
+    <button class="mini-btn mini-btn-action mini-btn-edit" data-action="edit" data-id="${id}" title="Sửa" aria-label="Sửa">${iconPencil()}</button>
+    <button class="mini-btn mini-btn-action mini-btn-delete" data-action="delete" data-id="${id}" title="Xóa" aria-label="Xóa">${iconTrash()}</button>
+  `;
+}
+
+/**
  * Tạo huy hiệu (badge) hiển thị trạng thái với màu sắc tương ứng
  * @param {string} v - Giá trị trạng thái (VD: 'Đã thanh toán', 'Đã xác nhận')
  * @returns {string} Chuỗi HTML của badge
@@ -74,6 +112,7 @@ class DataTable {
     this.onSelectionChange = config.onSelectionChange || function () { };
     this.onRenderComplete = config.onRenderComplete || function () { };
     this.pageSizeEl = document.getElementById(config.pageSizeId) || null;
+    this.enablePagination = config.enablePagination !== false;
     this.customCellRender = config.customCellRender || null;
     this.isRowSelectable = config.isRowSelectable || (() => true);
     this.isRowEditable = config.isRowEditable || (() => true);
@@ -107,6 +146,35 @@ class DataTable {
     this.state.currentPage = 1;
     this.state.filters = {};
     this.state.selected.clear();
+    this.renderAll();
+  }
+
+  /**
+   * Cập nhật dữ liệu cho các dòng (Inline update) mà không cần nạp lại toàn bộ bảng
+   * @param {Array} updatedRows - Mảng các object chứa dữ liệu mới của các dòng
+   * @param {string} primaryKey - Tên trường định danh (mặc định: MaNhomLopHP)
+   */
+  updateRowsData(updatedRows, primaryKey = 'MaNhomLopHP') {
+    if (!updatedRows || updatedRows.length === 0) return;
+
+    // Tạo lookup table cho nhanh
+    const updateMap = {};
+    updatedRows.forEach(row => {
+      if (row[primaryKey] !== undefined) {
+        updateMap[row[primaryKey]] = row;
+      }
+    });
+
+    // Cập nhật vào data gốc
+    this.state.data.forEach(row => {
+      const rowId = row[primaryKey];
+      if (updateMap[rowId]) {
+        // Ghi đè các trường mới vào dòng cũ
+        Object.assign(row, updateMap[rowId]);
+      }
+    });
+
+    // Render lại giao diện
     this.renderAll();
   }
 
@@ -232,7 +300,7 @@ class DataTable {
       case 'badge': return badgeHtml(v);
       case 'badge_list': return this.badgeListHtml(v, col);
       case 'capacity': return this.capacityHtml(row);
-      case 'action': return `<button class="mini-btn" data-action="tonghop" title="Tính lại số liệu">${iconRefresh()}<span>Tính lại</span></button>`;
+      case 'action': return actionButtonsHtml(row);
       case 'mono': return `<span class="mono-text">${esc(v)}</span>`;
       case 'number': return `<span class="num-text">${this.formatNum(v, col.MaTruong)}</span>`;
       case 'formula': return this.formatFormulaHtml(v);
@@ -373,12 +441,20 @@ class DataTable {
   renderAll() {
     const allRows = this.getRows();
     const totalRows = allRows.length;
-    const totalPages = Math.ceil(totalRows / this.state.pageSize) || 1;
-    if (this.state.currentPage > totalPages) this.state.currentPage = totalPages;
 
-    const startIdx = (this.state.currentPage - 1) * this.state.pageSize;
-    const endIdx = Math.min(startIdx + this.state.pageSize, totalRows);
-    const pageRows = allRows.slice(startIdx, endIdx);
+    let startIdx = 0;
+    let endIdx = totalRows;
+    let pageRows = allRows;
+    let totalPages = 1;
+
+    if (this.enablePagination) {
+      totalPages = Math.ceil(totalRows / this.state.pageSize) || 1;
+      if (this.state.currentPage > totalPages) this.state.currentPage = totalPages;
+
+      startIdx = (this.state.currentPage - 1) * this.state.pageSize;
+      endIdx = Math.min(startIdx + this.state.pageSize, totalRows);
+      pageRows = allRows.slice(startIdx, endIdx);
+    }
 
     if (totalRows === 0) {
       this.tbody.innerHTML = `<tr><td colspan="${this.state.columns.length + 1}" style="text-align:center;padding:32px;color:var(--text-muted);">Không tìm thấy dữ liệu phù hợp</td></tr>`;
@@ -387,7 +463,11 @@ class DataTable {
     }
 
     this.thead.innerHTML = `<tr>${this.buildHeaderHTML()}</tr>`;
-    this.renderPagination(totalRows, startIdx, endIdx, totalPages);
+    if (this.enablePagination) {
+      this.renderPagination(totalRows, startIdx, endIdx, totalPages);
+    } else if (this.paginationEl) {
+      this.paginationEl.innerHTML = '';
+    }
 
     if (this.onRenderComplete) this.onRenderComplete(allRows, this.state.selected);
   }
@@ -462,11 +542,20 @@ class DataTable {
     const row = this.state.data.find(r => String(r.MaNhomLopHP) === String(rowId));
     const col = this.state.columns.find(c => c.MaTruong === colId);
     if (!row || !col) return;
+    const originalValue = row[col.MaTruong];
 
     if (row.TrangThai === 'Đã thanh toán') {
       if (typeof showToast !== 'undefined') showToast('Không thể sửa: nhóm lớp này đã thanh toán');
       return;
     }
+
+    const normalizeEditedValue = (value) => {
+      if (col.KieuTruong === 'number' || col.KieuTruong === 'capacity') {
+        if (value === null || value === undefined || String(value).trim() === '') return '';
+        return col.MaTruong === 'HeSoHocDi' ? (parseFloat(value) || 0) : (parseInt(value) || 0);
+      }
+      return String(value ?? '');
+    };
 
     td.classList.add('editing');
     let inputHtml;
@@ -488,10 +577,20 @@ class DataTable {
     if (input.select) input.select();
 
     const commit = () => {
-      let val = input.value;
-      if (col.KieuTruong === 'number' || col.KieuTruong === 'capacity') {
-        val = col.MaTruong === 'HeSoHocDi' ? (parseFloat(val) || 0) : (parseInt(val) || 0);
+      const rawInputValue = input.value;
+      const oldComparable = normalizeEditedValue(originalValue);
+      const newComparable = normalizeEditedValue(rawInputValue);
+
+      if (oldComparable === newComparable) {
+        cancel();
+        return;
       }
+
+      let val = newComparable;
+      if ((col.KieuTruong === 'number' || col.KieuTruong === 'capacity') && val === '') {
+        val = 0;
+      }
+
       row[col.MaTruong] = val;
       row._dirty = true;
       this.onRowDirty(row, col.MaTruong, val);

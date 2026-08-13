@@ -46,13 +46,6 @@ async function init() {
         updateFooter(allRows, selectedSet);
       },
       customCellRender: (row, col) => {
-        if (col.MaTruong === 'HanhDong') {
-          return `
-            <span data-action="config" data-id="${row.ID_Nhom_CT}" style="color: var(--text-secondary); cursor: pointer; margin-right: 12px; font-weight: 500;">Cấu hình</span>
-            <span data-action="edit" data-id="${row.ID_Nhom_CT}" style="color: var(--brand-800); cursor: pointer; margin-right: 12px; font-weight: 500;">Sửa</span>
-            <span data-action="delete" data-id="${row.ID_Nhom_CT}" style="color: var(--red-600); cursor: pointer; font-weight: 500;">Xóa</span>
-          `;
-        }
         if (col.MaTruong === 'TrangThai') {
           const val = row[col.MaTruong];
           if (val === true || String(val).toLowerCase() === 'true') {
@@ -65,7 +58,7 @@ async function init() {
         if (col.MaTruong === 'DenNam') {
           const val = row[col.MaTruong];
           if (val === null || String(val).toLowerCase() === 'null') {
-            return `<span class="num-text">∞</span>`;
+            return `<span class="num-text"></span>`;
           }
         }
         return null; // Trả về null để datatable dùng render mặc định cho các cột khác
@@ -82,7 +75,10 @@ async function init() {
     }
 
     // Khởi tạo Modal Tạo Nhóm
-    initFormModal();
+    await initFormModal();
+
+    // Tải dữ liệu sau khi Dropdown Hệ đào tạo đã có data
+    await loadTableData();
   } catch (error) {
     console.error("Lỗi khi tải cấu hình cột:", error);
     if (typeof showToast !== 'undefined') showToast("Không thể tải cấu hình bảng từ máy chủ!");
@@ -234,16 +230,7 @@ async function loadTableData() {
   }
 }
 
-// Bắt sự kiện khi Navbar đã nạp xong Context (Lần đầu mở trang)
-window.addEventListener('ContextReady', () => {
-  loadTableData();
-});
-
-// Bắt sự kiện khi người dùng đổi Năm học/Học kỳ trên Navbar
-// Tuỳ nghiệp vụ, có thể không cần reload nếu không liên quan
-window.addEventListener('ContextChanged', () => {
-  loadTableData();
-});
+// (Đã gỡ bỏ ContextReady và ContextChanged vì trang này không phụ thuộc vào Học kỳ của Navbar)
 
 /**
  * Hàm phụ trợ cập nhật các con số Thống kê ở Footer

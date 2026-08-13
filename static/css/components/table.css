@@ -203,15 +203,15 @@
     }
 
     tr.row-dirty td {
-      background: var(--amber-50);
+      background: #FFFF99;
     }
 
     tr.row-dirty:hover td {
-      background: #F7E9C6;
+      background: #FFFF66;
     }
 
     tr.row-dirty .sticky-cell {
-      background: var(--amber-50);
+      background: #FFFF99;
     }
 
     tr.row-locked td {
@@ -334,23 +334,56 @@
       gap: 5px;
       height: 26px;
       padding: 0 10px;
-      border: 1px solid var(--border-strong);
+      border: none;
       border-radius: var(--radius);
-      background: var(--bg-panel);
+      background: transparent;
       cursor: pointer;
       font-size: 12px;
       color: var(--text-primary);
     }
-
+/* 
     .mini-btn:hover {
       background: var(--bg-subtle);
       border-color: var(--teal-600);
       color: var(--teal-700);
-    }
+    } */
 
     .mini-btn svg {
       width: 12px;
       height: 12px;
+    }
+
+    .mini-btn-action {
+      width: 26px;
+      padding: 0;
+      justify-content: center;
+    }
+
+    .mini-btn-config {
+      color: var(--text-secondary);
+    }
+
+    .mini-btn-edit {
+      color: var(--brand-800);
+    }
+
+    .mini-btn-delete {
+      color: var(--red-600);
+    }
+
+    .mini-btn-config:hover {
+      color: var(--text-primary);
+      background: var(--bg-subtle-2);
+    }
+
+    .mini-btn-edit:hover {
+      color: var(--brand-900);
+      background: var(--brand-50);
+    }
+
+    .mini-btn-delete:hover {
+      color: var(--red-700);
+      background: var(--red-50);
     }
 
 /* Formula Formatting */

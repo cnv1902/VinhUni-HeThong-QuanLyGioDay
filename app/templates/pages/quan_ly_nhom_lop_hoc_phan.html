@@ -12,15 +12,7 @@
     </svg>
     Lưu xác nhận
   </button>
-  <button class="btn btn-primary" id="btnSaveChanges" disabled
-    style="background-color: var(--teal-600); border-color: var(--teal-600);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-      <polyline points="7 3 7 8 15 8"></polyline>
-    </svg>
-    Lưu thay đổi
-  </button>
+
   <button class="btn" id="btnTransfer">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
       <path d="M4 7h13M13 3l4 4-4 4" />
@@ -50,7 +42,7 @@
 
 
 
-<div class="quick-row">
+<div class="quick-row" style="display: flex; justify-content: space-between; align-items: center;">
   <div class="search-box">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="7" />
@@ -58,6 +50,15 @@
     </svg>
     <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
   </div>
+
+  <button class="btn btn-primary" id="btnSaveChanges" style="display: none; background-color: var(--teal-600); border-color: var(--teal-600);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+      <polyline points="17 21 17 13 7 13 7 21"></polyline>
+      <polyline points="7 3 7 8 15 8"></polyline>
+    </svg>
+    Lưu thay đổi
+  </button>
 </div>
 
 {% include 'components/table.html' %}

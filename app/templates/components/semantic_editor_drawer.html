@@ -1,6 +1,6 @@
 <!-- DRAWER CẤU HÌNH CÔNG THỨC -->
 <div id="{{ drawer_id|default('configDrawer') }}" class="drawer-overlay">
-    <div class="drawer-panel" onclick="event.stopPropagation()">
+    <div class="drawer-panel">
         <div class="drawer-header">
             <h2 id="drawerTitle">Cấu hình Chi tiết</h2>
             <button id="btnCloseDrawer" class="icon-btn" aria-label="Đóng">
@@ -15,22 +15,21 @@
         <div class="md-container">
             <!-- CỘT TRÁI (MENU ĐỘNG) -->
             <div class="md-master">
-                <div class="md-master-group">CẤU HÌNH CHUNG</div>
                 <div id="menuFixed">
                     <!-- Render Hệ số lớp đông -->
                 </div>
 
-                <div class="md-master-group" style="margin-top: 8px;">CÔNG THỨC THEO TRƯỜNG HỢP</div>
-                <div id="menuDynamic" style="flex: 1; overflow-y: auto;">
+                <div class="md-master-group md-master-group-spaced">CÔNG THỨC THEO TRƯỜNG HỢP</div>
+                <div id="menuDynamic" class="md-menu-scroll">
                     <!-- Render Trường hợp dạy học -->
                 </div>
 
                 <!-- Khu vực thêm mới Trường hợp dạy bằng Datalist combobox -->
                 <div class="md-add-section">
-                    <label style="font-size: 12px; font-weight: 600; margin-bottom: 6px; display: block;">Thêm trường
+                    <label class="md-add-label">Thêm trường
                         hợp dạy</label>
                     <div id="cbHinhThucDayContainer"></div>
-                    <button id="btnAddFormat" class="btn btn-ghost" style="width: 100%; margin-top: 8px;">+ Thêm vào
+                    <button id="btnAddFormat" class="btn btn-ghost md-add-button">+ Thêm vào
                         danh sách</button>
                 </div>
             </div>
@@ -47,9 +46,9 @@
                 </div>
 
                 <!-- Toolbar (Ẩn mặc định, hiển thị khi focus vào ô công thức) -->
-                <div class="formula-toolbar" id="masterToolbar" style="display: none; margin-top: 16px;">
+                <div class="formula-toolbar" id="masterToolbar">
                     <div class="formula-group">
-                        <div id="dictGroup" style="display:flex; flex-wrap: wrap; gap: 6px;">
+                        <div id="dictGroup" class="dict-group">
                             <!-- Render Biến -->
                         </div>
                     </div>
@@ -80,7 +79,7 @@
         </div>
 
         <div class="drawer-footer">
-            <span id="footerStatus" style="font-size: 13px; color: var(--text-secondary); margin-right: auto;">Mọi thay
+            <span id="footerStatus" class="drawer-footer-status">Mọi thay
                 đổi sẽ không được lưu nếu chưa nhấn "Lưu cấu hình"</span>
             <button id="btnCancelDrawer" class="btn btn-ghost">Hủy bỏ</button>
             <button id="btnSaveConfig" class="btn btn-primary">Lưu cấu hình</button>

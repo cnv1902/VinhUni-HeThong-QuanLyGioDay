@@ -1,7 +1,8 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List, Dict, Any
+from app.schemas.base_schema import RoundedFloatBaseModel
 
-class CQNhomLopBase(BaseModel):
+class CQNhomLopBase(RoundedFloatBaseModel):
     MaNhomLopHP: str
     TenNhomLopHP: Optional[str] = None
     SoSinhVien: Optional[int] = None
@@ -27,6 +28,7 @@ class CQNhomLopBase(BaseModel):
     HeSoHocDi: Optional[float] = None
     XacNhan: Optional[bool] = None
     NamTaiChinh: Optional[int] = None
+    HeSo_LopDong: Optional[float] = None
 
 class CQNhomLopResponse(CQNhomLopBase):
     ID: int

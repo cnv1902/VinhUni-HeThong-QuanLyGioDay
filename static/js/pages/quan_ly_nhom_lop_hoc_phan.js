@@ -3,6 +3,29 @@
 // ==========================================
 let myTable;
 let modifiedRows = {};
+let allowLeavePage = false;
+let originalRowsById = {};
+
+function hasUnsavedChanges() {
+  return Object.keys(modifiedRows).length > 0;
+}
+
+function updateSaveButtonVisibility() {
+  const btnSave = document.getElementById('btnSaveChanges');
+  if (!btnSave) return;
+  btnSave.style.display = Object.keys(modifiedRows).length === 0 ? 'none' : 'inline-flex';
+}
+
+function valuesAreSame(a, b) {
+  return String(a ?? '') === String(b ?? '');
+}
+
+function snapshotRows(rows) {
+  originalRowsById = {};
+  rows.forEach(row => {
+    originalRowsById[row.MaNhomLopHP] = { ...row };
+  });
+}
 
 /**
  * Khởi tạo dữ liệu cốt lõi (Cấu hình cột) 1 lần duy nhất khi mở trang.
@@ -20,6 +43,7 @@ async function init() {
       tableId: 'dataTable',
       paginationId: 'tablePagination',
       pageSize: 100,
+      enablePagination: false,
       isRowSelectable: (row) => row.XacNhan !== true, // Không cho chọn nếu đã xác nhận
       isRowEditable: (row) => row.XacNhan !== true,   // Không cho sửa nếu đã xác nhận
       customCellRender: (row, col) => {
@@ -44,10 +68,21 @@ async function init() {
       },
       onRowDirty: (row, key, val) => {
         const rowId = row.MaNhomLopHP;
-        if (!modifiedRows[rowId]) {
-          modifiedRows[rowId] = {};
+        const originalRow = originalRowsById[rowId] || {};
+
+        if (valuesAreSame(originalRow[key], val)) {
+          if (modifiedRows[rowId]) {
+            delete modifiedRows[rowId][key];
+            if (Object.keys(modifiedRows[rowId]).length === 0) {
+              delete modifiedRows[rowId];
+            }
+          }
+        } else {
+          if (!modifiedRows[rowId]) {
+            modifiedRows[rowId] = {};
+          }
+          modifiedRows[rowId][key] = val;
         }
-        modifiedRows[rowId][key] = val;
 
         if (key === 'SiSoChuyenDoi' || key === 'SiSoDKH') {
           const sisoCD = parseFloat(row.SiSoChuyenDoi) || 0;
@@ -55,8 +90,8 @@ async function init() {
           row.SoSinhVien = sisoCD + sisoDKH;
         }
 
-        const btnSave = document.getElementById('btnSaveChanges');
-        if (btnSave) btnSave.disabled = Object.keys(modifiedRows).length === 0;
+        row._dirty = Boolean(modifiedRows[rowId]);
+        updateSaveButtonVisibility();
       },
       onSelectionChange: (selectedSet) => {
         updateFooter(myTable.getRows(), selectedSet);
@@ -95,6 +130,9 @@ async function loadTableData(hoc_ky) {
     }
 
     const nhomLopData = await apiLopHocPhan.getNhomLopData(hoc_ky);
+    snapshotRows(nhomLopData);
+    modifiedRows = {};
+    updateSaveButtonVisibility();
     if (myTable) {
       myTable.setData(nhomLopData);
     }
@@ -121,7 +159,7 @@ window.addEventListener('ContextChanged', (e) => {
       confirmModal.show("Có dữ liệu chưa lưu. Việc đổi học kỳ sẽ làm mất thay đổi. Tiếp tục?", "Cảnh báo", "Tiếp tục").then(isOk => {
         if (isOk) {
           modifiedRows = {};
-          document.getElementById('btnSaveChanges').disabled = true;
+          updateSaveButtonVisibility();
           loadTableData(hoc_ky);
         }
       });
@@ -211,7 +249,40 @@ function bindStaticEvents() {
     });
   }
 
+  window.addEventListener('beforeunload', (event) => {
+    if (allowLeavePage) return;
+    if (!hasUnsavedChanges()) return;
 
+    event.preventDefault();
+    event.returnValue = '';
+  });
+
+  document.addEventListener('click', async (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
+
+    if (!hasUnsavedChanges()) return;
+
+    event.preventDefault();
+
+    let isOk = false;
+    if (typeof confirmModal !== 'undefined') {
+      isOk = await confirmModal.show(
+        'Có bản ghi chỉnh sửa chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang này không?',
+        'Rời khỏi trang',
+        'Rời khỏi'
+      );
+    }
+
+    if (isOk) {
+      allowLeavePage = true;
+      modifiedRows = {};
+      window.location.href = href;
+    }
+  }, true);
 
   // Sự kiện cấu hình hiển thị bảng
   const btnConfigTable = document.getElementById('btnConfigTable');
@@ -240,6 +311,31 @@ function bindStaticEvents() {
       }
     });
   }
+  history.pushState({ guardUnsaved: true }, '', window.location.href);
+
+  window.addEventListener('popstate', async () => {
+    if (!hasUnsavedChanges()) {
+      history.back();
+      return;
+    }
+
+    history.pushState({ guardUnsaved: true }, '', window.location.href);
+
+    let isOk = false;
+    if (typeof confirmModal !== 'undefined') {
+      isOk = await confirmModal.show(
+        'Có bản ghi chỉnh sửa chưa được lưu. Bạn có chắc chắn muốn rời khỏi trang này không?',
+        'Rời khỏi trang',
+        'Rời khỏi'
+      );
+    }
+
+    if (isOk) {
+      allowLeavePage = true;
+      modifiedRows = {};
+      history.back();
+    }
+  });
 }
 
 async function submitSaveChanges() {
@@ -264,13 +360,21 @@ async function submitSaveChanges() {
     });
 
     if (res.ok) {
+      const data = await res.json();
       if (typeof showToast !== 'undefined') showToast("Đã lưu thay đổi thành công!");
       modifiedRows = {};
-      btnSaveChanges.disabled = true;
+      btnSaveChanges.disabled = false;
       btnSaveChanges.innerHTML = originalHTML;
 
-      // Remove dirty flag and visual highlight
+      // Cập nhật dữ liệu động từng dòng (Inline update)
+      if (data && data.updated_rows) {
+        myTable.updateRowsData(data.updated_rows);
+      }
+      
+      // Xóa cờ dirty của toàn bộ dòng (phòng trường hợp updateRowsData chưa xử lý hết)
       myTable.state.data.forEach(r => r._dirty = false);
+      snapshotRows(myTable.state.data);
+      updateSaveButtonVisibility();
       myTable.renderAll();
     } else {
       const err = await res.json();
