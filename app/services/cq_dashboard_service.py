@@ -20,28 +20,26 @@ async def get_dashboard_stats(db: Session, redis_client, hoc_ky: Optional[str] =
         nhom_lop_data = []
 
     tong_nhom_lop = len(nhom_lop_data)
-    tong_sinh_vien = 0
-    tong_tin_chi = 0.0
     da_xac_nhan = 0
     chua_xac_nhan = 0
+    da_ky = 0
 
     for item in nhom_lop_data:
-        tong_sinh_vien += (item.get("SoSinhVien") or 0)
-        tong_tin_chi += (item.get("SoTinChi") or 0.0)
         if item.get("XacNhan") is True:
             da_xac_nhan += 1
+            if (item.get("ID_LanTongHopFile") or 0) >= 1:
+                da_ky += 1
         else:
             chua_xac_nhan += 1
 
-    avg_sinh_vien = tong_sinh_vien / tong_nhom_lop if tong_nhom_lop > 0 else 0.0
-    avg_tin_chi = tong_tin_chi / tong_nhom_lop if tong_nhom_lop > 0 else 0.0
+    chua_ky = da_xac_nhan - da_ky
 
     return CQDashboardStatsResponse(
         TongNhomLop=tong_nhom_lop,
-        TongSinhVien=tong_sinh_vien,
-        TongTinChi=tong_tin_chi,
         DaXacNhan=da_xac_nhan,
-        ChuaXacNhan=chua_xac_nhan,
-        AvgSinhVien=avg_sinh_vien,
-        AvgTinChi=avg_tin_chi
+        DaKy=da_ky,
+        ChuaKy=chua_ky,
+        DaThanhToan=0,
+        ChuaThanhToan=0,
+        ChuaXacNhan=chua_xac_nhan
     )

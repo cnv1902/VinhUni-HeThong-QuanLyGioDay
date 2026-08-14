@@ -11,13 +11,18 @@ const apiLopHocPhan = {
     }
   },
 
-  // Lấy dữ liệu danh sách nhóm lớp, truyền hoc_ky
-  async getNhomLopData(hoc_ky = null) {
+  async getNhomLopData(hoc_ky = null, trang_thai_loc = null) {
     try {
       let url = `${window.API_PREFIX}/cq-nhom-lop-hoc-phan/`;
-      if (hoc_ky !== null) {
-        url += `?hoc_ky=${hoc_ky}`;
+      const params = new URLSearchParams();
+      if (hoc_ky !== null) params.append('hoc_ky', hoc_ky);
+      if (trang_thai_loc !== null) params.append('trang_thai_loc', trang_thai_loc);
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
       }
+      
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();

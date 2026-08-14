@@ -36,12 +36,29 @@ async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, hoc_ky: Optional[s
         except Exception as e:
             logger.error(f"Lỗi xóa Cache Redis (Nhóm lớp): {e}")
 
-async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client, hoc_ky: Optional[str] = None):
+async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client, hoc_ky: Optional[str] = None, trang_thai_loc: Optional[str] = None):
     """
     Lấy danh sách các nhóm lớp học phần hệ chính quy.
     """
     if hoc_ky is None:
         raise BadRequestException(detail="Yêu cầu không hợp lệ: Thiếu học kỳ.")
+
+    def filter_data(data, filter_type):
+        if not filter_type:
+            return data
+        if filter_type == "da_xac_nhan":
+            return [x for x in data if x.get("XacNhan") is True]
+        if filter_type == "chua_xac_nhan":
+            return [x for x in data if x.get("XacNhan") is not True]
+        if filter_type == "da_ky":
+            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) >= 1]
+        if filter_type == "chua_ky":
+            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) < 1]
+        if filter_type == "da_thanh_toan":
+            return []
+        if filter_type == "chua_thanh_toan":
+            return []
+        return data
 
     cache_key = f"{CACHE_PREFIX}{hoc_ky}"
 
@@ -49,7 +66,8 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client,
         try:
             cached_data = await redis_client.get(cache_key)
             if cached_data:
-                return json.loads(cached_data)
+                parsed_data = json.loads(cached_data)
+                return filter_data(parsed_data, trang_thai_loc)
         except Exception as e:
             logger.error(f"Lỗi lấy Cache Redis (Nhóm lớp {hoc_ky}): {e}")
 
@@ -62,7 +80,7 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client,
         except Exception as e:
             logger.error(f"Lỗi lưu Cache Redis (Nhóm lớp {hoc_ky}): {e}")
         
-    return columns_dict
+    return filter_data(columns_dict, trang_thai_loc)
 
 
 async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):

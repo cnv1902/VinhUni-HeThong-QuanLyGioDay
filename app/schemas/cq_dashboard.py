@@ -2,10 +2,10 @@ from app.schemas.base_schema import RoundedFloatBaseModel
 from typing import Optional
 
 class CQDashboardStatsResponse(RoundedFloatBaseModel):
-    TongNhomLop: Optional[int] = 0
-    TongSinhVien: Optional[int] = 0
-    TongTinChi: Optional[float] = 0.0
-    DaXacNhan: Optional[int] = 0
-    ChuaXacNhan: Optional[int] = 0
-    AvgSinhVien: Optional[float] = 0.0
-    AvgTinChi: Optional[float] = 0.0
+    TongNhomLop: int = 0
+    DaXacNhan: int = 0
+    DaKy: int = 0
+    ChuaKy: int = 0
+    DaThanhToan: int = 0
+    ChuaThanhToan: int = 0
+    ChuaXacNhan: int = 0

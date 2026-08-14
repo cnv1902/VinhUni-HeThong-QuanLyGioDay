@@ -10,11 +10,16 @@ from app.services import cq_nhom_lop_hoc_phan_service as services_cq_nhom_lop
 router = APIRouter()
 
 @router.get("/", response_model=List[CQNhomLopResponse])
-async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session = Depends(get_db), redis_client = Depends(get_redis), hoc_ky: Optional[str] = None):
+async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(
+    db: Session = Depends(get_db), 
+    redis_client = Depends(get_redis), 
+    hoc_ky: Optional[str] = None,
+    trang_thai_loc: Optional[str] = None
+):
     """
     Lấy danh sách các nhóm lớp học phần hệ chính quy
     """
-    columns = await services_cq_nhom_lop.get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db, redis_client, hoc_ky=hoc_ky)
+    columns = await services_cq_nhom_lop.get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db, redis_client, hoc_ky=hoc_ky, trang_thai_loc=trang_thai_loc)
     return columns
 
 @router.put("/bulk-update", response_model=CQNhomLopBulkUpdateResponse)

@@ -270,7 +270,10 @@ async function loadTableData(hoc_ky) {
       myTable.tbody.innerHTML = '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
     }
 
-    const nhomLopData = await apiLopHocPhan.getNhomLopData(hoc_ky);
+    const urlParams = new URLSearchParams(window.location.search);
+    const filterParam = urlParams.get('filter');
+
+    const nhomLopData = await apiLopHocPhan.getNhomLopData(hoc_ky, filterParam);
     snapshotRows(nhomLopData);
     modifiedRows = {};
     updateSaveButtonVisibility();

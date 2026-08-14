@@ -9,91 +9,48 @@
 {% endblock %}
 
 {% block content %}
-<!-- 2x2 Grid Hub -->
-<div class="dash-hub-grid">
-
-  <!-- Góc 1: Nhóm lớp học phần -->
-  <section class="dash-hub-quadrant">
-    <div class="quadrant-header">
-      <h2 class="quadrant-title">Nhóm Lớp Học Phần</h2>
-      <a href="/quan_ly_nhom_lop_hoc_phan.html" class="quadrant-link">Quản lý &rarr;</a>
-    </div>
-    <div class="quadrant-body">
-      <div class="quadrant-stats">
-        <div class="q-stat-item">
-          <span class="q-stat-label">Tổng số nhóm lớp</span>
-          <strong class="q-stat-value" id="dashTongNhomLop">--</strong>
-        </div>
-        <div class="q-stat-item">
-          <span class="q-stat-label">Tổng số sinh viên</span>
-          <strong class="q-stat-value" id="dashTongSinhVien">--</strong>
-        </div>
-        <div class="q-stat-item">
-          <span class="q-stat-label">Tổng tín chỉ</span>
-          <strong class="q-stat-value" id="dashTongTinChi">--</strong>
-        </div>
-        <div class="q-stat-item">
-          <span class="q-stat-label">Trung bình SV/Lớp</span>
-          <strong class="q-stat-value" id="dashAvgSinhVien">--</strong>
-        </div>
-        <div class="q-stat-item">
-          <span class="q-stat-label">Trung bình TC/Lớp</span>
-          <strong class="q-stat-value" id="dashAvgTinChi">--</strong>
-        </div>
-      </div>
-
-      <!-- Demo Bar Chart -->
-      <div class="q-chart-box">
-        <div class="q-chart-title">Phân bổ Xác nhận / Chưa xác nhận</div>
-        <div class="q-bar-group">
-          <div class="q-bar-col">
-            <span class="q-bar-value" id="dashDaXacNhanVal">--</span>
-            <div class="q-bar-stick" id="dashDaXacNhanStick" style="background: var(--green-600); height: 0%;"></div>
-            <span class="q-bar-label">Đã xác nhận</span>
-          </div>
-          <div class="q-bar-col">
-            <span class="q-bar-value" id="dashChuaXacNhanVal">--</span>
-            <div class="q-bar-stick" id="dashChuaXacNhanStick" style="background: var(--amber-600); height: 0%;"></div>
-            <span class="q-bar-label">Chưa xác nhận</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Góc 2: Công thức quy đổi -->
-  <section class="dash-hub-quadrant">
-    <div class="quadrant-header">
-      <h2 class="quadrant-title">Công Thức Quy Đổi</h2>
-      <a href="/nhom_cong_thuc_quy_doi.html" class="quadrant-link">Cấu hình &rarr;</a>
-    </div>
-    <div class="quadrant-body quadrant-empty">
-      <p>Phân hệ chưa có thống kê.</p>
-    </div>
-  </section>
-
-  <!-- Góc 3: Hệ số lớp đông -->
-  <section class="dash-hub-quadrant">
-    <div class="quadrant-header">
-      <h2 class="quadrant-title">Hệ Số Lớp Đông</h2>
-      <a href="#" class="quadrant-link text-muted">Cấu hình &rarr;</a>
-    </div>
-    <div class="quadrant-body quadrant-empty">
-      <p>Phân hệ chưa có thống kê.</p>
-    </div>
-  </section>
-
-  <!-- Góc 4: Mở rộng -->
-  <section class="dash-hub-quadrant">
-    <div class="quadrant-header">
-      <h2 class="quadrant-title">Quản lý Khác</h2>
-      <a href="#" class="quadrant-link text-muted">Chi tiết &rarr;</a>
-    </div>
-    <div class="quadrant-body quadrant-empty">
-      <p>Không gian dành cho các phân hệ mở rộng.</p>
-    </div>
-  </section>
-
+<div class="dash-horizontal-bar">
+  <!-- Cột 1: Tổng -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html'">
+    <span class="text-secondary fw-bold text-uppercase mb-2" style="font-size: 12px;">Tổng học phần</span>
+    <h3 class="text-dark fw-bold mb-0" style="font-size: 24px;" id="dashTongNhomLop">--</h3>
+  </div>
+  
+  <!-- Cột 2: Đã xác nhận -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_xac_nhan'">
+    <span class="text-primary fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã xác nhận</span>
+    <h3 class="text-primary fw-bold mb-0" style="font-size: 24px;" id="dashDaXacNhan">--</h3>
+  </div>
+  
+  <!-- Cột 3: Đã ký -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_ky'">
+    <span class="text-success fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã ký</span>
+    <h3 class="text-success fw-bold mb-0" style="font-size: 24px;" id="dashDaKy">--</h3>
+  </div>
+  
+  <!-- Cột 4: Chưa ký -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_ky'">
+    <span class="text-warning fw-bold text-uppercase mb-2" style="font-size: 12px; color: #b07200 !important;">Chưa ký</span>
+    <h3 class="text-warning fw-bold mb-0" style="font-size: 24px; color: #b07200 !important;" id="dashChuaKy">--</h3>
+  </div>
+  
+  <!-- Cột 5: Đã thanh toán -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_thanh_toan'">
+    <span class="text-info fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã thanh toán</span>
+    <h3 class="text-info fw-bold mb-0" style="font-size: 24px;" id="dashDaThanhToan">--</h3>
+  </div>
+  
+  <!-- Cột 6: Chưa thanh toán -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_thanh_toan'">
+    <span class="text-secondary fw-bold text-uppercase mb-2" style="font-size: 12px;">Chưa thanh toán</span>
+    <h3 class="text-secondary fw-bold mb-0" style="font-size: 24px;" id="dashChuaThanhToan">--</h3>
+  </div>
+  
+  <!-- Cột 7: Chưa xác nhận -->
+  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_xac_nhan'">
+    <span class="text-danger fw-bold text-uppercase mb-2" style="font-size: 12px;">Chưa xác nhận</span>
+    <h3 class="text-danger fw-bold mb-0" style="font-size: 24px;" id="dashChuaXacNhan">--</h3>
+  </div>
 </div>
 {% endblock %}
 
