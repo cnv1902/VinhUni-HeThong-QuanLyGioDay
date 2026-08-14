@@ -3,10 +3,9 @@
     <ul class="sidebar-menu">
       <li><a href="/" class="{% if active_menu == 'trang_chu' %}active{% endif %}">Trang chủ</a></li>
 
-      <li class="has-submenu" data-menu-id="menu_cha">
+      <li class="has-submenu" data-menu-id="ca_nhan">
         <div class="menu-item-wrap">
-          <a href="/menu-cha.html" class="{% if active_menu == 'menu_cha' %}active{% endif %}">Menu
-            cha</a>
+          <a href="/ca-nhan.html" class="{% if active_menu == 'ca_nhan' %}active{% endif %}">Cá nhân</a>
           <button class="submenu-toggle">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round">
@@ -15,7 +14,11 @@
           </button>
         </div>
         <ul class="sidebar-submenu" style="display: none;">
-          <li><a href="menu-con.html" class="{% if active_menu == 'menu_con' %}active{% endif %}">Menu con</a>
+          <li><a href="/ca-nhan-1.html" class="{% if active_menu == 'ca_nhan_1' %}active{% endif %}">Cá nhân 1</a>
+          </li>
+          <li><a href="/ca-nhan-2.html" class="{% if active_menu == 'ca_nhan_2' %}active{% endif %}">Cá nhân 2</a>
+          </li>
+          <li><a href="/ca-nhan-3.html" class="{% if active_menu == 'ca_nhan_3' %}active{% endif %}">Cá nhân 3</a>
           </li>
         </ul>
       </li>

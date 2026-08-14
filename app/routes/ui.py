@@ -16,21 +16,21 @@ templates.env.globals["CACHE_BUSTER"] = lambda: STARTUP_TIME  # type: ignore
 async def index(request: Request):
     return templates.TemplateResponse(
         request=request, 
-        name="pages/index.html"
+        name="pages/admin/index.html"
     )
 
 @router.get("/he_dao_tao_chinh_quy.html", include_in_schema=False)
 async def he_dao_tao_chinh_quy(request: Request):
     return templates.TemplateResponse(
         request=request, 
-        name="pages/he_dao_tao_chinh_quy.html"
+        name="pages/admin/he_dao_tao_chinh_quy.html"
     )
 
 @router.get("/quan_ly_nhom_lop_hoc_phan.html", include_in_schema=False)
 async def quan_ly_nhom_lop(request: Request):
     return templates.TemplateResponse(
         request=request, 
-        name="pages/quan_ly_nhom_lop_hoc_phan.html"
+        name="pages/admin/quan_ly_nhom_lop_hoc_phan.html"
     )
 
 @router.get("/login", include_in_schema=False)
@@ -44,5 +44,33 @@ async def login_page(request: Request):
 async def cong_thuc_quy_doi(request: Request):
     return templates.TemplateResponse(
         request=request, 
-        name="pages/nhom_cong_thuc_quy_doi.html"
+        name="pages/admin/nhom_cong_thuc_quy_doi.html"
+    )
+
+@router.get("/ca-nhan.html", include_in_schema=False)
+async def ca_nhan(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/user/ca_nhan.html"
+    )
+
+@router.get("/ca-nhan-1.html", include_in_schema=False)
+async def ca_nhan_1(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/user/ca_nhan_1.html"
+    )
+
+@router.get("/ca-nhan-2.html", include_in_schema=False)
+async def ca_nhan_2(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/user/ca_nhan_2.html"
+    )
+
+@router.get("/ca-nhan-3.html", include_in_schema=False)
+async def ca_nhan_3(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="pages/user/ca_nhan_3.html"
     )

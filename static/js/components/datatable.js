@@ -88,6 +88,8 @@ class DataTable {
    * @param {string} config.tableId - ID của thẻ chứa bảng (Container)
    * @param {string} config.paginationId - ID của thẻ chứa phân trang
    * @param {number} [config.pageSize=100] - Số dòng trên mỗi trang
+   * @param {boolean} [config.incrementalRender=false] - Chỉ render từng lô dòng khi cuộn
+   * @param {number} [config.incrementalBatchSize=100] - Số dòng render thêm mỗi lần
    * @param {Function} [config.onRowDirty] - Callback khi một ô bị chỉnh sửa
    * @param {Function} [config.onSelectionChange] - Callback khi chọn/bỏ chọn checkbox dòng
    * @param {Function} [config.onRenderComplete] - Callback khi bảng vẽ xong (dùng để update footer)
@@ -100,9 +102,20 @@ class DataTable {
     this.thead = this.container.querySelector('thead');
     this.paginationEl = document.getElementById(config.paginationId);
     this.getCellEditorOptions = config.getCellEditorOptions || null;
+    this.incrementalRender = config.incrementalRender === true;
+    this.incrementalBatchSize = config.incrementalBatchSize || 100;
+    this.incrementalObserver = null;
+    this.incrementalRowsCache = [];
+    this.resizableColumns = config.resizableColumns === true;
+    this.storageKey = config.storageKey || null;
+    this.indexColumnStorageKey = this.storageKey ? `${this.storageKey}__DataTableMeta` : null;
+    this.indexColumnWidth = this.loadIndexColumnWidth();
+    this.columnResizeState = null;
+    this.columnResizeGuide = null;
     this.state = {
       data: [], columns: [], sortKey: null, sortDir: 1, filters: {}, search: '',
       selected: new Set(), currentPage: 1, pageSize: config.pageSize || 100,
+      incrementalRenderedCount: config.incrementalBatchSize || 100,
       rawColumns: []
     };
 
@@ -119,6 +132,8 @@ class DataTable {
     this.isRowEditable = config.isRowEditable || (() => true);
 
     this.outsideClickHandler = this.outsideClickHandler.bind(this);
+    this.handleColumnResizeMove = this.handleColumnResizeMove.bind(this);
+    this.handleColumnResizeEnd = this.handleColumnResizeEnd.bind(this);
 
     this.bindEvents();
   }
@@ -135,6 +150,7 @@ class DataTable {
     if (rawColumns) this.state.rawColumns = rawColumns;
     this.calculateSticky();
     this.thead.innerHTML = `<tr>${this.buildHeaderHTML()}</tr>`;
+    this.resetIncrementalRender();
     this.renderAll();
   }
 
@@ -147,7 +163,19 @@ class DataTable {
     this.state.currentPage = 1;
     this.state.filters = {};
     this.state.selected.clear();
+    this.resetIncrementalRender();
     this.renderAll();
+  }
+
+  resetIncrementalRender() {
+    if (!this.incrementalRender) return;
+    if (this.incrementalObserver) {
+      this.incrementalObserver.disconnect();
+      this.incrementalObserver = null;
+    }
+    this.state.incrementalRenderedCount = this.incrementalBatchSize;
+    this.incrementalRowsCache = [];
+    if (this.container) this.container.scrollTop = 0;
   }
 
   /**
@@ -176,6 +204,7 @@ class DataTable {
     });
 
     // Render lại giao diện
+    this.resetIncrementalRender();
     this.renderAll();
   }
 
@@ -186,6 +215,7 @@ class DataTable {
   setSearch(keyword) {
     this.state.search = keyword;
     this.state.currentPage = 1;
+    this.resetIncrementalRender();
     this.renderAll();
     this.updateFilterCountBadge();
   }
@@ -253,6 +283,7 @@ class DataTable {
       else { this.state.sortKey = null; this.state.sortDir = 1; }
     } else { this.state.sortKey = key; this.state.sortDir = 1; }
     this.state.currentPage = 1;
+    this.resetIncrementalRender();
     this.renderAll();
   }
 
@@ -260,7 +291,7 @@ class DataTable {
    * Tính toán khoảng cách `left` cho các cột được ghim (sticky)
    */
   calculateSticky() {
-    let cum = 40; // 40px cho cột checkbox đầu tiên
+    let cum = 40 + this.indexColumnWidth; // 40px checkbox + STT
     this.state.columns.forEach(c => {
       if (c.GhimCot || c.ThuTuHienThi <= 2) {
         this.stickyOffsets[c.MaTruong] = cum;
@@ -378,16 +409,20 @@ class DataTable {
     const selectableRows = this.getRows().filter(r => this.isRowSelectable(r));
     const allSelected = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
     const checkboxTh = `<th class="select-th" style="width:40px;min-width:40px;max-width:40px;"><input type="checkbox" id="selectAll" ${allSelected ? 'checked' : ''}></th>`;
+    const indexResizeHandle = this.resizableColumns ? `<span class="col-resize-handle" data-key="__ROW_INDEX__" title="Kéo để đổi độ rộng cột"></span>` : '';
+    const indexTh = `<th class="index-th sticky-th" style="left:40px;width:${this.indexColumnWidth}px;min-width:${this.indexColumnWidth}px;max-width:${this.indexColumnWidth}px;">STT${indexResizeHandle}</th>`;
     const ths = this.state.columns.map(col => {
       const stickyStyle = col.sticky ? `left:${this.stickyOffsets[col.MaTruong]}px;` : '';
+      const resizeHandle = this.resizableColumns ? `<span class="col-resize-handle" data-key="${esc(col.MaTruong)}" title="Kéo để đổi độ rộng cột"></span>` : '';
       return `<th data-col="${col.MaTruong}" class="${col.sticky ? 'sticky-th' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:center;">
         <div class="th-inner">
           <span class="th-label" title="${esc(col.TenTruong)}">${esc(col.TenTruong)}</span>
           <span class="th-actions">${this.sortIconHtml(col.MaTruong)}${this.filterIconHtml(col.MaTruong)}</span>
         </div>
+        ${resizeHandle}
       </th>`;
     }).join('');
-    return checkboxTh + ths;
+    return checkboxTh + indexTh + ths;
   }
 
   /**
@@ -421,9 +456,10 @@ class DataTable {
    * @param {Object} row - Dòng dữ liệu
    * @returns {string} Thẻ <tr> chứa các <td>
    */
-  renderRowHTML(row) {
+  renderRowHTML(row, rowIndex = 0) {
     const selectable = this.isRowSelectable(row);
     const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(String(row.MaNhomLopHP)) ? 'checked' : ''} ${!selectable ? 'disabled' : ''}></td>`;
+    const indexCell = `<td class="index-cell sticky-cell" style="left:40px;width:${this.indexColumnWidth}px;min-width:${this.indexColumnWidth}px;max-width:${this.indexColumnWidth}px;">${rowIndex + 1}</td>`;
 
     const editable = this.isRowEditable(row);
     const cells = this.state.columns.map(col => {
@@ -433,13 +469,15 @@ class DataTable {
     }).join('');
     const rowId = row.MaNhomLopHP;
     const rowClass = [row._dirty ? 'row-dirty' : '', row.TrangThai === 'Đã thanh toán' ? 'row-locked' : ''].filter(Boolean).join(' ');
-    return `<tr data-id="${rowId}" class="${rowClass}">${checkboxCell}${cells}</tr>`;
+    return `<tr data-id="${rowId}" class="${rowClass}">${checkboxCell}${indexCell}${cells}</tr>`;
   }
 
   /**
    * Dựng lại toàn bộ DOM của bảng lưới và phân trang
    */
-  renderAll() {
+  renderAll(options = {}) {
+    const preserveScroll = options.preserveScroll === true;
+    const scrollTop = preserveScroll && this.container ? this.container.scrollTop : 0;
     const allRows = this.getRows();
     const totalRows = allRows.length;
 
@@ -448,7 +486,11 @@ class DataTable {
     let pageRows = allRows;
     let totalPages = 1;
 
-    if (this.enablePagination) {
+    if (this.incrementalRender && !this.enablePagination) {
+      this.incrementalRowsCache = allRows;
+      endIdx = Math.min(this.state.incrementalRenderedCount, totalRows);
+      pageRows = allRows.slice(0, endIdx);
+    } else if (this.enablePagination) {
       totalPages = Math.ceil(totalRows / this.state.pageSize) || 1;
       if (this.state.currentPage > totalPages) this.state.currentPage = totalPages;
 
@@ -458,9 +500,18 @@ class DataTable {
     }
 
     if (totalRows === 0) {
-      this.tbody.innerHTML = `<tr><td colspan="${this.state.columns.length + 1}" style="text-align:center;padding:32px;color:var(--text-muted);">Không tìm thấy dữ liệu phù hợp</td></tr>`;
+      this.tbody.innerHTML = `<tr><td colspan="${this.state.columns.length + 2}" style="text-align:center;padding:32px;color:var(--text-muted);">Không tìm thấy dữ liệu phù hợp</td></tr>`;
     } else {
-      this.tbody.innerHTML = pageRows.map(r => this.renderRowHTML(r)).join('');
+      this.tbody.innerHTML = pageRows.map((r, index) => this.renderRowHTML(r, startIdx + index)).join('');
+      if (this.incrementalRender && !this.enablePagination) {
+        this.renderIncrementalTrigger();
+        this.observeIncrementalTrigger();
+      }
+    }
+
+    if ((totalRows === 0 || !this.tbody.querySelector('.incremental-trigger')) && this.incrementalObserver) {
+      this.incrementalObserver.disconnect();
+      this.incrementalObserver = null;
     }
 
     this.thead.innerHTML = `<tr>${this.buildHeaderHTML()}</tr>`;
@@ -471,6 +522,65 @@ class DataTable {
     }
 
     if (this.onRenderComplete) this.onRenderComplete(allRows, this.state.selected);
+    if (preserveScroll && this.container) this.container.scrollTop = scrollTop;
+  }
+
+  renderIncrementalTrigger() {
+    if (!this.incrementalRender || this.enablePagination) return;
+    if (this.state.incrementalRenderedCount >= this.incrementalRowsCache.length) return;
+
+    this.tbody.insertAdjacentHTML('beforeend', `
+      <tr class="incremental-trigger-row">
+        <td colspan="${this.state.columns.length + 2}">
+          <div class="incremental-trigger"></div>
+        </td>
+      </tr>
+    `);
+  }
+
+  observeIncrementalTrigger() {
+    if (!this.incrementalRender || this.enablePagination) return;
+
+    if (this.incrementalObserver) {
+      this.incrementalObserver.disconnect();
+    }
+
+    const trigger = this.tbody.querySelector('.incremental-trigger');
+    if (!trigger) return;
+
+    this.incrementalObserver = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        this.appendNextIncrementalBatch();
+      }
+    }, {
+      root: this.container,
+      rootMargin: '160px',
+      threshold: 0
+    });
+
+    this.incrementalObserver.observe(trigger);
+  }
+
+  appendNextIncrementalBatch() {
+    if (!this.incrementalRender || this.enablePagination) return;
+
+    const start = this.state.incrementalRenderedCount;
+    const end = Math.min(start + this.incrementalBatchSize, this.incrementalRowsCache.length);
+    if (start >= end) return;
+
+    const triggerRow = this.tbody.querySelector('.incremental-trigger-row');
+    if (triggerRow) triggerRow.remove();
+
+    const html = this.incrementalRowsCache
+      .slice(start, end)
+      .map((r, index) => this.renderRowHTML(r, start + index))
+      .join('');
+
+    this.tbody.insertAdjacentHTML('beforeend', html);
+    this.state.incrementalRenderedCount = end;
+
+    this.renderIncrementalTrigger();
+    this.observeIncrementalTrigger();
   }
 
   /**
@@ -714,6 +824,7 @@ class DataTable {
       delete this.state.filters[key];
       this.closeFilterDropdown();
       this.state.currentPage = 1;
+      this.resetIncrementalRender();
       this.renderAll();
       this.updateFilterCountBadge();
     });
@@ -736,6 +847,7 @@ class DataTable {
 
       this.closeFilterDropdown();
       this.state.currentPage = 1;
+      this.resetIncrementalRender();
       this.renderAll();
       this.updateFilterCountBadge();
     });
@@ -766,6 +878,147 @@ class DataTable {
       if (n > 0) { badge.style.display = 'inline-block'; badge.textContent = n; }
       else { badge.style.display = 'none'; }
     }
+  }
+
+  startColumnResize(event, handle) {
+    if (!this.resizableColumns) return;
+    const key = handle.dataset.key;
+    const th = handle.closest('th');
+    const isIndexColumn = key === '__ROW_INDEX__';
+    const col = isIndexColumn ? null : this.state.columns.find(c => c.MaTruong === key);
+    if ((!isIndexColumn && !col) || !th) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rect = th.getBoundingClientRect();
+    const startWidth = isIndexColumn ? this.indexColumnWidth : (parseInt(col.DoRong, 10) || Math.round(rect.width));
+
+    this.columnResizeState = {
+      key,
+      col,
+      isIndexColumn,
+      startX: event.clientX,
+      startWidth,
+      nextWidth: startWidth,
+      headerLeft: rect.left,
+      minWidth: 60
+    };
+
+    this.createColumnResizeGuide(rect.left + startWidth);
+    document.body.classList.add('is-resizing');
+    document.addEventListener('mousemove', this.handleColumnResizeMove);
+    document.addEventListener('mouseup', this.handleColumnResizeEnd);
+  }
+
+  handleColumnResizeMove(event) {
+    if (!this.columnResizeState) return;
+
+    const state = this.columnResizeState;
+    const delta = event.clientX - state.startX;
+    const nextWidth = Math.max(state.minWidth, Math.round(state.startWidth + delta));
+
+    state.nextWidth = nextWidth;
+    this.updateColumnResizeGuide(state.headerLeft + nextWidth);
+  }
+
+  handleColumnResizeEnd() {
+    if (!this.columnResizeState) return;
+
+    const state = this.columnResizeState;
+    if (state.isIndexColumn) {
+      this.indexColumnWidth = state.nextWidth;
+      this.persistIndexColumnWidth();
+    } else {
+      state.col.DoRong = state.nextWidth;
+
+      const rawCol = this.state.rawColumns.find(c => c.MaTruong === state.key);
+      if (rawCol) rawCol.DoRong = state.nextWidth;
+
+      this.persistColumnConfig();
+    }
+    this.calculateSticky();
+    this.renderAll({ preserveScroll: true });
+    this.cleanupColumnResize();
+  }
+
+  createColumnResizeGuide(left) {
+    this.removeColumnResizeGuide();
+
+    this.columnResizeGuide = document.createElement('div');
+    this.columnResizeGuide.className = 'col-resize-guide';
+    this.columnResizeGuide.style.left = `${left}px`;
+    document.body.appendChild(this.columnResizeGuide);
+  }
+
+  updateColumnResizeGuide(left) {
+    if (!this.columnResizeGuide) return;
+    this.columnResizeGuide.style.left = `${left}px`;
+  }
+
+  removeColumnResizeGuide() {
+    if (!this.columnResizeGuide) return;
+    this.columnResizeGuide.remove();
+    this.columnResizeGuide = null;
+  }
+
+  cleanupColumnResize() {
+    document.removeEventListener('mousemove', this.handleColumnResizeMove);
+    document.removeEventListener('mouseup', this.handleColumnResizeEnd);
+    document.body.classList.remove('is-resizing');
+    this.removeColumnResizeGuide();
+    this.columnResizeState = null;
+  }
+
+  persistColumnConfig() {
+    if (!this.storageKey) return;
+
+    const visibleMap = new Map(this.state.columns.map(col => [col.MaTruong, col]));
+    let sourceColumns = this.state.rawColumns.length ? this.state.rawColumns : this.state.columns;
+
+    try {
+      const savedConfig = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+      if (Array.isArray(savedConfig) && savedConfig.length) {
+        sourceColumns = savedConfig;
+      }
+    } catch (err) {
+      console.error('Lỗi khi đọc cấu hình localStorage', err);
+    }
+
+    const savedData = sourceColumns.map(col => {
+      const current = visibleMap.get(col.MaTruong) || col;
+      return {
+        MaTruong: col.MaTruong,
+        TenTruong: current.TenTruong,
+        HienThi: current.HienThi,
+        CanLe: current.CanLe,
+        DoRong: current.DoRong,
+        ThuTuHienThi: current.ThuTuHienThi
+      };
+    });
+
+    localStorage.setItem(this.storageKey, JSON.stringify(savedData));
+  }
+
+  loadIndexColumnWidth() {
+    if (!this.indexColumnStorageKey) return 40;
+
+    try {
+      const savedMeta = JSON.parse(localStorage.getItem(this.indexColumnStorageKey) || '{}');
+      const width = parseInt(savedMeta.indexColumnWidth, 10);
+      return Number.isFinite(width) ? Math.max(40, width) : 40;
+    } catch (err) {
+      console.error('Lỗi khi đọc cấu hình cột STT', err);
+      return 40;
+    }
+  }
+
+  persistIndexColumnWidth() {
+    if (!this.indexColumnStorageKey) return;
+
+    localStorage.setItem(this.indexColumnStorageKey, JSON.stringify({
+      indexColumnWidth: this.indexColumnWidth
+    }));
   }
 
   // --- E. EVENT BINDING ---
@@ -811,6 +1064,11 @@ class DataTable {
       if (sortBtn) { this.toggleSort(sortBtn.dataset.key); return; }
       const filterBtn = e.target.closest('.filter-btn');
       if (filterBtn) { this.openFilterDropdown(filterBtn.dataset.key, filterBtn); return; }
+    });
+
+    this.thead.addEventListener('mousedown', e => {
+      const resizeHandle = e.target.closest('.col-resize-handle');
+      if (resizeHandle) this.startColumnResize(e, resizeHandle);
     });
 
     this.thead.addEventListener('change', e => {

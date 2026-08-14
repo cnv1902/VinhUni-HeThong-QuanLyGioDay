@@ -139,6 +139,36 @@
       flex: 0 0 auto;
     }
 
+    .col-resize-handle {
+      position: absolute;
+      top: 0;
+      right: -3px;
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      z-index: 6;
+    }
+
+    .col-resize-handle:hover {
+      background: var(--teal-50);
+    }
+
+    .col-resize-guide {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--teal-600);
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    body.is-resizing,
+    body.is-resizing * {
+      cursor: col-resize !important;
+      user-select: none;
+    }
+
     .sort-btn,
     .filter-btn {
       border: none;
@@ -190,6 +220,13 @@
 
     .select-cell {
       text-align: center;
+    }
+
+    .index-th,
+    .index-cell {
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-secondary);
     }
 
     .sticky-cell {
@@ -392,4 +429,14 @@
 .fm-num { color: var(--amber-600); font-family: var(--font-mono); font-weight: 500; font-size: 13px; margin: 0 1px; }
 .fm-op { color: var(--text-muted); font-weight: 600; font-family: var(--font-mono); margin: 0 4px; font-size: 13px; }
 .fm-paren { color: var(--text-secondary); font-weight: 500; margin: 0 1px; }
+
+.incremental-trigger-row td {
+  padding: 0;
+  height: 1px;
+  border: 0;
+}
+
+.incremental-trigger {
+  height: 1px;
+}
 

@@ -136,8 +136,11 @@ async function init() {
     myTable = new DataTable({
       tableId: 'dataTable',
       paginationId: 'tablePagination',
-      pageSize: 100,
       enablePagination: false,
+      incrementalRender: true,
+      incrementalBatchSize: 100,
+      resizableColumns: true,
+      storageKey: 'table_CQ_NhomLopHocPhan_Config',
       isRowSelectable: (row) => row.XacNhan !== true, // Không cho chọn nếu đã xác nhận
       isRowEditable: (row) => row.XacNhan !== true,   // Không cho sửa nếu đã xác nhận
       customCellRender: (row, col) => {

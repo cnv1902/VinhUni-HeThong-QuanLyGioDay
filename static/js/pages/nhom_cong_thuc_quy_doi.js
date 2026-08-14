@@ -30,13 +30,15 @@ async function init() {
     renderFooterUI();
 
     const rawColsConfig = await apiCongThuc.getColumnsConfig();
-    const colsConfig = TableConfigModal.mergeConfig('table_CQ_CongThucQuyDoi_Config', rawColsConfig);
+    const colsConfig = TableConfigModal.mergeConfig('table_HETHONG_CongThucQuyDoi_Config', rawColsConfig);
 
     // Khởi tạo DataTable Component
     myTable = new DataTable({
       tableId: 'dataTable',
       paginationId: 'tablePagination',
       pageSize: 100,
+      resizableColumns: true,
+      storageKey: 'table_HETHONG_CongThucQuyDoi_Config',
       isRowSelectable: () => true,
       isRowEditable: () => false,   // Tạm thời chưa code sửa
       onSelectionChange: (selectedSet) => {
@@ -274,7 +276,7 @@ function bindStaticEvents() {
   const btnConfig = document.getElementById('btnConfigTable');
   if (btnConfig) {
     btnConfig.addEventListener('click', () => {
-      TableConfigModal.open('table_CQ_CongThucQuyDoi_Config', myTable.state.rawColumns, (newCols) => {
+      TableConfigModal.open('table_HETHONG_CongThucQuyDoi_Config', myTable.state.rawColumns, (newCols) => {
         myTable.setColumns(newCols);
       });
     });
