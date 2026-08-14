@@ -4,16 +4,99 @@
 
 {% set active_menu = 'chinh_quy' %}
 
+{% block styles %}
+<link rel="stylesheet" href="/static/css/pages/admin/he_dao_tao_chinh_quy.css?v={{ CACHE_BUSTER() }}">
+{% endblock %}
+
 {% block content %}
-<div class="empty-dashboard"
-    style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center; padding: 40px;">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"
-        style="margin-bottom: 16px; opacity: 0.5;">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-    </svg>
-    <h2 style="font-weight: 500; font-size: 18px; margin: 0 0 8px 0; color: var(--text-secondary);">Hệ Đào tạo Chính quy
-    </h2>
-    <p style="margin: 0; font-size: 14px;">Vui lòng chọn các menu con ở thanh điều hướng bên trái để tiếp tục.</p>
+<!-- 2x2 Grid Hub -->
+<div class="dash-hub-grid">
+
+  <!-- Góc 1: Nhóm lớp học phần -->
+  <section class="dash-hub-quadrant">
+    <div class="quadrant-header">
+      <h2 class="quadrant-title">Nhóm Lớp Học Phần</h2>
+      <a href="/quan_ly_nhom_lop_hoc_phan.html" class="quadrant-link">Quản lý &rarr;</a>
+    </div>
+    <div class="quadrant-body">
+      <div class="quadrant-stats">
+        <div class="q-stat-item">
+          <span class="q-stat-label">Tổng số nhóm lớp</span>
+          <strong class="q-stat-value" id="dashTongNhomLop">--</strong>
+        </div>
+        <div class="q-stat-item">
+          <span class="q-stat-label">Tổng số sinh viên</span>
+          <strong class="q-stat-value" id="dashTongSinhVien">--</strong>
+        </div>
+        <div class="q-stat-item">
+          <span class="q-stat-label">Tổng tín chỉ</span>
+          <strong class="q-stat-value" id="dashTongTinChi">--</strong>
+        </div>
+        <div class="q-stat-item">
+          <span class="q-stat-label">Trung bình SV/Lớp</span>
+          <strong class="q-stat-value" id="dashAvgSinhVien">--</strong>
+        </div>
+        <div class="q-stat-item">
+          <span class="q-stat-label">Trung bình TC/Lớp</span>
+          <strong class="q-stat-value" id="dashAvgTinChi">--</strong>
+        </div>
+      </div>
+
+      <!-- Demo Bar Chart -->
+      <div class="q-chart-box">
+        <div class="q-chart-title">Phân bổ Xác nhận / Chưa xác nhận</div>
+        <div class="q-bar-group">
+          <div class="q-bar-col">
+            <span class="q-bar-value" id="dashDaXacNhanVal">--</span>
+            <div class="q-bar-stick" id="dashDaXacNhanStick" style="background: var(--green-600); height: 0%;"></div>
+            <span class="q-bar-label">Đã xác nhận</span>
+          </div>
+          <div class="q-bar-col">
+            <span class="q-bar-value" id="dashChuaXacNhanVal">--</span>
+            <div class="q-bar-stick" id="dashChuaXacNhanStick" style="background: var(--amber-600); height: 0%;"></div>
+            <span class="q-bar-label">Chưa xác nhận</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Góc 2: Công thức quy đổi -->
+  <section class="dash-hub-quadrant">
+    <div class="quadrant-header">
+      <h2 class="quadrant-title">Công Thức Quy Đổi</h2>
+      <a href="/nhom_cong_thuc_quy_doi.html" class="quadrant-link">Cấu hình &rarr;</a>
+    </div>
+    <div class="quadrant-body quadrant-empty">
+      <p>Phân hệ chưa có thống kê.</p>
+    </div>
+  </section>
+
+  <!-- Góc 3: Hệ số lớp đông -->
+  <section class="dash-hub-quadrant">
+    <div class="quadrant-header">
+      <h2 class="quadrant-title">Hệ Số Lớp Đông</h2>
+      <a href="#" class="quadrant-link text-muted">Cấu hình &rarr;</a>
+    </div>
+    <div class="quadrant-body quadrant-empty">
+      <p>Phân hệ chưa có thống kê.</p>
+    </div>
+  </section>
+
+  <!-- Góc 4: Mở rộng -->
+  <section class="dash-hub-quadrant">
+    <div class="quadrant-header">
+      <h2 class="quadrant-title">Quản lý Khác</h2>
+      <a href="#" class="quadrant-link text-muted">Chi tiết &rarr;</a>
+    </div>
+    <div class="quadrant-body quadrant-empty">
+      <p>Không gian dành cho các phân hệ mở rộng.</p>
+    </div>
+  </section>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/pages/admin/he_dao_tao_chinh_quy.js?v={{ CACHE_BUSTER() }}"></script>
 {% endblock %}

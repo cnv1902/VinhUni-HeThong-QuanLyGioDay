@@ -1,0 +1,144 @@
+/* Lưới 2x2 */
+.dash-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, minmax(320px, auto));
+    gap: 20px;
+    padding: 24px;
+}
+
+/* Thẻ Quadrant */
+.dash-hub-quadrant {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+}
+
+.quadrant-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quadrant-title {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.quadrant-link {
+    font-size: 13px;
+    color: var(--brand-800);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.quadrant-link:hover {
+    color: var(--brand-700);
+}
+
+.quadrant-link.text-muted {
+    color: var(--text-muted);
+}
+
+.quadrant-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 1;
+}
+
+.quadrant-empty {
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-style: italic;
+}
+
+/* Thống kê Nhóm Lớp */
+.quadrant-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.q-stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.q-stat-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.q-stat-value {
+    font-variant-numeric: tabular-nums;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+/* Demo Bar Chart CSS */
+.q-chart-box {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+}
+
+.q-chart-title {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.q-bar-group {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    height: 80px;
+    margin-bottom: 8px;
+}
+
+.q-bar-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    height: 100%;
+}
+
+.q-bar-stick {
+    width: 32px;
+    border-radius: 4px 4px 0 0;
+    transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    min-height: 2px;
+}
+
+.q-bar-label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.q-bar-value {
+    font-size: 12px;
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .dash-hub-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+}

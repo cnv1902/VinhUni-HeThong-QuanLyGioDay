@@ -20,15 +20,15 @@ class CQNhomLopBase(RoundedFloatBaseModel):
     SotietDA: Optional[float] = None
     SotietThucTap: Optional[float] = None
     SotietDoAnKhoaLuan: Optional[float] = None
-    SoTietLTQD: Optional[float] = None
-    SoTietTHQD: Optional[float] = None
-    SoTietBTQD: Optional[float] = None
+    SoTiet_QD: Optional[float] = None
+    SoTiet_TT: Optional[float] = None
     KhoaCN: Optional[str] = None
     ID_LanTongHopFile: Optional[int] = None
     HeSoHocDi: Optional[float] = None
     XacNhan: Optional[bool] = None
     NamTaiChinh: Optional[int] = None
     HeSo_LopDong: Optional[float] = None
+    Cong_Thuc: Optional[str] = None
 
 class CQNhomLopResponse(CQNhomLopBase):
     ID: int

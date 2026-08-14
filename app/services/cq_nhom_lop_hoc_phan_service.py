@@ -149,6 +149,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             continue
             
         update_data: Dict[str, Any] = {"MaNhomLopHP": item.MaNhomLopHP}
+        cong_thuc_used = []
         is_siso_changed = False
 
         logger.error(
@@ -245,6 +246,9 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                 if check_id_in_string_list(str(hinh_thuc_hoc), str(ds_ma)):
                     if tu_nam <= nam_tai_chinh <= den_nam:
                         id_nhom_ct = int(nhom_ct.get("ID_Nhom_CT"))
+                        cong_thuc_used.append(
+                            f"Nhóm CT: {nhom_ct.get('TenNhom') or nhom_ct.get('TenNhom_CT') or id_nhom_ct}"
+                        )
                         break
                     
             if id_nhom_ct:
@@ -261,6 +265,8 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                         he_so_ld_config = local_he_so_ld_cache.get(id_hs)
                         if he_so_ld_config:
                             cau_hinh_json = he_so_ld_config.get("CauHinh_Json", "")
+                            if cau_hinh_json:
+                                cong_thuc_used.append(f"Hệ số lớp đông: {cau_hinh_json}")
                             he_so_lop_dong_val = parse_he_so_lop_dong(so_sinh_vien, str(cau_hinh_json))
                             update_data["HeSo_LopDong"] = he_so_lop_dong_val
                             
@@ -269,12 +275,13 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                                                 
                     # 4.4 Phân giải và Tính toán Biểu thức JSON
                     bieu_thuc_json = truong_hop_ct.get("BieuThuc_JSON")
+
                     if bieu_thuc_json:
                         # Tạo context_data trộn dữ liệu mới và cũ
                         context_data = {c.name: getattr(db_item, c.name) for c in db_item.__table__.columns}
                         context_data.update(update_data)
                         context_data["HeSo_LopDong"] = he_so_lop_dong_val
-                        
+                        cong_thuc_used.append(f"Biểu thức quy đổi: {bieu_thuc_json}")
                         # Tính toán
                         calculated_fields = evaluate_formula_json(str(bieu_thuc_json), context_data)
                         
@@ -282,7 +289,8 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                         for k, v in calculated_fields.items():
                             if hasattr(db_item, k):
                                 update_data[k] = v
-        
+        if cong_thuc_used:
+            update_data["Cong_Thuc"] = "\n".join(str(x) for x in cong_thuc_used if x)
         logger.error(
             f"[DEBUG_BULK_HTHOC] BEFORE_APPEND item={item.MaNhomLopHP}, "
             f"len_update_data={len(update_data)}, update_data={update_data}"

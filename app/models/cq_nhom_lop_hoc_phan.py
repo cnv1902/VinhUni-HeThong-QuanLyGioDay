@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, BigInteger
+from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, BigInteger, NVARCHAR
 from app.models.base import Base
 
 class CQNhomLopHocPhan(Base):
@@ -68,10 +68,10 @@ class CQNhomLopHocPhan(Base):
     SotietThucTap = Column(Float, nullable=True)
     SotietDoAnKhoaLuan = Column(Float, nullable=True)
     SoTietTH_Tam = Column(Float, nullable=True)
-    SoTietLT_ThucTe = Column(Float, nullable=True)
-    SoTietTH_ThucTe = Column(Float, nullable=True)
-    SoTietBT_ThucTe = Column(Float, nullable=True)
+    SoTiet_QD = Column(Float, nullable=True)
+    SoTiet_TT = Column(Float, nullable=True)
     HeSo_LopDong = Column(Float, nullable=True)
     HeSo_Khac = Column(Float, nullable=True)
     HeSo_HeDaoTao = Column(Float, nullable=True)
     NamTaiChinh = Column(Integer, nullable=True)
+    Cong_Thuc = Column(NVARCHAR, nullable=True)
