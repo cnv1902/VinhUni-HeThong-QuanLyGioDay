@@ -73,7 +73,7 @@ async function initBulkComboboxes() {
 async function ensureHinhThucHocOptions() {
   if (hinhThucHocOptions) return hinhThucHocOptions;
 
-  const data = await apiLopHocPhan.getHinhThucHoc();
+  const data = await apiLopHocPhanChinhQuy.getHinhThucHoc();
   hinhThucHocOptions = data.map(item => ({
     id: item.MaHTHoc,
     text: item.TenHTHoc
@@ -85,7 +85,7 @@ async function ensureHinhThucHocOptions() {
 async function ensureHinhThucDayOptions() {
   if (hinhThucDayOptions) return hinhThucDayOptions;
 
-  const data = await apiLopHocPhan.getHinhThucDay();
+  const data = await apiLopHocPhanChinhQuy.getHinhThucDay();
   hinhThucDayOptions = data.map(item => ({
     id: item.MaHTDay,
     text: item.TenHTDay
@@ -129,7 +129,7 @@ async function init() {
   try {
     renderFooterUI();
 
-    const rawColsConfig = await apiLopHocPhan.getColumnsConfig();
+    const rawColsConfig = await apiLopHocPhanChinhQuy.getColumnsConfig();
     const colsConfig = TableConfigModal.mergeConfig('table_CQ_NhomLopHocPhan_Config', rawColsConfig);
 
     // Khởi tạo DataTable Component
@@ -273,7 +273,7 @@ async function loadTableData(hoc_ky) {
     const urlParams = new URLSearchParams(window.location.search);
     const filterParam = urlParams.get('filter');
 
-    const nhomLopData = await apiLopHocPhan.getNhomLopData(hoc_ky, filterParam);
+    const nhomLopData = await apiLopHocPhanChinhQuy.getNhomLopData(hoc_ky, filterParam);
     snapshotRows(nhomLopData);
     modifiedRows = {};
     updateSaveButtonVisibility();
@@ -466,8 +466,8 @@ function bindStaticEvents() {
 
   // Sự kiện Lưu thay đổi
   const btnSaveChanges = document.getElementById('btnSaveChanges');
-    if (btnSaveChanges) {
-      btnSaveChanges.addEventListener('click', async () => {
+  if (btnSaveChanges) {
+    btnSaveChanges.addEventListener('click', async () => {
       const editedCount = Object.keys(modifiedRows).length;
       const hasBulkChange = bulkMaHTHoc !== null || bulkMaHTDay !== null;
 
@@ -560,24 +560,20 @@ async function submitSaveChanges() {
     }
 
     const payload = {
-      TenBang: "CQ_NhomLopHocPhan",
+      MaBang: "CQ_NhomLopHocPhan",
       items
     };
 
-    const res = await fetch('/api/v1/cq-nhom-lop-hoc-phan/bulk-update', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-
-    if (res.ok) {
-      const data = await res.json();
+    try {
+      const data = await apiLopHocPhanChinhQuy.bulkUpdateNhomLop(payload);
       if (typeof showToast !== 'undefined') showToast("Đã lưu thay đổi thành công!");
+
       modifiedRows = {};
       bulkMaHTHoc = null;
       bulkMaHTDay = null;
       if (cbBulkHinhThucHoc) cbBulkHinhThucHoc.setValue('__NO_CHANGE__');
       if (cbBulkHinhThucDay) cbBulkHinhThucDay.setValue('__NO_CHANGE__');
+
       btnSaveChanges.disabled = false;
       btnSaveChanges.innerHTML = originalHTML;
 
@@ -585,15 +581,15 @@ async function submitSaveChanges() {
       if (data && data.updated_rows) {
         myTable.updateRowsData(data.updated_rows);
       }
-      
+
       // Xóa cờ dirty của toàn bộ dòng (phòng trường hợp updateRowsData chưa xử lý hết)
       myTable.state.data.forEach(r => r._dirty = false);
       snapshotRows(myTable.state.data);
       updateSaveButtonVisibility();
       myTable.renderAll();
-    } else {
-      const err = await res.json();
-      if (typeof showToast !== 'undefined') showToast("Lỗi khi lưu: " + (err.detail || "Không xác định"), true);
+
+    } catch (error) {
+      if (typeof showToast !== 'undefined') showToast("Lỗi khi lưu: " + (error.message || "Không xác định"), true);
       btnSaveChanges.disabled = false;
       btnSaveChanges.innerHTML = originalHTML;
     }

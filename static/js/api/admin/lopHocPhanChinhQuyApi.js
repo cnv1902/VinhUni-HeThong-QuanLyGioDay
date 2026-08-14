@@ -1,4 +1,4 @@
-const apiLopHocPhan = {
+const apiLopHocPhanChinhQuy = {
   // Lấy danh sách cấu hình cột từ API
   async getColumnsConfig() {
     try {
@@ -17,12 +17,12 @@ const apiLopHocPhan = {
       const params = new URLSearchParams();
       if (hoc_ky !== null) params.append('hoc_ky', hoc_ky);
       if (trang_thai_loc !== null) params.append('trang_thai_loc', trang_thai_loc);
-      
+
       const queryString = params.toString();
       if (queryString) {
         url += `?${queryString}`;
       }
-      
+
       const response = await fetch(url);
       if (!response.ok) throw new Error('Network response was not ok');
       return await response.json();
@@ -41,6 +41,19 @@ const apiLopHocPhan = {
   async getHinhThucDay() {
     const response = await fetch(`${window.API_PREFIX}/hinh-thuc-day/`);
     if (!response.ok) throw new Error('Không thể lấy danh sách hình thức dạy');
+    return await response.json();
+  },
+
+  async bulkUpdateNhomLop(payload) {
+    const response = await fetch(`${window.API_PREFIX}/cq-nhom-lop-hoc-phan/bulk-update`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Lỗi khi lưu thay đổi');
+    }
     return await response.json();
   }
 };

@@ -89,13 +89,13 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
     - Xử lý toàn bộ logic tính toán (If/Else, Sĩ số, Hệ số, Công thức).
     - Chuẩn bị dữ liệu List[dict] rồi đẩy xuống CRUD.
     """
-    allowed_fields = crud_he_thong_dm_truong_duoc_su_dung.get_editable_fields(db, payload.TenBang)
+    allowed_fields = crud_he_thong_dm_truong_duoc_su_dung.get_editable_fields(db, payload.MaBang)
 
     logger.error(f"[DEBUG_BULK_HTHOC] allowed_fields={allowed_fields}")
     logger.error(f"[DEBUG_BULK_HTHOC] payload_items={[{'MaNhomLopHP': item.MaNhomLopHP, 'updates': item.updates} for item in payload.items]}")
 
     if not allowed_fields:
-        raise BadRequestException(detail=f"Bảng {payload.TenBang} không có cấu hình cột nào được phép sửa.")
+        raise BadRequestException(detail=f"Bảng {payload.MaBang} không có cấu hình cột nào được phép sửa.")
 
     final_updates = []
     ten_ht_hoc_map = None

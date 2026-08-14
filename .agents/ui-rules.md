@@ -212,6 +212,11 @@ Tuyệt đối KHÔNG viết toàn bộ HTML/CSS/JS của một trang vào chung
 
 ## 13. Quy tắc viết Javascript cho Trang (Page-level JS)
 
+**13.0 Tách biệt API và Logic Giao diện (Repository Pattern)**
+Tuyệt đối tuân thủ việc tách biệt các lời gọi API ra khỏi file logic giao diện (Page JS) để đảm bảo mô hình Repository Pattern:
+- **API Layer (`static/js/api/`):** Chứa tất cả các file Javascript chuyên dụng cho việc giao tiếp với Backend. Mọi lệnh `fetch()`, xử lý Header, parse JSON, và bắt lỗi HTTP phải được đặt ở đây.
+- **UI Layer (`static/js/pages/`):** Chứa các file Javascript điều khiển giao diện trang. File này chỉ được gọi (import/sử dụng) các Object/Hàm từ API Layer. Tuyệt đối **không nhúng trực tiếp lệnh `fetch()`** vào file UI Layer.
+
 Để đảm bảo mã nguồn Javascript của từng trang dễ đọc và dễ bảo trì, tuyệt đối tuân thủ các quy tắc tổ chức sau:
 
 1. **Gom nhóm mã nguồn (Grouping):** Chia file JS thành các phân khu rõ ràng bằng các dòng comment phân cách (ví dụ: // === 1. STATE ===). Các nhóm cơ bản thường bao gồm:

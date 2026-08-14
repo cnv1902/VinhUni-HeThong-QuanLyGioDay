@@ -112,3 +112,30 @@ document.querySelectorAll('.submenu-toggle').forEach(btn => {
         });
     }
 })();
+
+// --- LOGIC CHO SIDEBAR SCROLL RESTORATION ---
+(function() {
+    const sidebarContent = document.querySelector('.sidebar-content');
+    if (!sidebarContent) return;
+
+    // 1. Phục hồi vị trí cuộn ngay khi tải trang
+    const savedScroll = sessionStorage.getItem('sidebarScrollTop');
+    if (savedScroll) {
+        // Phục hồi ngay lập tức để tránh giật hình
+        sidebarContent.scrollTop = parseInt(savedScroll, 10);
+        
+        // Thử phục hồi lại sau 50ms phòng trường hợp DOM chưa kịp nạp xong menu con
+        setTimeout(() => {
+            sidebarContent.scrollTop = parseInt(savedScroll, 10);
+        }, 50);
+    }
+
+    // 2. Lưu vị trí cuộn khi người dùng lăn chuột (Dùng timer để giảm tải sự kiện scroll)
+    let scrollTimeout;
+    sidebarContent.addEventListener('scroll', () => {
+        if (scrollTimeout) clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+            sessionStorage.setItem('sidebarScrollTop', sidebarContent.scrollTop);
+        }, 100); // Lưu sau khi dừng cuộn 100ms
+    });
+})();

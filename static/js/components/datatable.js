@@ -127,6 +127,7 @@ class DataTable {
     this.onRenderComplete = config.onRenderComplete || function () { };
     this.pageSizeEl = document.getElementById(config.pageSizeId) || null;
     this.enablePagination = config.enablePagination !== false;
+    this.rowKey = config.rowKey || null;
     this.customCellRender = config.customCellRender || null;
     this.isRowSelectable = config.isRowSelectable || (() => true);
     this.isRowEditable = config.isRowEditable || (() => true);
@@ -136,6 +137,21 @@ class DataTable {
     this.handleColumnResizeEnd = this.handleColumnResizeEnd.bind(this);
 
     this.bindEvents();
+  }
+
+  /**
+   * Lấy ID duy nhất của một dòng dữ liệu (tự động nhận diện trường khóa chính)
+   * @param {Object} row - Dòng dữ liệu
+   * @returns {string} ID dạng chuỗi
+   */
+  getRowId(row) {
+    if (!row) return '';
+    if (this.rowKey && row[this.rowKey] !== undefined && row[this.rowKey] !== null) return String(row[this.rowKey]);
+    if (row.ID !== undefined && row.ID !== null) return String(row.ID);
+    if (row.id !== undefined && row.id !== null) return String(row.id);
+    if (row.MaNhomLopHP !== undefined && row.MaNhomLopHP !== null) return String(row.MaNhomLopHP);
+    if (row.MaBang && row.MaTruong) return `${row.MaBang}_${row.MaTruong}`;
+    return '';
   }
 
   // --- B. DATA & STATE MANAGEMENT ---
@@ -407,7 +423,7 @@ class DataTable {
    */
   buildHeaderHTML() {
     const selectableRows = this.getRows().filter(r => this.isRowSelectable(r));
-    const allSelected = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
+    const allSelected = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(this.getRowId(r)));
     const checkboxTh = `<th class="select-th" style="width:40px;min-width:40px;max-width:40px;"><input type="checkbox" id="selectAll" ${allSelected ? 'checked' : ''}></th>`;
     const indexResizeHandle = this.resizableColumns ? `<span class="col-resize-handle" data-key="__ROW_INDEX__" title="Kéo để đổi độ rộng cột"></span>` : '';
     const indexTh = `<th class="index-th sticky-th" style="left:40px;width:${this.indexColumnWidth}px;min-width:${this.indexColumnWidth}px;max-width:${this.indexColumnWidth}px;">STT${indexResizeHandle}</th>`;
@@ -457,8 +473,9 @@ class DataTable {
    * @returns {string} Thẻ <tr> chứa các <td>
    */
   renderRowHTML(row, rowIndex = 0) {
+    const rowId = this.getRowId(row);
     const selectable = this.isRowSelectable(row);
-    const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(String(row.MaNhomLopHP)) ? 'checked' : ''} ${!selectable ? 'disabled' : ''}></td>`;
+    const checkboxCell = `<td class="select-cell sticky-cell" style="left:0;width:40px;min-width:40px;max-width:40px;"><input type="checkbox" class="row-check" ${this.state.selected.has(rowId) ? 'checked' : ''} ${!selectable ? 'disabled' : ''}></td>`;
     const indexCell = `<td class="index-cell sticky-cell" style="left:40px;width:${this.indexColumnWidth}px;min-width:${this.indexColumnWidth}px;max-width:${this.indexColumnWidth}px;">${rowIndex + 1}</td>`;
 
     const editable = this.isRowEditable(row);
@@ -467,7 +484,6 @@ class DataTable {
       const canEditCell = editable && col.DuocSua;
       return `<td data-col="${col.MaTruong}" data-editable="${canEditCell ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${this.cellDisplay(row, col)}</td>`;
     }).join('');
-    const rowId = row.MaNhomLopHP;
     const rowClass = [row._dirty ? 'row-dirty' : '', row.TrangThai === 'Đã thanh toán' ? 'row-locked' : ''].filter(Boolean).join(' ');
     return `<tr data-id="${rowId}" class="${rowClass}">${checkboxCell}${indexCell}${cells}</tr>`;
   }
@@ -650,9 +666,10 @@ class DataTable {
    * @param {string} colId - Khóa chính của cột
    */
   async startEdit(td, rowId, colId) {
-    const row = this.state.data.find(r => String(r.MaNhomLopHP) === String(rowId));
+    const row = this.state.data.find(r => this.getRowId(r) === String(rowId));
     const col = this.state.columns.find(c => c.MaTruong === colId);
     if (!row || !col) return;
+    if (!this.isRowEditable(row)) return;
     const originalValue = row[col.MaTruong];
 
     if (row.TrangThai === 'Đã thanh toán') {
@@ -723,7 +740,7 @@ class DataTable {
       row[col.MaTruong] = val;
       row._dirty = true;
       this.onRowDirty(row, col.MaTruong, val);
-      this.renderAll();
+      this.renderAll({ preserveScroll: true });
     };
 
     const cancel = () => {
@@ -1055,7 +1072,7 @@ class DataTable {
       const selectAllCb = this.thead.querySelector('#selectAll');
       if (selectAllCb) {
         const selectableRows = allRows.filter(r => this.isRowSelectable(r));
-        selectAllCb.checked = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(String(r.MaNhomLopHP)));
+        selectAllCb.checked = selectableRows.length > 0 && selectableRows.every(r => this.state.selected.has(this.getRowId(r)));
       }
     });
 
@@ -1077,8 +1094,9 @@ class DataTable {
         const rows = this.getRows();
         rows.forEach(r => {
           if (this.isRowSelectable(r)) {
-            if (checked) this.state.selected.add(String(r.MaNhomLopHP));
-            else this.state.selected.delete(String(r.MaNhomLopHP));
+            const rId = this.getRowId(r);
+            if (checked) this.state.selected.add(rId);
+            else this.state.selected.delete(rId);
           }
         });
         this.onSelectionChange(this.state.selected);

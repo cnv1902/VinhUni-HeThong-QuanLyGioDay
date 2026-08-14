@@ -40,7 +40,7 @@ class CQNhomLopUpdateItem(BaseModel):
     updates: Dict[str, Any]
 
 class CQNhomLopBulkUpdate(BaseModel):
-    TenBang: str
+    MaBang: str
     items: List[CQNhomLopUpdateItem]
 
 class CQNhomLopBulkUpdateResponse(RoundedFloatBaseModel):

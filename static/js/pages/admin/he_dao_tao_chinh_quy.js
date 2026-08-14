@@ -44,12 +44,10 @@ function renderDashboard(data) {
  */
 async function loadDashboardStats(hocKy) {
   if (!hocKy) return;
-  
+
   setLoadingState();
   try {
-    const response = await fetch(`/api/v1/cq-dashboard?hoc_ky=${encodeURIComponent(hocKy)}`);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    const data = await response.json();
+    const data = await apiHeDaoTaoChinhQuy.getDashboardStats(hocKy);
     renderDashboard(data);
   } catch (error) {
     console.error('Lỗi khi nạp dữ liệu dashboard:', error);

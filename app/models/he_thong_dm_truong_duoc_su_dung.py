@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, String, Integer, Boolean, Enum
+from sqlalchemy import Column, String, Integer, Boolean, Enum, NVARCHAR
 from app.models.base import Base
 
 # 1. Định nghĩa trước các tập hợp được phép chọn (Từ điển)
@@ -23,7 +23,8 @@ class DMTruongSuDung(Base):
     __tablename__ = "tbl_HETHONG_DMTruongDuocSuDung"
 
     ID = Column(Integer, primary_key=True, autoincrement=True, nullable=False)
-    TenBang = Column(String(50), nullable=False)
+    MaBang = Column(String(50), nullable=False)
+    TenBang = Column(NVARCHAR(250), nullable=True)
     MaTruong = Column(String(50), nullable=False)
     TenTruong = Column(String(100), nullable=False) 
     DoRong = Column(Integer, default=100)
