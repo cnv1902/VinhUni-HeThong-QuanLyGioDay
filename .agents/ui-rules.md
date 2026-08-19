@@ -251,3 +251,10 @@ Thay vào đó, phải xử lý lỗi êm mượt và trả về mảng rỗng `
 2. **Hiệu ứng Focus lồng nhau**: Nếu một Component phức tạp sử dụng cấu trúc Hộp ảo bao quanh Input thực bên trong (như TagInput: `div.form-input > input.tag-input-field`), bắt buộc phải:
    - Dùng CSS pseudo-class `:focus-within` lên Hộp ảo để bắt hiệu ứng focus khi Input thực được click (`.form-input:focus-within { box-shadow: ... }`).
    - Tước bỏ toàn bộ hiệu ứng Focus/Outline/Ring mặc định của trình duyệt/Tailwind trên Input thực bằng `!important` (`.tag-input-field:focus { outline: none !important; box-shadow: none !important; }`).
+
+## 17. Đồng bộ Tài liệu Giao diện (Documentation Synchronization)
+
+Khi Agent thực hiện bất kỳ thay đổi nào (thêm, sửa, xóa, refactor code) trên các file mã nguồn Javascript (`.js`) thuộc UI Layer hoặc API Layer, Agent **BẮT BUỘC** phải tự động tìm và cập nhật song song nội dung thay đổi đó vào file tài liệu Markdown (`.md`) tương ứng trong thư mục `docs/frontend/` (ví dụ: `docs/frontend/components/` hoặc `docs/frontend/pages/`). 
+
+Việc sửa mã nguồn mà bỏ quên tài liệu sẽ khiến các Agent hoặc Lập trình viên khác khi tái sử dụng Component bị sai lệch logic (out-of-sync).
+

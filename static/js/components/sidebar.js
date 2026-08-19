@@ -1,40 +1,201 @@
-// Khôi phục trạng thái từ localStorage
-document.querySelectorAll('.has-submenu').forEach(item => {
-    const menuId = item.getAttribute('data-menu-id');
-    const submenu = item.querySelector('.sidebar-submenu');
-    const toggleBtn = item.querySelector('.submenu-toggle');
+// === 1. STATE & DOM ELEMENTS ===
+const DOM = {
+    dynamicSidebarMenu: document.getElementById("dynamicSidebarMenu"),
+};
 
-    if (menuId && submenu && toggleBtn) {
-        const state = localStorage.getItem('sidebar_submenu_' + menuId);
-        if (state === 'open') {
-            submenu.style.display = 'block';
-            toggleBtn.classList.add('open');
-        } else if (state === 'closed') {
-            submenu.style.display = 'none';
-            toggleBtn.classList.remove('open');
-        }
-    }
+// === 2. INITIALIZATION ===
+/**
+ * Khởi tạo trang: Kiểm tra SSO Token, Load Menu động và Khôi phục trạng thái UI
+ */
+document.addEventListener("DOMContentLoaded", async function () {
+    await checkAndExchangeToken();
+    await loadDynamicMenu();
+    restoreSubmenuState();
+    bindSubmenuEvents();
 });
 
-// Gắn sự kiện click
-document.querySelectorAll('.submenu-toggle').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        const parentLi = this.closest('.has-submenu');
-        const menuId = parentLi.getAttribute('data-menu-id');
-        const submenu = parentLi.querySelector('.sidebar-submenu');
+/**
+ * Kiểm tra xem có transfer_token trên URL không, nếu có thì đem đổi thành access_token
+ */
+async function checkAndExchangeToken() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const transferToken = urlParams.get('transfer_token');
 
-        if (submenu) {
-            const isHidden = submenu.style.display === 'none';
-            submenu.style.display = isHidden ? 'block' : 'none';
-            this.classList.toggle('open', isHidden);
+    if (transferToken) {
+        try {
+            // Gọi API Layer (Đã tách riêng theo Rule 13.0)
+            const data = await apiAuth.exchangeToken(transferToken);
+            localStorage.setItem('access_token', data.access_token);
+            
+            // Xóa URL cho sạch sẽ
+            window.history.replaceState({}, document.title, window.location.pathname);
+            console.log("SSO Login Success!");
+        } catch (error) {
+            console.error("Lỗi SSO:", error);
+            // Có thể dùng components/toast.js ở đây nếu cần thiết
+        }
+    }
+}
 
-            if (menuId) {
-                localStorage.setItem('sidebar_submenu_' + menuId, isHidden ? 'open' : 'closed');
+// === 3. DATA PROCESSING & API CALLS ===
+/**
+ * Tải dữ liệu chức năng từ API và gọi hàm render HTML
+ */
+async function loadDynamicMenu() {
+    const token = localStorage.getItem('access_token');
+    if (!DOM.dynamicSidebarMenu) return;
+
+    if (!token) {
+        // Chuyển hướng thẳng sang trang cấm truy cập nếu không có token
+        window.location.href = '/no-access';
+        return;
+    }
+
+    try {
+        // Gọi API Layer
+        const flatData = await apiPhanQuyenChucNang.getDanhSachChucNang(token);
+        
+        // Data Processing
+        const menuTree = buildMenuTree(flatData);
+        
+        // HTML Rendering
+        DOM.dynamicSidebarMenu.innerHTML = renderMenuHTML(menuTree);
+    } catch (error) {
+        if (error.message === 'UNAUTHORIZED') {
+            localStorage.removeItem('access_token');
+            window.location.href = '/no-access';
+        } else {
+            console.error("Lỗi tải menu:", error);
+            DOM.dynamicSidebarMenu.innerHTML = '<li><a href="#">Lỗi tải hệ thống</a></li>';
+        }
+    }
+}
+
+/**
+ * Chuyển đổi mảng chức năng phẳng (Flat Array) thành cấu trúc cây (Tree)
+ * @param {Array} items - Mảng phẳng các chức năng
+ * @returns {Array} Mảng cây chức năng
+ */
+function buildMenuTree(items) {
+    const itemMap = {};
+    const tree = [];
+
+    // Tạo từ điển để tra cứu nhanh bằng ID
+    items.forEach(item => {
+        itemMap[item.CN_ID] = { ...item, children: [] };
+    });
+
+    // Lắp ráp các node vào node cha
+    items.forEach(item => {
+        if (!item.CN_Thuoc || item.CN_Thuoc === 0) {
+            tree.push(itemMap[item.CN_ID]);
+        } else {
+            if (itemMap[item.CN_Thuoc]) {
+                itemMap[item.CN_Thuoc].children.push(itemMap[item.CN_ID]);
             }
         }
     });
-});
+
+    return tree;
+}
+
+// === 4. TABLE / HTML RENDERING ===
+/**
+ * Dùng đệ quy để chuyển đổi cấu trúc cây thành chuỗi HTML Sidebar
+ * @param {Array} menuTree - Mảng cây chức năng
+ * @returns {string} Chuỗi HTML đã được render
+ */
+function renderMenuHTML(menuTree) {
+    let html = "";
+    const currentPath = window.location.pathname;
+
+    menuTree.forEach(node => {
+        const url = node.CN_URL ? node.CN_URL.trim() : "#";
+        
+        // Chỉ gán active nếu url hợp lệ, không rỗng và thực sự match với currentPath
+        let isActive = "";
+        if (url !== "#" && url !== "") {
+            if (currentPath === url || (url !== "/" && currentPath.includes(url))) {
+                isActive = "active";
+            }
+        }
+
+        const menuId = "menu_" + node.CN_ID;
+
+        if (node.children && node.children.length > 0) {
+            html += `
+                <li class="has-submenu" data-menu-id="${menuId}">
+                    <div class="menu-item-wrap">
+                        <a href="${url}" class="${isActive}">${node.CN_Ten}</a>
+                        <button class="submenu-toggle">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
+                    <ul class="sidebar-submenu" style="display: none;">
+                        ${renderMenuHTML(node.children)}
+                    </ul>
+                </li>
+            `;
+        } else {
+            html += `<li><a href="${url}" class="${isActive}">${node.CN_Ten}</a></li>`;
+        }
+    });
+
+    return html;
+}
+
+// === 5. EVENT LISTENERS BINDING ===
+/**
+ * Gắn sự kiện click cho toàn bộ document (Event Delegation) để xử lý đóng mở submenu
+ */
+function bindSubmenuEvents() {
+    document.addEventListener('click', function(e) {
+        const toggleBtn = e.target.closest('.submenu-toggle');
+        if (toggleBtn) {
+            e.preventDefault();
+            const parentLi = toggleBtn.closest('.has-submenu');
+            if (!parentLi) return;
+
+            const menuId = parentLi.getAttribute('data-menu-id');
+            const submenu = parentLi.querySelector('.sidebar-submenu');
+
+            if (submenu) {
+                const isHidden = submenu.style.display === 'none';
+                submenu.style.display = isHidden ? 'block' : 'none';
+                toggleBtn.classList.toggle('open', isHidden);
+
+                if (menuId) {
+                    localStorage.setItem('sidebar_submenu_' + menuId, isHidden ? 'open' : 'closed');
+                }
+            }
+        }
+    });
+}
+
+// === 6. UI STATE UPDATERS ===
+/**
+ * Khôi phục trạng thái (đóng/mở) của các submenu dựa trên giá trị đã lưu trong localStorage
+ */
+function restoreSubmenuState() {
+    document.querySelectorAll('.has-submenu').forEach(item => {
+        const menuId = item.getAttribute('data-menu-id');
+        const submenu = item.querySelector('.sidebar-submenu');
+        const toggleBtn = item.querySelector('.submenu-toggle');
+
+        if (menuId && submenu && toggleBtn) {
+            const state = localStorage.getItem('sidebar_submenu_' + menuId);
+            if (state === 'open') {
+                submenu.style.display = 'block';
+                toggleBtn.classList.add('open');
+            } else if (state === 'closed') {
+                submenu.style.display = 'none';
+                toggleBtn.classList.remove('open');
+            }
+        }
+    });
+}
 
 // --- LOGIC CHO SIDEBAR CO GIÃN VÀ THU GỌN ---
 (function() {

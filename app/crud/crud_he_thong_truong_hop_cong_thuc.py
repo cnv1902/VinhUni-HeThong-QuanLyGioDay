@@ -45,19 +45,17 @@ def execute_bulk_transaction(
     inserts: list,
     deletes: list
 ):
-    """Thực thi thao tác DB (thêm mới, xóa) và commit trong 1 transaction duy nhất cho THCT"""
-    for payload in inserts:
-        new_th = HeThongTruongHopCongThuc(
-            ID_Nhom_CT=id_nhom_ct,
-            ID_HeSo_LD=payload.ID_HeSo_LD,
-            MaHTDay=payload.MaHTDay,
-            BieuThuc_JSON=payload.BieuThuc_JSON,
-            BieuThuc_Text=payload.BieuThuc_Text,
-            TrangThai=payload.TrangThai
-        )
-        db.add(new_th)
+    """Thực thi thao tác DB (thêm mới, xóa) và commit trong 1 transaction duy nhất bằng Bulk Operations"""
+    if inserts:
+        insert_dicts = []
+        for payload in inserts:
+            item_dict = payload.model_dump(exclude_unset=True) if hasattr(payload, "model_dump") else dict(payload)
+            item_dict["ID_Nhom_CT"] = id_nhom_ct
+            insert_dicts.append(item_dict)
+        db.bulk_insert_mappings(HeThongTruongHopCongThuc, insert_dicts)
         
-    for db_item in deletes:
-        db.delete(db_item)
+    if deletes:
+        delete_ids = [d.ID_TruongHop_CT for d in deletes]
+        db.query(HeThongTruongHopCongThuc).filter(HeThongTruongHopCongThuc.ID_TruongHop_CT.in_(delete_ids)).delete(synchronize_session=False)
         
     db.commit()

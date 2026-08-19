@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union, Optional
-from jose import jwt
+from jose import jwt, JWTError
 from passlib.context import CryptContext
 from app.core.config import settings
 
@@ -25,3 +25,15 @@ def create_access_token(
     to_encode = {"exp": expire, "sub": str(subject)}
     encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+
+def verify_transfer_token(token: str) -> str:
+    """
+    Giải mã transfer token từ Cổng Cán Bộ.
+    Nếu token quá hạn hoặc không hợp lệ, hàm sẽ văng lỗi JWTError.
+    Trả về hs_id (subject) nếu hợp lệ.
+    """
+    payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
+    hs_id = payload.get("sub")
+    if hs_id is None:
+        raise JWTError("Token không chứa Subject (hs_id)")
+    return hs_id

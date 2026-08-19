@@ -10,17 +10,6 @@ let editingId = null; // null = Thêm mới, có giá trị = Sửa
 // Biến cho Drawer Cấu hình
 let semanticEditor = null;
 
-// Format "1_2023-2024" => "Kỳ 1 (2023-2024)"
-function formatHocKyName(rawName) {
-  if (!rawName) return '';
-  const cleanName = rawName.trim();
-  const parts = cleanName.split('_');
-  if (parts.length === 2) {
-    return `Kỳ ${parts[0].trim()} (${parts[1].trim()})`;
-  }
-  return cleanName;
-}
-
 /**
  * Khởi tạo dữ liệu cốt lõi (Cấu hình cột) 1 lần duy nhất khi mở trang.
  * Không tải data bảng ngay lúc này, mà chờ Navbar báo cáo "ContextReady".
@@ -96,9 +85,6 @@ async function init() {
 async function initFormModal() {
   if (typeof BaseModal !== 'undefined') {
     formModal = new BaseModal('modalNhomCongThuc');
-
-    // Đã xóa setupHocKyCombos vì dùng TuNam, DenNam (Input text/number)
-
     // Tải danh sách Hệ đào tạo
     const listHe = await apiCongThuc.getHeDaoTao();
     const heData = listHe.map(he => ({ id: he.ID_He, text: he.Ten_He }));
@@ -143,7 +129,7 @@ async function initFormModal() {
       tagHinhThucHoc = new TagInput('#dsHinhThucHocContainer', {
         data: tagData,
         fieldName: 'DsMaHTHoc',
-        placeholder: 'Gõ để tìm Hình thức học...'  
+        placeholder: 'Gõ để tìm Hình thức học...'
       });
 
       const formEl = document.getElementById('formNhomCongThuc');

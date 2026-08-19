@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Integer, Float, Boolean, DateTime, BigInteger, NVARCHAR
+from sqlalchemy.orm import relationship
 from app.models.base import Base
 
 class CQNhomLopHocPhan(Base):
@@ -75,3 +76,6 @@ class CQNhomLopHocPhan(Base):
     HeSo_HeDaoTao = Column(Float, nullable=True)
     NamTaiChinh = Column(Integer, nullable=True)
     Cong_Thuc = Column(NVARCHAR, nullable=True)
+
+    # Relationships
+    DSKeKhai = relationship("CQKeKhai", back_populates="NhomLopHocPhan")

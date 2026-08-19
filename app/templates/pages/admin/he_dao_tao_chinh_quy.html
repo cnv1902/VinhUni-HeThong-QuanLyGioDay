@@ -5,57 +5,235 @@
 {% set active_menu = 'chinh_quy' %}
 
 {% block styles %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap"
+  rel="stylesheet">
 <link rel="stylesheet" href="/static/css/pages/admin/he_dao_tao_chinh_quy.css?v={{ CACHE_BUSTER() }}">
 {% endblock %}
 
 {% block content %}
-<div class="dash-horizontal-bar">
-  <!-- Cột 1: Tổng -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html'">
-    <span class="text-secondary fw-bold text-uppercase mb-2" style="font-size: 12px;">Tổng học phần</span>
-    <h3 class="text-dark fw-bold mb-0" style="font-size: 24px;" id="dashTongNhomLop">--</h3>
+<div class="dashboard-wrapper">
+
+  <!-- Cột trái: quy trình xử lý -->
+  <div class="dashboard-main">
+
+    <!-- Panel 1: Phễu tiến độ (Tổng học phần -> Xác nhận -> Ký -> Thanh toán) -->
+    <section class="panel funnel-panel">
+      <div class="panel-header">
+        <div class="panel-heading">
+          <span class="panel-icon panel-icon-brand" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+              <polyline points="17 6 23 6 23 12"></polyline>
+            </svg>
+          </span>
+          <div>
+            <h4 class="panel-title">Tiến độ xử lý hồ sơ</h4>
+            <p class="panel-subtitle">Xác nhận&nbsp;&middot;&nbsp;Ký&nbsp;&middot;&nbsp;Thanh toán</p>
+          </div>
+        </div>
+        <button type="button" class="panel-meta" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html'">
+          <span class="meta-label">Tổng học phần</span>
+          <span class="meta-value" id="dashTongNhomLop">--</span>
+        </button>
+      </div>
+
+      <div class="funnel-track">
+
+        <!-- Giai đoạn 1: Xác nhận -->
+        <div class="funnel-stage">
+          <div class="stage-head">
+            <span class="stage-icon stage-icon-confirm" aria-hidden="true">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </span>
+            <span class="stage-label">Đã xác nhận</span>
+          </div>
+          <button type="button" class="stage-value-btn"
+            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_xac_nhan'">
+            <span class="stage-value" id="dashDaXacNhan">--</span>
+            <span class="stage-rate" id="dashRateXacNhan">--%</span>
+          </button>
+          <div class="stage-bar">
+            <div class="stage-bar-fill stage-bar-fill-confirm" id="dashBarXacNhan" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="funnel-connector" aria-hidden="true">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+
+        <!-- Giai đoạn 2: Ký -->
+        <div class="funnel-stage">
+          <div class="stage-head">
+            <span class="stage-icon stage-icon-sign" aria-hidden="true">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </span>
+            <span class="stage-label">Đã ký</span>
+          </div>
+          <button type="button" class="stage-value-btn"
+            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_ky'">
+            <span class="stage-value" id="dashDaKy">--</span>
+            <span class="stage-rate" id="dashRateKy">--%</span>
+          </button>
+          <div class="stage-bar">
+            <div class="stage-bar-fill stage-bar-fill-sign" id="dashBarKy" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="funnel-connector" aria-hidden="true">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" viewBox="0 0 24 24">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </div>
+
+        <!-- Giai đoạn 3: Thanh toán -->
+        <div class="funnel-stage">
+          <div class="stage-head">
+            <span class="stage-icon stage-icon-pay" aria-hidden="true">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" viewBox="0 0 24 24">
+                <line x1="12" y1="1" x2="12" y2="23"></line>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </span>
+            <span class="stage-label">Đã thanh toán</span>
+          </div>
+          <button type="button" class="stage-value-btn"
+            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_thanh_toan'">
+            <span class="stage-value" id="dashDaThanhToan">--</span>
+            <span class="stage-rate" id="dashRateThanhToan">--%</span>
+          </button>
+          <div class="stage-bar">
+            <div class="stage-bar-fill stage-bar-fill-pay" id="dashBarThanhToan" style="width:0%"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Panel 2: Việc cần xử lý -->
+    <section class="panel action-panel">
+      <div class="panel-header panel-header-slim">
+        <div class="panel-heading">
+          <span class="panel-icon panel-icon-warning" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+          </span>
+          <h4 class="panel-title">Cần xử lý ngay</h4>
+        </div>
+      </div>
+
+      <div class="action-grid">
+
+        <button type="button" class="action-item action-item-danger"
+          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_xac_nhan'">
+          <span class="action-icon" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </span>
+          <span class="action-text">
+            <span class="action-label">Chưa xác nhận</span>
+            <span class="action-value" id="dashChuaXacNhan">--</span>
+          </span>
+        </button>
+
+        <button type="button" class="action-item action-item-warning"
+          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_ky'">
+          <span class="action-icon" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </span>
+          <span class="action-text">
+            <span class="action-label">Chưa ký</span>
+            <span class="action-value" id="dashChuaKy">--</span>
+          </span>
+        </button>
+
+        <button type="button" class="action-item action-item-neutral"
+          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_thanh_toan'">
+          <span class="action-icon" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+              <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+          </span>
+          <span class="action-text">
+            <span class="action-label">Chưa thanh toán</span>
+            <span class="action-value" id="dashChuaThanhToan">--</span>
+          </span>
+        </button>
+
+      </div>
+    </section>
+
   </div>
 
-  <!-- Cột 2: Đã xác nhận -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_xac_nhan'">
-    <span class="text-primary fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã xác nhận</span>
-    <h3 class="text-primary fw-bold mb-0" style="font-size: 24px;" id="dashDaXacNhan">--</h3>
-  </div>
+  <!-- Cột phải: biểu đồ tỉ lệ -->
+  <aside class="dashboard-side">
+    <section class="panel chart-panel">
+      <div class="panel-header panel-header-slim panel-header-center">
+        <div class="panel-heading">
+          <span class="panel-icon panel-icon-brand" aria-hidden="true">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
+              <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
+            </svg>
+          </span>
+          <h4 class="panel-title">Tỉ lệ hoàn thành</h4>
+        </div>
+      </div>
 
-  <!-- Cột 3: Đã ký -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_ky'">
-    <span class="text-success fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã ký</span>
-    <h3 class="text-success fw-bold mb-0" style="font-size: 24px;" id="dashDaKy">--</h3>
-  </div>
+      <div class="chart-frame">
+        <canvas id="ratioChart"></canvas>
+        <div class="chart-center" aria-hidden="true">
+          <span class="chart-center-value" id="chartCenterValue">--%</span>
+          <span class="chart-center-label">Đã thanh toán</span>
+        </div>
+      </div>
 
-  <!-- Cột 4: Chưa ký -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_ky'">
-    <span class="text-warning fw-bold text-uppercase mb-2" style="font-size: 12px; color: #b07200 !important;">Chưa
-      ký</span>
-    <h3 class="text-warning fw-bold mb-0" style="font-size: 24px; color: #b07200 !important;" id="dashChuaKy">--</h3>
-  </div>
+      <ul class="chart-legend" id="chartLegend">
+        <!-- JS populates -->
+      </ul>
+    </section>
+  </aside>
 
-  <!-- Cột 5: Đã thanh toán -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_thanh_toan'">
-    <span class="text-info fw-bold text-uppercase mb-2" style="font-size: 12px;">Đã thanh toán</span>
-    <h3 class="text-info fw-bold mb-0" style="font-size: 24px;" id="dashDaThanhToan">--</h3>
-  </div>
-
-  <!-- Cột 6: Chưa thanh toán -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_thanh_toan'">
-    <span class="text-secondary fw-bold text-uppercase mb-2" style="font-size: 12px;">Chưa thanh toán</span>
-    <h3 class="text-secondary fw-bold mb-0" style="font-size: 24px;" id="dashChuaThanhToan">--</h3>
-  </div>
-
-  <!-- Cột 7: Chưa xác nhận -->
-  <div class="hover-card" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_xac_nhan'">
-    <span class="text-danger fw-bold text-uppercase mb-2" style="font-size: 12px;">Chưa xác nhận</span>
-    <h3 class="text-danger fw-bold mb-0" style="font-size: 24px;" id="dashChuaXacNhan">--</h3>
-  </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="/static/js/api/admin/heDaoTaoChinhQuyApi.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/pages/admin/he_dao_tao_chinh_quy.js?v={{ CACHE_BUSTER() }}"></script>
 {% endblock %}

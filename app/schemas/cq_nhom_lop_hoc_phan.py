@@ -29,6 +29,7 @@ class CQNhomLopBase(RoundedFloatBaseModel):
     NamTaiChinh: Optional[int] = None
     HeSo_LopDong: Optional[float] = None
     Cong_Thuc: Optional[str] = None
+    TrangThaiThanhToan: Optional[bool] = False
 
 class CQNhomLopResponse(CQNhomLopBase):
     ID: int
@@ -46,3 +47,6 @@ class CQNhomLopBulkUpdate(BaseModel):
 class CQNhomLopBulkUpdateResponse(RoundedFloatBaseModel):
     message: str
     updated_rows: List[Dict[str, Any]]
+
+class CQNhomLopBulkConfirmRequest(BaseModel):
+    ma_nhom_lop_hp_list: List[str]

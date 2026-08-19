@@ -131,6 +131,8 @@ class DataTable {
     this.customCellRender = config.customCellRender || null;
     this.isRowSelectable = config.isRowSelectable || (() => true);
     this.isRowEditable = config.isRowEditable || (() => true);
+    this.isRowLocked = config.isRowLocked || (() => false);
+    this.getRowClass = config.getRowClass || (() => '');
 
     this.outsideClickHandler = this.outsideClickHandler.bind(this);
     this.handleColumnResizeMove = this.handleColumnResizeMove.bind(this);
@@ -250,8 +252,15 @@ class DataTable {
       }
       for (const key in this.state.filters) {
         const allowed = this.state.filters[key];
-        const valStr = String(r[key]);
-        const valNum = parseFloat(valStr) || 0;
+        const col = this.state.columns.find(c => c.MaTruong === key);
+        
+        let valStr = String(r[key] ?? '');
+        if (col && this.customCellRender) {
+          try {
+            valStr = String(this.cellDisplay(r, col) ?? '');
+          } catch(e) {}
+        }
+        const valNum = parseFloat(String(r[key])) || 0;
 
         if (allowed && typeof allowed === 'object' && allowed.type === 'mixed') {
           if (allowed.min !== null && valNum < allowed.min) return false;
@@ -484,7 +493,13 @@ class DataTable {
       const canEditCell = editable && col.DuocSua;
       return `<td data-col="${col.MaTruong}" data-editable="${canEditCell ? '1' : '0'}" class="${col.sticky ? 'sticky-cell' : ''}" style="width:${col.DoRong}px;min-width:${col.DoRong}px;max-width:${col.DoRong}px;${stickyStyle}; text-align:${col.CanLe || 'left'}">${this.cellDisplay(row, col)}</td>`;
     }).join('');
-    const rowClass = [row._dirty ? 'row-dirty' : '', row.TrangThai === 'Đã thanh toán' ? 'row-locked' : ''].filter(Boolean).join(' ');
+    const rowLocked = this.isRowLocked(row);
+    const customRowClass = String(this.getRowClass(row, rowIndex) || '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .map(cls => esc(cls))
+      .join(' ');
+    const rowClass = [row._dirty ? 'row-dirty' : '', rowLocked ? 'row-locked' : '', customRowClass].filter(Boolean).join(' ');
     return `<tr data-id="${rowId}" class="${rowClass}">${checkboxCell}${indexCell}${cells}</tr>`;
   }
 
@@ -672,8 +687,8 @@ class DataTable {
     if (!this.isRowEditable(row)) return;
     const originalValue = row[col.MaTruong];
 
-    if (row.TrangThai === 'Đã thanh toán') {
-      if (typeof showToast !== 'undefined') showToast('Không thể sửa: nhóm lớp này đã thanh toán');
+    if (this.isRowLocked(row)) {
+      if (typeof showToast !== 'undefined') showToast('Không thể sửa: bản ghi này đang bị khóa');
       return;
     }
 
@@ -776,18 +791,37 @@ class DataTable {
     div.style.top = (rect.bottom + 6) + 'px';
     div.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 256)) + 'px';
 
-    // Checkbox list setup
-    const allValues = Array.from(new Set(this.state.data.map(r => String(r[key])))).sort((a, b) => a.localeCompare(b));
+    const getRowFilterValue = (row) => {
+      if (!this.customCellRender) return String(row[key] ?? '');
+      try {
+        return String(this.cellDisplay(row, col) ?? '');
+      } catch(e) {
+        return String(row[key] ?? '');
+      }
+    };
+
+    const rawValuesMap = new Map();
+    this.state.data.forEach(r => {
+      const html = getRowFilterValue(r);
+      if (!rawValuesMap.has(html)) {
+        const div = document.createElement('div');
+        div.innerHTML = html;
+        rawValuesMap.set(html, (div.textContent || div.innerText || '').trim());
+      }
+    });
+
+    const allValues = Array.from(rawValuesMap.keys()).sort((a, b) => rawValuesMap.get(a).localeCompare(rawValuesMap.get(b)));
     let checkedSet = null;
     if (currentAllowed instanceof Set) checkedSet = currentAllowed;
     else if (currentAllowed && currentAllowed.values) checkedSet = currentAllowed.values;
 
     const getFilterLabel = (valStr) => {
       if (!valStr) return '(trống)';
+      if (this.customCellRender) return valStr; // Trả thẳng HTML đã render
+
       const fakeRow = {};
-      // Khôi phục kiểu boolean cơ bản để hàm render nhận diện chính xác
-      if (valStr.toLowerCase() === 'true') fakeRow[key] = true;
-      else if (valStr.toLowerCase() === 'false') fakeRow[key] = false;
+      if (String(valStr).toLowerCase() === 'true') fakeRow[key] = true;
+      else if (String(valStr).toLowerCase() === 'false') fakeRow[key] = false;
       else fakeRow[key] = valStr;
 
       try {
@@ -797,7 +831,7 @@ class DataTable {
       return esc(valStr);
     };
 
-    const mapItems = allValues.map(v => `<label class="fd-item" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="fd-cb" value="${esc(v)}" ${(!checkedSet || checkedSet.has(v)) ? 'checked' : ''}>${getFilterLabel(v)}</label>`).join('');
+    const mapItems = allValues.map(v => `<label class="fd-item" data-text="${esc(rawValuesMap.get(v))}" style="display:flex; align-items:center; gap:8px;"><input type="checkbox" class="fd-cb" value="${esc(v)}" ${(!checkedSet || checkedSet.has(v)) ? 'checked' : ''}>${getFilterLabel(v)}</label>`).join('');
 
     let html = `
       <input type="text" class="fd-search" placeholder="Tìm giá trị...">
@@ -830,7 +864,10 @@ class DataTable {
 
     div.querySelector('.fd-search').addEventListener('input', e => {
       const q = e.target.value.toLowerCase();
-      div.querySelectorAll('.fd-item').forEach(lbl => { lbl.style.display = lbl.textContent.toLowerCase().includes(q) ? 'flex' : 'none'; });
+      div.querySelectorAll('.fd-item').forEach(lbl => { 
+        const txt = (lbl.getAttribute('data-text') || lbl.textContent).toLowerCase();
+        lbl.style.display = txt.includes(q) ? 'flex' : 'none'; 
+      });
     });
 
     div.querySelector('.fd-selectall').addEventListener('change', e => {

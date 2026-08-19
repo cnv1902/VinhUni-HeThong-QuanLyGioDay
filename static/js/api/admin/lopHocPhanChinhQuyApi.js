@@ -11,11 +11,11 @@ const apiLopHocPhanChinhQuy = {
     }
   },
 
-  async getNhomLopData(hoc_ky = null, trang_thai_loc = null) {
+  async getNhomLopData(namTaiChinh = null, trang_thai_loc = null) {
     try {
       let url = `${window.API_PREFIX}/cq-nhom-lop-hoc-phan/`;
       const params = new URLSearchParams();
-      if (hoc_ky !== null) params.append('hoc_ky', hoc_ky);
+      if (namTaiChinh !== null) params.append('nam_tai_chinh', namTaiChinh);
       if (trang_thai_loc !== null) params.append('trang_thai_loc', trang_thai_loc);
 
       const queryString = params.toString();
@@ -53,6 +53,19 @@ const apiLopHocPhanChinhQuy = {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'Lỗi khi lưu thay đổi');
+    }
+    return await response.json();
+  },
+
+  async confirmNhomLopHocPhan(listMa, namTaiChinh) {
+    const response = await fetch(`${window.API_PREFIX}/cq-nhom-lop-hoc-phan/xac-nhan-hang-loat?nam_tai_chinh=${encodeURIComponent(namTaiChinh)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ma_nhom_lop_hp_list: listMa })
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.detail || 'Lỗi khi xác nhận hàng loạt');
     }
     return await response.json();
   }

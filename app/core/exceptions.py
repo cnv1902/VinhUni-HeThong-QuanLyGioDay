@@ -8,6 +8,10 @@ class BadRequestException(HTTPException):
     def __init__(self, detail: str = "Yêu cầu không hợp lệ"):
         super().__init__(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
 
+class ConflictException(HTTPException):
+    def __init__(self, detail: str = "Yêu cầu xung đột với trạng thái dữ liệu hiện tại"):
+        super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
 class CredentialsException(HTTPException):
     def __init__(self, detail: str = "Token không hợp lệ hoặc đã hết hạn"):
         super().__init__(

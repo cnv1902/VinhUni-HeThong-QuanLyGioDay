@@ -31,7 +31,7 @@ def update(db: Session, db_obj: HeThongHeSoLopDong):
 
 def delete(db: Session, db_obj: HeThongHeSoLopDong):
     """Xóa hệ số lớp đông (Soft Delete)"""
-    db_obj.Is_Delete = True
+    db_obj.Is_Delete = True # type: ignore
     db.commit()
     return db_obj
 
@@ -40,18 +40,20 @@ def execute_bulk_transaction(
     inserts: list,
     deletes: list
 ):
-    """Thực thi thao tác DB (thêm mới, sửa) trong 1 transaction duy nhất"""
-    for payload in inserts:
-        new_ld = HeThongHeSoLopDong(
-            Ten_HeSo_LD=payload.Ten_HeSo_LD,
-            CauHinh_Json=payload.CauHinh_Json,
-            TrangThai=payload.TrangThai,
-            Is_Delete=False
-        )
-        db.add(new_ld)
+    """Thực thi thao tác DB (thêm mới, sửa) trong 1 transaction duy nhất bằng Bulk Operations"""
+    if inserts:
+        insert_dicts = []
+        for payload in inserts:
+            # Lấy dict từ Pydantic schema hoặc dict thuần
+            item_dict = payload.model_dump(exclude_unset=True) if hasattr(payload, "model_dump") else dict(payload)
+            item_dict["Is_Delete"] = False
+            insert_dicts.append(item_dict)
+        db.bulk_insert_mappings(HeThongHeSoLopDong, insert_dicts)
         
-    for db_item in deletes:
-        # Soft delete instead of hard delete
-        db_item.Is_Delete = True
+    if deletes:
+        delete_ids = [d.ID_HeSo_LD for d in deletes]
+        db.query(HeThongHeSoLopDong).filter(HeThongHeSoLopDong.ID_HeSo_LD.in_(delete_ids)).update(
+            {HeThongHeSoLopDong.Is_Delete: True}, synchronize_session=False
+        )
         
     db.commit()

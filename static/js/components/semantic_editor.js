@@ -133,10 +133,8 @@ class SemanticEditorDrawer {
 
     async loadDrawerData(groupId) {
         try {
-            const apiBase = (window.API_PREFIX || '/api/v1');
-
             // Lấy danh sách rút gọn Hệ số lớp đông cho Combobox
-            const resHSDG = await fetch(`${apiBase}/he-so-lop-dong/danh-sach-don-gian`).catch(e => null);
+            const resHSDG = await apiSemanticEditor.getHeSoLopDongDonGian().catch(e => null);
             if (resHSDG && resHSDG.ok) {
                 this.danhSachHeSoLopDong = await resHSDG.json();
             } else {
@@ -144,7 +142,7 @@ class SemanticEditorDrawer {
             }
 
             // Fetch Trường hợp dạy
-            const resTH = await fetch(`${apiBase}/truong-hop-cong-thuc/nhom-cong-thuc/${groupId}`).catch(e => null);
+            const resTH = await apiSemanticEditor.getTruongHopNhomCongThuc(groupId).catch(e => null);
             if (resTH && resTH.ok) {
                 const dataTH = await resTH.json();
                 this.truongHopData = (dataTH.data || dataTH).map(item => {
@@ -181,8 +179,7 @@ class SemanticEditorDrawer {
         if (this.fullHeSoData !== null) return; // Đã load
 
         try {
-            const apiBase = (window.API_PREFIX || '/api/v1');
-            const res = await fetch(`${apiBase}/he-so-lop-dong/`);
+            const res = await apiSemanticEditor.getHeSoLopDong();
             if (res.ok) {
                 const data = await res.json();
                 this.fullHeSoData = data.map(item => {
@@ -509,8 +506,7 @@ class SemanticEditorDrawer {
 
                 if (typeof caseId === 'string' && !caseId.startsWith('th_')) {
                     try {
-                        const url = `${window.API_PREFIX || '/api/v1'}/truong-hop-cong-thuc/${caseId}`;
-                        const res = await fetch(url, { method: 'DELETE' });
+                        const res = await apiSemanticEditor.deleteTruongHopCongThuc(caseId);
                         if (!res.ok) {
                             const errorData = await res.json().catch(() => null);
                             throw new Error(errorData && errorData.detail ? errorData.detail : "Lỗi khi xóa từ server");
@@ -767,8 +763,6 @@ class SemanticEditorDrawer {
         btnSave.disabled = true;
 
         try {
-            const apiBase = (window.API_PREFIX || '/api/v1');
-
             if (this.activeMenuId === 'lop_dong') {
                 // 1. LƯU HỆ SỐ LỚP ĐÔNG
                 const payload = this.fullHeSoData.map(group => {
@@ -787,11 +781,7 @@ class SemanticEditorDrawer {
                     };
                 });
 
-                const res = await fetch(`${apiBase}/he-so-lop-dong/bulk-update`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ he_so_lop_dong: payload })
-                });
+                const res = await apiSemanticEditor.bulkUpdateHeSoLopDong(payload);
 
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => null);
@@ -825,11 +815,7 @@ class SemanticEditorDrawer {
                     };
                 });
 
-                const res = await fetch(`${apiBase}/truong-hop-cong-thuc/nhom-cong-thuc/${this.currentGroupId}/bulk-update`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ truong_hop_cong_thuc: validTruongHop })
-                });
+                const res = await apiSemanticEditor.bulkUpdateTruongHopNhomCongThuc(this.currentGroupId, validTruongHop);
 
                 if (!res.ok) {
                     const errorData = await res.json().catch(() => null);

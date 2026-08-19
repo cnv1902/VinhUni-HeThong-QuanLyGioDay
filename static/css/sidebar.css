@@ -33,7 +33,8 @@
 .sidebar-resizer {
   position: absolute;
   top: 0;
-  right: -2px; /* Lấn ra 2px để dễ bắt chuột */
+  right: -2px;
+  /* Lấn ra 2px để dễ bắt chuột */
   width: 5px;
   height: 100%;
   cursor: col-resize;
@@ -42,7 +43,8 @@
   z-index: 10;
 }
 
-.sidebar-resizer:hover, .sidebar-resizer.dragging {
+.sidebar-resizer:hover,
+.sidebar-resizer.dragging {
   background-color: var(--teal-600);
 }
 
@@ -54,22 +56,20 @@
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #fff;
-  border: 1px solid var(--border);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  background: #1a6bb5;
+  border: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   z-index: 11;
-  color: var(--text-secondary);
+  color: #ffffff;
   transition: right 0.3s, background-color 0.2s, color 0.2s;
   padding: 0;
 }
 
 .sidebar-toggle:hover {
-  background: var(--bg-subtle);
-  color: var(--text-primary);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 .sidebar-toggle svg {
@@ -132,7 +132,8 @@
 }
 
 .menu-item-wrap a:hover {
-  background-color: transparent; /* Let the wrapper handle the hover bg */
+  background-color: transparent;
+  /* Let the wrapper handle the hover bg */
 }
 
 .submenu-toggle {

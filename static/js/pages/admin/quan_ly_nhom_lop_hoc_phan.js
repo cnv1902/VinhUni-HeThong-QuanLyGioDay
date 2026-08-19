@@ -28,6 +28,11 @@ function valuesAreSame(a, b) {
   return String(a ?? '') === String(b ?? '');
 }
 
+function isTrueLike(value) {
+  const normalized = String(value ?? '').trim().toLowerCase();
+  return normalized === 'true' || normalized === '1';
+}
+
 function snapshotRows(rows) {
   originalRowsById = {};
   rows.forEach(row => {
@@ -141,24 +146,36 @@ async function init() {
       incrementalBatchSize: 100,
       resizableColumns: true,
       storageKey: 'table_CQ_NhomLopHocPhan_Config',
-      isRowSelectable: (row) => row.XacNhan !== true, // Không cho chọn nếu đã xác nhận
-      isRowEditable: (row) => row.XacNhan !== true,   // Không cho sửa nếu đã xác nhận
+      rowKey: 'MaNhomLopHP',
+      isRowSelectable: (row) => !(isTrueLike(row.XacNhan) || Number(row.ID_LanTongHopFile || 0) > 0 || isTrueLike(row.TrangThaiThanhToan)),
+      isRowEditable: (row) => !(isTrueLike(row.XacNhan) || Number(row.ID_LanTongHopFile || 0) > 0 || isTrueLike(row.TrangThaiThanhToan)),
+      isRowLocked: (row) => isTrueLike(row.XacNhan) || Number(row.ID_LanTongHopFile || 0) > 0 || isTrueLike(row.TrangThaiThanhToan),
+      getRowClass: (row) => {
+        const classes = [];
+        if (isTrueLike(row.XacNhan) || Number(row.ID_LanTongHopFile || 0) > 0 || isTrueLike(row.TrangThaiThanhToan)) classes.push('row-confirmed');
+        if (Number(row.ID_LanTongHopFile || 0) > 0) classes.push('row-signed');
+        if (isTrueLike(row.ThanhToanThinhGiang) || isTrueLike(row.TrangThaiThanhToan) || row.TrangThai === 'Đã thanh toán') classes.push('row-paid');
+        return classes.join(' ');
+      },
       customCellRender: (row, col) => {
         // Chỉ custom cột có type là badge và không phải trạng thái cố định
         if (col.MaTruong === 'LopChuyen') {
           const val = row[col.MaTruong];
-          if (val === true || String(val).toLowerCase() === 'true') {
+          if (isTrueLike(val)) {
             return `<span class="badge badge-true">✓</span>`;
-          } else if (val === false || String(val).toLowerCase() === 'false') {
+          } else if (String(val).trim().toLowerCase() === 'false' || val === 0 || val === '0') {
             return `<span class="badge badge-false">✗</span>`;
           }
         }
         if (col.MaTruong === 'XacNhan') {
-          const val = row[col.MaTruong];
-          if (val === true || String(val).toLowerCase() === 'true') {
-            return `<span class="badge badge-true">Đã xác nhận</span>`;
-          } else if (val === false || String(val).toLowerCase() === 'false') {
-            return `<span class="badge badge-false">Chưa xác nhận</span>`;
+          if (isTrueLike(row['TrangThaiThanhToan'])) {
+            return `<span class="badge">Đã thanh toán</span>`;
+          } else if (Number(row.ID_LanTongHopFile || 0) > 0) {
+            return `<span class="badge">Chưa thanh toán</span>`;
+          } else if (isTrueLike(row['XacNhan'])) {
+            return `<span class="badge">Chưa ký</span>`;
+          } else {
+            return `<span class="badge">Chưa xác nhận</span>`;
           }
         }
         return null; // Trả về null để datatable dùng cách hiển thị mặc định
@@ -240,16 +257,6 @@ async function init() {
       },
       onRenderComplete: (allRows, selectedSet) => {
         updateFooter(allRows, selectedSet);
-
-        // Thêm class css row-locked cho các dòng đã xác nhận
-        const trs = document.querySelectorAll('#dataTable tbody tr');
-        trs.forEach(tr => {
-          const rowId = tr.getAttribute('data-id');
-          const rowData = allRows.find(r => String(r.MaNhomLopHP) === String(rowId));
-          if (rowData && rowData.XacNhan === true) {
-            tr.classList.add('row-locked');
-          }
-        });
       }
     });
 
@@ -332,30 +339,44 @@ function updateFooter(rows, selectedSet = null) {
     selSpan.textContent = selectedSize;
   }
 
-  // Tính tổng sinh viên, tổng tín chỉ, số đã xác nhận, chưa xác nhận
-  let sumSv = 0;
-  let sumTc = 0;
-  let sumConfirmed = 0;
+  // Ẩn/hiện nút cập nhật hàng loạt theo số lượng dòng được chọn
+  const btnToggleBulkUpdate = document.getElementById('btnToggleBulkUpdate');
+  if (btnToggleBulkUpdate) {
+    btnToggleBulkUpdate.style.display = selectedSize > 0 ? 'inline-flex' : 'none';
+
+    // Nếu bảng không còn dòng nào được chọn nhưng panel vẫn đang mở -> tự động đóng lại
+    if (selectedSize === 0 && typeof isBulkPanelOpen !== 'undefined' && isBulkPanelOpen) {
+      btnToggleBulkUpdate.click();
+    }
+  }
+
+
+  // Tính tổng theo các trạng thái ưu tiên
+  let sumPaid = 0;
+  let sumUnpaid = 0;
+  let sumUnsigned = 0;
   let sumUnconfirmed = 0;
 
   rows.forEach(r => {
-    sumSv += (r.SoSinhVien || 0);
-    sumTc += (r.SoTinChi || 0);
-    if (r.XacNhan === true) {
-      sumConfirmed++;
+    if (isTrueLike(r['TrangThaiThanhToan'])) {
+      sumPaid++;
+    } else if (Number(r.ID_LanTongHopFile || 0) > 0) {
+      sumUnpaid++;
+    } else if (isTrueLike(r['XacNhan'])) {
+      sumUnsigned++;
     } else {
       sumUnconfirmed++;
     }
   });
 
-  const sumSvEl = document.getElementById('statSV');
-  if (sumSvEl) sumSvEl.textContent = formatNum(sumSv);
+  const statPaidEl = document.getElementById('statPaid');
+  if (statPaidEl) statPaidEl.textContent = formatNum(sumPaid);
 
-  const sumTcEl = document.getElementById('statTC');
-  if (sumTcEl) sumTcEl.textContent = formatNum(sumTc);
+  const statUnpaidEl = document.getElementById('statUnpaid');
+  if (statUnpaidEl) statUnpaidEl.textContent = formatNum(sumUnpaid);
 
-  const statConfirmedEl = document.getElementById('statConfirmed');
-  if (statConfirmedEl) statConfirmedEl.textContent = formatNum(sumConfirmed);
+  const statUnsignedEl = document.getElementById('statUnsigned');
+  if (statUnsignedEl) statUnsignedEl.textContent = formatNum(sumUnsigned);
 
   const statUnconfirmedEl = document.getElementById('statUnconfirmed');
   if (statUnconfirmedEl) statUnconfirmedEl.textContent = formatNum(sumUnconfirmed);
@@ -365,14 +386,13 @@ function renderFooterUI() {
   const footer = document.getElementById('pageFooter');
   if (footer) {
     footer.innerHTML = `
-            <span>Tổng số: <b id="statTotal">0</b> nhóm lớp</span>
-            <span>Đang hiển thị: <b id="statFiltered">0</b></span>
-            <span>Đã chọn: <b id="statSelected">0</b></span>
-            <span>Tổng SV: <b id="statSV">0</b></span>
-            <span>Tổng số TC: <b id="statTC">0</b></span>
-            <span>Đã xác nhận: <b id="statConfirmed">0</b></span>
-            <span>Chưa xác nhận: <b id="statUnconfirmed">0</b></span>
-            <span class="hint">Nháy đúp vào ô để chỉnh sửa · Lớp đã xác nhận không thể chỉnh sửa</span>
+            <span>Tổng số: <b id="statTotal">0</b></span>
+            <span>Đã thanh toán: <b id="statPaid" style="color: #D97706">0</b></span>
+            <span>Chưa thanh toán (Đã ký): <b id="statUnpaid" style="color: #0284C7">0</b></span>
+            <span>Chưa ký (Đã xác nhận): <b id="statUnsigned" style="color: #16A34A">0</b></span>
+            <span>Chưa xác nhận: <b id="statUnconfirmed" style="color: var(--text-muted)">0</b></span>
+            <span style="margin-left: auto;">Đã chọn: <b id="statSelected" style="color: #ef0202ff">0</b></span>
+            <span class="hint" style="margin-left: 14px;">Nháy đúp vào ô để chỉnh sửa</span>
         `;
   }
 }
@@ -390,6 +410,71 @@ function bindStaticEvents() {
   if (quickSearch) {
     quickSearch.addEventListener('input', e => {
       myTable.setSearch(e.target.value);
+    });
+  }
+
+  const btnSave = document.getElementById('btnSave');
+  if (btnSave) {
+    btnSave.addEventListener('click', async () => {
+      const selectedIds = Array.from(myTable.state.selected);
+      if (selectedIds.length === 0) {
+        if (typeof showToast !== 'undefined') showToast("Vui lòng chọn ít nhất một lớp học phần để xác nhận", true);
+        return;
+      }
+
+      let isOk = true;
+      if (typeof confirmModal !== 'undefined') {
+        isOk = await confirmModal.show(
+          `Bạn có chắc chắn muốn xác nhận ${selectedIds.length} lớp học phần đã chọn?`,
+          'Xác nhận hàng loạt',
+          'Xác nhận'
+        );
+      } else {
+        isOk = confirm(`Bạn có chắc chắn muốn xác nhận ${selectedIds.length} lớp học phần đã chọn?`);
+      }
+
+      if (!isOk) return;
+
+      try {
+        btnSave.disabled = true;
+        btnSave.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg> Đang xử lý...`;
+
+        const namTaiChinh = (typeof navbarState !== 'undefined')
+          ? navbarState.selectedNamTaiChinh
+          : null;
+
+        const res = await apiLopHocPhanChinhQuy.confirmNhomLopHocPhan(selectedIds, namTaiChinh);
+        if (typeof showToast !== 'undefined') {
+          showToast(`Đã xác nhận thành công ${res.updated_count} lớp học phần.`);
+        }
+
+        // Cập nhật giao diện cục bộ (Inline update) thay vì tải lại toàn bộ dữ liệu
+        const updated_rows = selectedIds.map(id => {
+          const existingRow = myTable.state.data.find(r => String(r.MaNhomLopHP) === String(id));
+          return {
+            ...existingRow,
+            XacNhan: 1,
+            // (Tuỳ chọn) Nếu cột UI cần hiện thời gian xác nhận, có thể tự mock ở đây
+          };
+        });
+
+        myTable.updateRowsData(updated_rows);
+
+        // Bỏ chọn và render lại UI
+        myTable.state.selected.clear();
+        snapshotRows(myTable.state.data);
+        updateSaveButtonVisibility();
+        myTable.renderAll();
+
+      } catch (error) {
+        console.error(error);
+        if (typeof showToast !== 'undefined') {
+          showToast(error.message || 'Lỗi khi xác nhận.', true);
+        }
+      } finally {
+        btnSave.disabled = false;
+        btnSave.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 13l4 4L19 7" /></svg> Xác nhận`;
+      }
     });
   }
 
@@ -473,16 +558,17 @@ function bindStaticEvents() {
 
       if (editedCount === 0 && !hasBulkChange) return;
 
-      const visibleRows = myTable.getRows().filter(row => row.XacNhan !== true);
-      const affectedCount = hasBulkChange ? visibleRows.length : editedCount;
+      const selectedSet = myTable.state.selected || new Set();
+      const targetRows = myTable.getRows().filter(row => !isTrueLike(row.XacNhan) && selectedSet.has(String(row.MaNhomLopHP)));
+      const affectedCount = hasBulkChange ? targetRows.length : editedCount;
 
       if (hasBulkChange && affectedCount === 0) {
-        if (typeof showToast !== 'undefined') showToast('Không có bản ghi đang hiển thị có thể cập nhật.', true);
+        if (typeof showToast !== 'undefined') showToast('Vui lòng chọn (tích vào ô vuông) ít nhất một bản ghi.', true);
         return;
       }
 
       const message = hasBulkChange
-        ? `Bạn có chắc chắn muốn lưu thay đổi cho ${affectedCount} bản ghi đang hiển thị?`
+        ? `Bạn có chắc chắn muốn lưu thay đổi cho ${affectedCount} bản ghi đã chọn?`
         : `Bạn có chắc chắn muốn lưu ${editedCount} thay đổi?`;
 
       if (typeof confirmModal !== 'undefined') {
@@ -530,8 +616,9 @@ async function submitSaveChanges() {
 
   try {
     const hasBulkChange = bulkMaHTHoc !== null || bulkMaHTDay !== null;
+    const selectedSet = myTable.state.selected || new Set();
     const sourceRows = hasBulkChange
-      ? myTable.getRows().filter(row => row.XacNhan !== true)
+      ? myTable.getRows().filter(row => !isTrueLike(row.XacNhan) && selectedSet.has(String(row.MaNhomLopHP)))
       : Object.keys(modifiedRows).map(id => ({ MaNhomLopHP: id }));
 
     const items = sourceRows.map(row => {

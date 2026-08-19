@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Cổng Cán Bộ";
+}
+
+<div class="text-center" style="margin-top: 100px;">
+    <div style="display: inline-flex; align-items: center; justify-content: center; width: 80px; height: 80px; border-radius: 50%; background-color: #e6f0fa; color: #0055AF; margin-bottom: 24px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 40px; height: 40px;">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+    </div>
+    <h1 class="display-4" style="font-weight: 600; color: #182430;">Cổng Thông Tin Cán Bộ</h1>
+    <p style="font-size: 18px; color: #5B6B78; margin-bottom: 40px;">Xin chào Thầy/Cô <b>Nguyễn Văn A</b> (Mã Hồ Sơ: 1678)</p>
+    
+    <!-- Nút này sẽ gọi đến SSOController.cs để tự gen JWT và ném sang web Python -->
+    <a href="/trigger-sso" class="btn" style="background-color: #0055AF; color: white; padding: 12px 30px; font-size: 16px; border-radius: 6px; font-weight: 500; text-decoration: none;">
+        Chuyển sang Hệ thống Quản Lý Giờ Dạy
+    </a>
+</div>

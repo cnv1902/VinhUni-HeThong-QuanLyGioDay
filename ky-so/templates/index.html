@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test ký số</title>
+
+    <!-- Widget chính thức -->
+    <script src="https://ky.vinhuni.edu.vn/widget/vgca-signing-widget.js"></script>
+
+    <!-- Thư viện đăng nhập của Microsoft, bản cho TRÌNH DUYỆT (không phải bản Python).
+         Để NGAY TRONG ứng dụng, không nạp từ CDN: alcdn.msauth.net đã bị Microsoft gỡ nội dung
+         (mọi phiên bản đều trả 404), và một ứng dụng nội bộ cũng không nên phụ thuộc mạng ngoài
+         cho bước đăng nhập. Cập nhật thư viện: npm pack @azure/msal-browser rồi chép
+         lib/msal-browser.min.js đè lên tệp này. -->
+    <script src="/static/msal-browser.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box
+        }
+
+        body {
+            margin: 0;
+            background: #f1f5f9;
+            font-family: Arial, sans-serif;
+            color: #0f172a
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 18px
+        }
+
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            padding: 22px;
+            box-shadow: 0 5px 20px #0000000b
+        }
+
+        h1 {
+            margin: 0 0 8px
+        }
+
+        .desc {
+            color: #64748b;
+            margin-bottom: 20px
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 18px
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 11px 18px;
+            font-size: 15px;
+            cursor: pointer
+        }
+
+        .primary {
+            background: #2563eb;
+            color: white
+        }
+
+        .success {
+            background: #16a34a;
+            color: white
+        }
+
+        .secondary {
+            background: #e2e8f0;
+            color: #0f172a
+        }
+
+        button:disabled {
+            opacity: .5;
+            cursor: not-allowed
+        }
+
+        .status {
+            padding: 12px;
+            border-radius: 9px;
+            background: #f8fafc;
+            margin-bottom: 15px
+        }
+
+        iframe {
+            width: 100%;
+            height: 720px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            background: #e5e7eb
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .small {
+            font-size: 13px;
+            color: #64748b
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Kiểm thử ký số VGCA</h1>
+            <div class="desc">
+                Luồng: Xuất PDF → xem trước → xác nhận → đăng nhập 365 lấy vé → mở widget ký số.
+            </div>
+
+            <div class="actions">
+                <button class="primary" id="btnXuat" onclick="xuatPDF()">
+                    1. Xuất PDF
+                </button>
+
+                <button class="success" id="btnKy" onclick="moKySo()" disabled>
+                    2. Xác nhận & ký số
+                </button>
+
+                <button class="secondary" id="btnTai" onclick="taiPDF()" disabled>
+                    Mở PDF
+                </button>
+            </div>
+
+            <div class="status" id="status">
+                Chưa có PDF. Hãy bấm "Xuất PDF".
+            </div>
+
+            <iframe id="pdfPreview" class="hidden"></iframe>
+
+            <div class="small" style="margin-top:10px">
+                Lưu ý: Token được xử lý và bảo mật hoàn toàn ở phía Backend FastAPI.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let pdfBlob = null;
+        let pdfUrl = null;
+        let fileName = null;
+
+        // ─────────────────────────────────────────────────────────────────────────
+        //  LẤY VÉ NGAY TẠI TRÌNH DUYỆT — không gọi về backend nữa.
+        //
+        //  Vé phải thuộc về chính người đang ngồi trước máy. Lấy ở backend bằng MSAL Python
+        //  thì vé thuộc về người đã đăng nhập trên MÁY CHỦ, và mọi chữ ký đổ hết về người đó.
+        // ─────────────────────────────────────────────────────────────────────────
+        const CLIENT_ID = "4cecf646-a561-49c3-b1aa-1f5a0b251b4f";   // app QUẢN LÝ GIỜ DẠY
+        const TENANT_ID = "4ef78439-6d6c-4ea0-ab14-49b9284ab4c9";
+        const SCOPE_KY  = "api://06d582b1-3448-49c3-b136-2a61ef9382f3/ky_thay_nguoi_dung";
+
+        // Đặt tên khác "msal": tên đó đã bị thư viện của Microsoft chiếm ở phạm vi toàn cục,
+        // khai trùng thì trang chết ngay lúc nạp với "Cannot access 'msal' before initialization".
+        //
+        // Dựng MUỘN (trong hàm) chứ không dựng thẳng ở đây: máy trong mạng nội bộ có thể không ra
+        // được alcdn.msauth.net, khi đó "msal" không tồn tại và dòng "new msal..." sẽ ném lỗi ngay
+        // lúc nạp trang — mọi nút sau đó im lặng không phản hồi, không ai biết vì sao. Dựng muộn
+        // thì lỗi hiện đúng lúc bấm, kèm câu giải thích đọc được.
+        // Giữ PROMISE chứ không giữ đối tượng: MSAL từ bản 3 trở đi bắt buộc gọi initialize()
+        // (bất đồng bộ) trước mọi lời gọi khác, nếu không sẽ báo
+        // "uninitialized_public_client_application". Giữ promise thì hai lần bấm liên tiếp vẫn chỉ
+        // khởi tạo đúng một lần.
+        let msalDangSan = null;
+
+        function layUngDungMsal() {
+            if (typeof msal === "undefined") {
+                throw new Error(
+                    "Không nạp được /static/msal-browser.min.js. Kiểm tra tệp có nằm trong thư mục " +
+                    "app/static/ không, và máy chủ đã khởi động lại chưa.");
+            }
+
+            if (!msalDangSan) {
+                const app = new msal.PublicClientApplication({
+                    auth: {
+                        clientId: CLIENT_ID,
+                        authority: "https://login.microsoftonline.com/" + TENANT_ID,
+                        // Trang TRẮNG riêng, KHÔNG phải trang chủ ứng dụng: cửa sổ bật lên chỉ
+                        // cần một chỗ để Microsoft trả kết quả về, không cần tải lại cả app trong
+                        // đó. Xem chú thích trong static/dang-nhap-xong.html.
+                        //
+                        // Địa chỉ này phải khai y hệt làm Redirect URI kiểu SPA trên Entra ID.
+                        redirectUri: window.location.origin + "/static/dang-nhap-xong.html",
+                    },
+                });
+
+                // handleRedirectPromise() PHẢI gọi sau initialize(), kể cả khi ta chỉ dùng cửa sổ
+                // bật lên chứ không dùng chuyển hướng: đây là chỗ MSAL dọn trạng thái của lần đăng
+                // nhập trước còn dang dở. Thiếu nó thì một lần bấm bị đóng giữa chừng sẽ để lại cờ
+                // "đang đăng nhập" và mọi lần bấm sau đều hỏng với interaction_in_progress.
+                msalDangSan = app.initialize()
+                    .then(() => app.handleRedirectPromise())
+                    .then(() => app);
+            }
+
+            return msalDangSan;
+        }
+
+        /**
+         * Xoá cờ "đang có cửa sổ đăng nhập" mà MSAL để sót trong sessionStorage.
+         *
+         * MSAL đặt cờ này ngay trước khi mở cửa sổ Microsoft và chỉ xoá khi cửa sổ đó kết thúc tử
+         * tế. Người dùng bấm tắt cửa sổ, trình duyệt chặn pop-up, hay trang bị tải lại giữa chừng —
+         * cờ nằm lại vĩnh viễn, và từ đó mọi lần bấm ký đều báo interaction_in_progress cho tới khi
+         * đóng hẳn tab. Không có API công khai nào để dọn, nên phải xoá thẳng khoá.
+         */
+        function donCoDangDangNhap() {
+            let daXoa = 0;
+            for (const khoa of Object.keys(sessionStorage)) {
+                if (khoa.startsWith("msal.") && khoa.includes("interaction.status")) {
+                    sessionStorage.removeItem(khoa);
+                    daXoa++;
+                }
+            }
+            return daXoa;
+        }
+
+        // KHỞI TẠO NGAY KHI NẠP TRANG — đây không phải tối ưu tốc độ, mà là điều kiện để cửa sổ
+        // đăng nhập mở được.
+        //
+        // initialize() và handleRedirectPromise() đều gọi mạng. Nếu để chúng chạy muộn, tức là chạy
+        // BÊN TRONG cú bấm nút, thì trình tự là: người dùng bấm → chờ mạng → mới gọi window.open.
+        // Trình duyệt chỉ cho mở cửa sổ trong khoảng vài giây ngay sau cú bấm; chờ mạng xong là hết
+        // hạn, và cửa sổ bị chặn với lỗi "popup_window_error" — trông y như trình duyệt cấm pop-up
+        // dù người dùng chẳng cấm gì. Hâm nóng sẵn ở đây thì lúc bấm không còn phải chờ gì.
+        layUngDungMsal().catch((e) => {
+            console.error("Không khởi tạo được thư viện đăng nhập:", e);
+        });
+
+        // Chỉ cho phép MỘT lần xin vé chạy tại một thời điểm. Bấm nút hai lần liên tiếp mà không
+        // chặn thì lần thứ hai mở cửa sổ trong lúc lần đầu chưa xong — chính là tình huống MSAL từ
+        // chối bằng interaction_in_progress.
+        let dangXinVe = null;
+
+        function layVeKySo() {
+            if (dangXinVe) return dangXinVe;
+            dangXinVe = xinVe().finally(() => { dangXinVe = null; });
+            return dangXinVe;
+        }
+
+        async function xinVe() {
+            const app = await layUngDungMsal();
+
+            try {
+                return await xinVeMotLan(app);
+            } catch (e) {
+                if (e && e.errorCode === "interaction_in_progress") {
+                    // Cờ sót lại từ lần trước. Dọn rồi thử đúng MỘT lần nữa — lặp vô hạn ở đây thì
+                    // người dùng chỉ thấy trang treo, không biết chuyện gì đang xảy ra.
+                    donCoDangDangNhap();
+                    return await xinVeMotLan(app);
+                }
+                throw e;
+            }
+        }
+
+        async function xinVeMotLan(app) {
+            const yeuCau = { scopes: [SCOPE_KY], account: app.getAllAccounts()[0] };
+
+            if (!yeuCau.account) {
+                // Chưa đăng nhập lần nào — mở cửa sổ Microsoft.
+                return (await app.loginPopup({ scopes: [SCOPE_KY] })).accessToken;
+            }
+
+            try {
+                // Vé còn hạn thì lấy từ bộ nhớ đệm, không mở cửa sổ nào.
+                return (await app.acquireTokenSilent(yeuCau)).accessToken;
+            } catch {
+                return (await app.acquireTokenPopup(yeuCau)).accessToken;
+            }
+        }
+
+        async function xuatPDF() {
+            const status = document.getElementById("status");
+            const iframe = document.getElementById("pdfPreview");
+
+            status.textContent = "Đang tạo PDF...";
+
+            try {
+                const res = await fetch("/api/xuat-pdf", { method: "POST" });
+                const data = await res.json();
+
+                if (!data.success) throw new Error("Không tạo được PDF");
+
+                fileName = data.fileName;
+
+                const pdfRes = await fetch(data.url);
+                pdfBlob = await pdfRes.blob();
+
+                if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+                pdfUrl = URL.createObjectURL(pdfBlob);
+
+                iframe.src = pdfUrl;
+                iframe.classList.remove("hidden");
+
+                document.getElementById("btnKy").disabled = false;
+                document.getElementById("btnTai").disabled = false;
+
+                status.textContent = "Đã xuất PDF. Hãy kiểm tra nội dung rồi bấm 'Xác nhận & ký số'.";
+            } catch (e) {
+                console.error(e);
+                status.textContent = "Lỗi: " + e.message;
+            }
+        }
+
+        function taiPDF() {
+            if (!pdfUrl) return;
+
+            const a = document.createElement("a");
+            a.href = pdfUrl;
+            a.download = fileName || "van-ban-test.pdf";
+            a.click();
+        }
+
+        async function moKySo() {
+            if (!pdfBlob) {
+                alert("Chưa có PDF để ký.");
+                return;
+            }
+
+            let token;
+            try {
+                document.getElementById("status").textContent = "Đang xin vé ký số...";
+                token = await layVeKySo();
+            } catch (e) {
+                alert("Lỗi lấy vé ký số: " + e.message);
+                document.getElementById("status").textContent = "Lỗi: " + e.message;
+                return;
+            }
+
+            document.getElementById("status").textContent = "Đang mở giao diện ký số...";
+
+            VgcaSigning.openSignFlow({
+                apiBase: "https://ky.vinhuni.edu.vn",
+                token: token,
+                file: pdfBlob,
+                fileName: fileName,
+                signatureKind: "Full",
+
+                onSuccess: async ({ requestId, status }) => {
+                    document.getElementById("status").textContent = "Ký thành công. RequestId: " + requestId;
+                    await taiVanBanDaKy(requestId);
+                },
+
+                onCancel: () => {
+                    document.getElementById("status").textContent = "Người dùng đã hủy quá trình ký.";
+                },
+
+                onError: (err) => {
+                    console.error(err);
+                    document.getElementById("status").textContent = "Widget báo lỗi. Xem Console để kiểm tra.";
+                }
+            });
+        }
+
+        async function taiVanBanDaKy(requestId) {
+            try {
+                const token = await layVeKySo();
+
+                const res = await fetch(
+                    `https://ky.vinhuni.edu.vn/api/sign-requests/${requestId}/document`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        }
+                    }
+                );
+
+                if (!res.ok) {
+                    throw new Error("Không tải được PDF đã ký.");
+                }
+
+                const signedBlob = await res.blob();
+                const signedUrl = URL.createObjectURL(signedBlob);
+
+                document.getElementById("pdfPreview").src = signedUrl;
+
+                const a = document.createElement("a");
+                a.href = signedUrl;
+                a.download = "DA-KY-" + fileName;
+                a.textContent = "Tải PDF đã ký";
+                a.style.display = "block";
+                a.style.marginTop = "10px";
+                document.querySelector(".card").appendChild(a);
+
+                document.getElementById("status").textContent = "Đã lấy PDF đã ký thành công.";
+            } catch (e) {
+                console.error(e);
+                document.getElementById("status").textContent = "Ký xong nhưng chưa tải được PDF đã ký: " + e.message;
+            }
+        }
+    </script>
+</body>
+
+</html>

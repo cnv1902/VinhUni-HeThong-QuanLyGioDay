@@ -2,10 +2,10 @@ import json
 from sqlalchemy.orm import Session
 from app.crud import curd_cq_nhom_lop_hoc_phan
 from typing import Optional, Dict, Any
-from app.core.exceptions import BadRequestException
+from app.core.exceptions import BadRequestException, ConflictException
 from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopResponse
 from app.core.logger import app_logger as logger
-from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopBulkUpdate
+from app.schemas.cq_nhom_lop_hoc_phan import CQNhomLopBulkUpdate, CQNhomLopBulkConfirmRequest
 from app.services import hoc_ky_service
 from app.services import he_thong_nhom_cong_thuc_service
 from app.services import he_thong_truong_hop_cong_thuc_service
@@ -21,14 +21,17 @@ from app.services import hinh_thuc_day_service
 CACHE_PREFIX = "cache:cq_nhom_lop_hoc_phan:"
 CACHE_TTL = 3600
 
-async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, hoc_ky: Optional[str] = None):
+def is_true_like(value) -> bool:
+    return str(value or "").strip().lower() in {"true", "1"}
+
+async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, nam_tai_chinh: Optional[int] = None):
     """
     Xóa cache nhóm lớp học phần (Gọi hàm này sau khi thêm/sửa/xóa nhóm lớp học phần)
     """
     if redis_client:
         try:
-            if hoc_ky:
-                await redis_client.delete(f"{CACHE_PREFIX}{hoc_ky}")
+            if nam_tai_chinh:
+                await redis_client.delete(f"{CACHE_PREFIX}{nam_tai_chinh}")
             else:
                 keys = await redis_client.keys(f"{CACHE_PREFIX}*")
                 if keys:
@@ -36,12 +39,12 @@ async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, hoc_ky: Optional[s
         except Exception as e:
             logger.error(f"Lỗi xóa Cache Redis (Nhóm lớp): {e}")
 
-async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client, hoc_ky: Optional[str] = None, trang_thai_loc: Optional[str] = None):
+async def get_danh_sach_nhom_lop_hoc_phan_theo_nam_tai_chinh(db: Session, redis_client, nam_tai_chinh: Optional[int] = None, trang_thai_loc: Optional[str] = None):
     """
     Lấy danh sách các nhóm lớp học phần hệ chính quy.
     """
-    if hoc_ky is None:
-        raise BadRequestException(detail="Yêu cầu không hợp lệ: Thiếu học kỳ.")
+    if nam_tai_chinh is None:
+        raise BadRequestException(detail="Yêu cầu không hợp lệ: Thiếu năm tài chính.")
 
     def filter_data(data, filter_type):
         if not filter_type:
@@ -49,18 +52,18 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client,
         if filter_type == "da_xac_nhan":
             return [x for x in data if x.get("XacNhan") is True]
         if filter_type == "chua_xac_nhan":
-            return [x for x in data if x.get("XacNhan") is not True]
+            return [x for x in data if not x.get("XacNhan")]
         if filter_type == "da_ky":
             return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) >= 1]
         if filter_type == "chua_ky":
-            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) < 1]
+            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) == 0]
         if filter_type == "da_thanh_toan":
-            return []
+            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) >= 1 and x.get("TrangThaiThanhToan")]
         if filter_type == "chua_thanh_toan":
-            return []
+            return [x for x in data if x.get("XacNhan") is True and (x.get("ID_LanTongHopFile") or 0) >= 1 and not x.get("TrangThaiThanhToan")]
         return data
 
-    cache_key = f"{CACHE_PREFIX}{hoc_ky}"
+    cache_key = f"{CACHE_PREFIX}{nam_tai_chinh}"
 
     if redis_client:
         try:
@@ -69,16 +72,16 @@ async def get_danh_sach_nhom_lop_hoc_phan_theo_hoc_ky(db: Session, redis_client,
                 parsed_data = json.loads(cached_data)
                 return filter_data(parsed_data, trang_thai_loc)
         except Exception as e:
-            logger.error(f"Lỗi lấy Cache Redis (Nhóm lớp {hoc_ky}): {e}")
+            logger.error(f"Lỗi lấy Cache Redis (Nhóm lớp {nam_tai_chinh}): {e}")
 
-    columns = curd_cq_nhom_lop_hoc_phan.get_danh_sach_theo_hoc_ky(db, hoc_ky)
+    columns = curd_cq_nhom_lop_hoc_phan.get_danh_sach_theo_nam_tai_chinh(db, nam_tai_chinh)
     columns_dict = [CQNhomLopResponse.model_validate(item).model_dump() for item in columns]
     
     if redis_client:
         try:
             await redis_client.setex(cache_key, CACHE_TTL, json.dumps(columns_dict))
         except Exception as e:
-            logger.error(f"Lỗi lưu Cache Redis (Nhóm lớp {hoc_ky}): {e}")
+            logger.error(f"Lỗi lưu Cache Redis (Nhóm lớp {nam_tai_chinh}): {e}")
         
     return filter_data(columns_dict, trang_thai_loc)
 
@@ -120,12 +123,17 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
     list_ma_nhom_lop = [item.MaNhomLopHP for item in payload.items]
     db_items_list = curd_cq_nhom_lop_hoc_phan.get_by_list_ma_nhom_lop(db, list_ma_nhom_lop)
     db_items_map = {getattr(db_item, "MaNhomLopHP"): db_item for db_item in db_items_list}
+    skipped_locked_count = 0
+    skipped_not_found_count = 0
+    invalid_update_fields = set()
     
     # Chuẩn bị danh sách ID Nhóm công thức cần lấy Trường Hợp (Loại bỏ await trong vòng lặp)
     unique_nhom_ct_ids = set()
     for item in payload.items:
         db_item = db_items_map.get(item.MaNhomLopHP)
         if not db_item:
+            continue
+        if is_true_like(getattr(db_item, "XacNhan", None)):
             continue
         hinh_thuc_hoc = (
             item.updates.get("MaHTHoc")
@@ -164,6 +172,11 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
         # 1. Lấy dữ liệu gốc từ RAM (Map O(1))
         db_item = db_items_map.get(item.MaNhomLopHP)
         if not db_item:
+            skipped_not_found_count += 1
+            continue
+
+        if is_true_like(getattr(db_item, "XacNhan", None)):
+            skipped_locked_count += 1
             continue
             
         update_data: Dict[str, Any] = {"MaNhomLopHP": item.MaNhomLopHP}
@@ -179,10 +192,19 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
         # 2. Lọc các field được phép update
         for key, value in item.updates.items():
             if key in allowed_fields and hasattr(db_item, key):
-                update_data[key] = value
-                if key in ["SiSoChuyenDoi", "SiSoDKH"]:
-                    is_siso_changed = True
+                # Kiểm tra xem giá trị có thực sự thay đổi không (So sánh string an toàn)
+                original_val = getattr(db_item, key)
+                is_changed = str(original_val) != str(value)
+                # Xử lý trường hợp None/Null
+                if (original_val is None and value is not None) or (original_val is not None and value is None):
+                    is_changed = True
+                    
+                if is_changed:
+                    update_data[key] = value
+                    if key in ["SiSoChuyenDoi", "SiSoDKH"]:
+                        is_siso_changed = True
             else:
+                invalid_update_fields.add(key)
                 logger.error(
                     f"[DEBUG_BULK_HTHOC] SKIP_FIELD item={item.MaNhomLopHP}, "
                     f"key={key}, value={value}, in_allowed={key in allowed_fields}, "
@@ -319,13 +341,49 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             logger.error(f"[DEBUG_BULK_HTHOC] NOT_APPENDED item={item.MaNhomLopHP}, update_data={update_data}")
 
     logger.error(f"[DEBUG_BULK_HTHOC] FINAL_UPDATES={final_updates}")
-    if final_updates:
-        # 5. Đẩy xuống CRUD chỉ thực hiện DB Update
-        curd_cq_nhom_lop_hoc_phan.update_danh_sach(db, final_updates)
+    
+    if not final_updates:
+        msg = "Không có bản ghi nào được cập nhật thực sự."
+        details = []
+        # if skipped_locked_count > 0:
+        #     details.append(f"Đã bỏ qua {skipped_locked_count} dòng đã xác nhận.")
+        if skipped_not_found_count > 0:
+            details.append(f"Không tìm thấy {skipped_not_found_count} dòng.")
+        if invalid_update_fields:
+            details.append(f"Các trường không hợp lệ: {', '.join(invalid_update_fields)}")
+            
+        if details:
+            msg += f" Chi tiết: {' '.join(details)}"
+            
+        raise ConflictException(detail=msg)
+
+    # 5. Đẩy xuống CRUD chỉ thực hiện DB Update
+    curd_cq_nhom_lop_hoc_phan.update_danh_sach(db, final_updates)
     
     await invalidate_cq_nhom_lop_hoc_phan_cache(redis_client)
             
     return {
         "message": "Cập nhật thành công.",
         "updated_rows": final_updates
+    }
+
+async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payload: CQNhomLopBulkConfirmRequest, nam_tai_chinh: Optional[int]):
+    """
+    Xác nhận hàng loạt nhóm lớp học phần.
+    """
+    if not payload.ma_nhom_lop_hp_list:
+        raise BadRequestException(detail="Danh sách mã nhóm lớp học phần không được để trống.")
+        
+    try:
+        updated_count = curd_cq_nhom_lop_hoc_phan.bulk_confirm_nhom_lop_hoc_phan(db, payload.ma_nhom_lop_hp_list)
+    except Exception as e:
+        logger.error(f"Lỗi khi xác nhận hàng loạt: {str(e)}")
+        raise ConflictException(detail="Có lỗi xảy ra khi cập nhật dữ liệu vào cơ sở dữ liệu.")
+        
+    # Xoá cache
+    await invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, nam_tai_chinh)
+    
+    return {
+        "message": "Xác nhận thành công",
+        "updated_count": updated_count
     }

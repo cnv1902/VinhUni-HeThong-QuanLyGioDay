@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<title>Đang hoàn tất đăng nhập</title>
+<style>
+  body{font:15px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+       margin:0;display:flex;align-items:center;justify-content:center;height:100vh;color:#334;
+       text-align:center;padding:0 20px}
+  #loi{color:#b3261e;max-width:34rem}
+</style>
+</head>
+<body>
+  <p id="trangThai">Đang hoàn tất đăng nhập, cửa sổ này tự đóng…</p>
+  <p id="loi" hidden></p>
+
+<!--
+  TRANG CHUYỂN-VỀ CỦA LUỒNG POP-UP. Nó PHẢI chạy "cầu nối" của MSAL, không được để trống.
+
+  Bản đầu tôi để trang này trống hoàn toàn — sai, và đó là nguyên nhân lỗi "timed_out": trang chính
+  chờ mãi không thấy kết quả. Lý do nằm trong chính mã nguồn MSAL 5 (waitForPopupResponse):
+
+      return waitForBridgeResponse(this.config.system.popupBridgeTimeout, ...)
+
+  Tức là trang chính KHÔNG tự đọc địa chỉ của cửa sổ con (đó là cách của MSAL 2), mà NGỒI CHỜ một
+  thông điệp BroadcastChannel do chính trang này gửi sang. Không ai gửi thì nó chờ tới hết giờ.
+
+  broadcastResponseToMainFrame() làm đúng ba việc: đọc mã uỷ quyền từ địa chỉ, phát nó về trang
+  chính qua BroadcastChannel, rồi gọi window.close().
+
+  PHẢI khai đúng địa chỉ này làm Redirect URI kiểu Single-page application trên Entra ID:
+
+      http://localhost:4000/static/dang-nhap-xong.html
+-->
+<script src="/static/msal-redirect-bridge.min.js"></script>
+<script>
+  // Không có mã uỷ quyền trong địa chỉ thì đây là người vào thẳng bằng tay, không phải cửa sổ đăng
+  // nhập — nói cho họ biết thay vì ném lỗi kỹ thuật.
+  if (!location.hash && !location.search) {
+    document.getElementById("trangThai").textContent =
+      "Trang này chỉ dùng cho bước đăng nhập, không mở trực tiếp.";
+  } else {
+    msalRedirectBridge.broadcastResponseToMainFrame().catch(function (e) {
+      // Hỏng ở đây thì cửa sổ KHÔNG tự đóng và trang chính sẽ chờ hết giờ. Hiện lỗi ra ngay tại
+      // đây, vì đây là chỗ duy nhất còn nhìn thấy được nguyên nhân.
+      document.getElementById("trangThai").hidden = true;
+      var l = document.getElementById("loi");
+      l.hidden = false;
+      l.textContent = "Không chuyển được kết quả đăng nhập về ứng dụng: " +
+                      (e && e.message ? e.message : e);
+    });
+  }
+</script>
+</body>
+</html>

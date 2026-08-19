@@ -20,7 +20,8 @@ When instructed to write or modify backend logic for this project, you MUST stri
   - Tên file thường là `crud_[tên_đối_tượng].py` hoặc `[tên_đối_tượng].py`.
   - Các hàm luôn phải nhận `db: Session` làm tham số đầu tiên. Ví dụ: `def get_item(db: Session, item_id: int)`.
   - **KHÔNG** throw lỗi HTTP (`HTTPException`) tại đây. Chỉ trả về dữ liệu hoặc `None`.
-  - **QUY TẮC BẮT BUỘC (Explicit Assignment):** Khi tạo mới hoặc cập nhật bản ghi trong hàm CRUD, bắt buộc phải khởi tạo đối tượng bằng cách gán tay từng trường (VD: `HeThongHeSoLopDong(GiaTri_Min=obj_in.GiaTri_Min, ...)`). Tuyệt đối KHÔNG sử dụng cú pháp Dictionary Unpacking (`**obj_in.model_dump()`).
+  - **QUY TẮC BẮT BUỘC (Explicit Assignment):** Khi tạo mới hoặc cập nhật bản ghi (1-2 objects) trong hàm CRUD, bắt buộc phải khởi tạo đối tượng bằng cách gán tay từng trường (VD: `HeThongHeSoLopDong(GiaTri_Min=obj_in.GiaTri_Min, ...)`). Tuyệt đối KHÔNG sử dụng cú pháp Dictionary Unpacking (`**obj_in.model_dump()`).
+  - **Ngoại lệ cho thao tác hàng loạt (Bulk Operations):** Khi cần cập nhật hoặc thêm mới số lượng lớn bản ghi (hàng trăm/ngàn object), ĐƯỢC PHÉP sử dụng Dictionary truyền thẳng vào `db.bulk_update_mappings()` hoặc `db.bulk_insert_mappings()` để tối ưu tốc độ I/O. Tuy nhiên, các Dictionary này BẮT BUỘC phải được làm sạch bởi Pydantic Schema và xử lý gán giá trị ở tầng Service trước khi truyền xuống CRUD.
 
 - **`app/api/v1/endpoints/` (REST API Routers)**
   - Chứa các endpoint API trả về dữ liệu JSON (`@router.get()`, `@router.post()`).

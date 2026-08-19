@@ -60,7 +60,7 @@ async def bulk_update_columns(db: Session, redis_client, payload):
     """
     Cập nhật hàng loạt cột và clear cache các bảng bị ảnh hưởng
     """
-    updates = [item.model_dump() for item in payload.items]
+    updates = [item.model_dump(exclude_unset=True) for item in payload.items]
     updated_records, affected_tables = crud_he_thong_dm_truong_duoc_su_dung.bulk_update(db, updates)
     
     # Clear cache cho các bảng bị ảnh hưởng

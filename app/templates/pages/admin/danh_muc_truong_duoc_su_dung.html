@@ -17,28 +17,26 @@
 </div>
 
 <div class="quick-row" style="display: flex; justify-content: space-between; align-items: flex-end;">
-  <div class="quick-actions">
-    <div class="search-box">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="11" cy="11" r="7" />
-        <path d="M21 21l-4.3-4.3" />
+  <div class="quick-actions-left" style="display: flex; gap: 14px; align-items: center;">
+    <button class="btn btn-primary" id="btnSaveChanges"
+      style="display: none; background-color: var(--teal-600); border-color: var(--teal-600);">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+        <polyline points="7 3 7 8 15 8"></polyline>
       </svg>
-      <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
-    </div>
-
-    <!-- Combobox lọc bảng: đặt cạnh ô tìm kiếm -->
+      Cập nhật
+    </button>
     <div id="filterMaBangContainer" style="min-width: 280px;"></div>
   </div>
 
-  <button class="btn btn-primary" id="btnSaveChanges"
-    style="display: none; background-color: var(--teal-600); border-color: var(--teal-600);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-      <polyline points="17 21 17 13 7 13 7 21"></polyline>
-      <polyline points="7 3 7 8 15 8"></polyline>
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
     </svg>
-    Lưu thay đổi
-  </button>
+    <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
+  </div>
 </div>
 
 {% include 'components/table.html' %}

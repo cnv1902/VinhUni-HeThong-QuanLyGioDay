@@ -28,10 +28,17 @@ async def get_all_hoc_ky(db: Session, redis_client):
             if cached_data:
                 return json.loads(cached_data)
         except Exception as e:
-            logger.error(f"Lỗi lấy Cache Redis (Học kỳ thanh toán): {e}")
+            logger.error(f"Lỗi lấy Cache Redis Năm tài chính): {e}")
 
     columns = curd_hoc_ky.get_danh_sach_hoc_ky(db)
-    columns_dict = [HocKyResponse.model_validate(col).model_dump() for col in columns]
+    columns_dict = []
+    for col in columns:
+        data = HocKyResponse.model_validate(col).model_dump()
+
+        if data.get("NamTaiChinh") is not None:
+            data["NamTaiChinh"] = str(data["NamTaiChinh"])[-4:]
+
+        columns_dict.append(data)
     
     if redis_client:
         try:

@@ -40,26 +40,15 @@ def get_danh_sach_bang(db: Session):
 
 def bulk_update(db: Session, updates: list[dict]):
     """
-    Cập nhật hàng loạt nhiều cấu hình cột.
+    Cập nhật hàng loạt nhiều cấu hình cột sử dụng bulk_update_mappings.
     """
-    updated_records = []
     affected_tables = set()
+    if updates:
+        for item in updates:
+            if "MaBang" in item:
+                affected_tables.add(item["MaBang"])
+                
+        db.bulk_update_mappings(DMTruongSuDung, updates)
+        db.commit()
 
-    for item in updates:
-        db_obj = db.query(DMTruongSuDung).filter(DMTruongSuDung.ID == item["ID"]).first()
-        if db_obj:
-            # Chỉ update field nào được gửi lên (không None)
-            if item.get("TenTruong") is not None: db_obj.TenTruong = item["TenTruong"]
-            if item.get("DoRong") is not None: db_obj.DoRong = item["DoRong"]
-            if item.get("CanLe") is not None: db_obj.CanLe = item["CanLe"]
-            if item.get("KieuTruong") is not None: db_obj.KieuTruong = item["KieuTruong"]
-            if item.get("ThuTuHienThi") is not None: db_obj.ThuTuHienThi = item["ThuTuHienThi"]
-            if "HienThi" in item and item["HienThi"] is not None: db_obj.HienThi = item["HienThi"]
-            if "DuocSua" in item and item["DuocSua"] is not None: db_obj.DuocSua = item["DuocSua"]
-            if "GhimCot" in item and item["GhimCot"] is not None: db_obj.GhimCot = item["GhimCot"]
-
-            affected_tables.add(db_obj.MaBang)
-            updated_records.append(db_obj)
-
-    db.commit()
-    return updated_records, list(affected_tables)
+    return updates, list(affected_tables)

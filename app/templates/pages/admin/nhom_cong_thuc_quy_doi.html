@@ -37,7 +37,20 @@
   </button>
 </div>
 
-<div class="quick-row" style="display: flex; gap: 12px; align-items: center;">
+<div class="quick-row" style="display: flex; justify-content: space-between; align-items: center;">
+  <div class="quick-actions-left" style="display: flex; gap: 12px; align-items: center;">
+    <select id="filterHeDaoTao" class="form-input" style="width: 200px; height: 32px; padding: 0 10px; margin-bottom: 0;">
+      <option value="">-- Tất cả hệ đào tạo --</option>
+    </select>
+
+    <select id="filterTrangThai" class="form-input"
+      style="width: 180px; height: 32px; padding: 0 10px; margin-bottom: 0;">
+      <option value="">-- Tất cả trạng thái --</option>
+      <option value="1" selected>Đang áp dụng</option>
+      <option value="0">Ngưng áp dụng</option>
+    </select>
+  </div>
+
   <div class="search-box">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="11" cy="11" r="7" />
@@ -45,16 +58,6 @@
     </svg>
     <input type="text" id="quickSearch" class="text-input" placeholder="Tìm kiếm nhanh...">
   </div>
-  
-  <select id="filterHeDaoTao" class="form-input" style="width: 200px; height: 32px; padding: 0 10px; margin-bottom: 0;">
-    <option value="">-- Tất cả hệ đào tạo --</option>
-  </select>
-
-  <select id="filterTrangThai" class="form-input" style="width: 180px; height: 32px; padding: 0 10px; margin-bottom: 0;">
-    <option value="">-- Tất cả trạng thái --</option>
-    <option value="1" selected>Đang áp dụng</option>
-    <option value="0">Ngưng áp dụng</option>
-  </select>
 </div>
 
 {% include 'components/table.html' %}
@@ -123,6 +126,7 @@
 <script src="/./static/js/components/datatable.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/./static/js/components/combo_box.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/./static/js/components/tag_input.js?v={{ CACHE_BUSTER() }}"></script>
+<script src="/./static/js/api/admin/semanticEditorApi.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/./static/js/components/semantic_editor.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/./static/js/api/admin/nhomCongThucQuyDoiApi.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/./static/js/pages/admin/nhom_cong_thuc_quy_doi.js?v={{ CACHE_BUSTER() }}"></script>

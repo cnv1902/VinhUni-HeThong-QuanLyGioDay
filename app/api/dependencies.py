@@ -21,7 +21,7 @@ def get_db():
     finally:
         db.close()
 
-def get_current_user(
+def get_current_hs_id(
     db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
 ):
     try:
@@ -38,4 +38,8 @@ def get_current_user(
     #     raise NotFoundException(detail="Không tìm thấy User")
     # return user
     
-    return token_data.sub
+    if token_data.sub is None:
+        raise CredentialsException()
+    
+    # Trả về hs_id (chuyển sang kiểu int)
+    return int(token_data.sub)
