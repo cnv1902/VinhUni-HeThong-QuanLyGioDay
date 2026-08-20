@@ -87,17 +87,17 @@ def update_danh_sach(db: Session, updates_data: List[Dict[str, Any]]):
         db.commit()
     logger.error("[DEBUG_BULK_HTHOC_CRUD] COMMIT_DONE")
 
-def bulk_confirm_nhom_lop_hoc_phan(db: Session, list_ma: List[str]) -> int:
+def bulk_confirm_nhom_lop_hoc_phan(db: Session, list_ma: List[str], hs_id_str: str) -> int:
     """
     Xác nhận hàng loạt nhóm lớp học phần.
-    Cập nhật XacNhan = True, XacNhan_ThoiGian = now(), XacNhan_Nguoi = '1678'
+    Cập nhật XacNhan = True, XacNhan_ThoiGian = now(), XacNhan_Nguoi = hs_id_str
     """
     result = db.query(CQNhomLopHocPhan).filter(
         CQNhomLopHocPhan.MaNhomLopHP.in_(list_ma)
     ).update({
         CQNhomLopHocPhan.XacNhan: True,
         CQNhomLopHocPhan.XacNhan_ThoiGian: func.now(),
-        CQNhomLopHocPhan.XacNhan_Nguoi: "1678"
+        CQNhomLopHocPhan.XacNhan_Nguoi: hs_id_str
     }, synchronize_session=False)
     db.commit()
     return result

@@ -47,8 +47,8 @@ namespace CongCanBoDemo.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var transferToken = tokenHandler.WriteToken(token);
 
-            // 5. Lệnh Redirect (302) bế user ném sang trang chủ Frontend của Quản Lý Giờ Dạy
-            string redirectUrl = $"https://quanlygioday.covit.site/?transfer_token={transferToken}";
+            // 5. Lệnh Redirect (302) bế user ném sang API SSO Callback của Backend
+            string redirectUrl = $"https://quanlygioday.covit.site/api/v1/auth/sso-callback?transfer_token={transferToken}";
             return Redirect(redirectUrl);
         }
     }

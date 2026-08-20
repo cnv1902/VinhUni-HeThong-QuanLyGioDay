@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Lập và ký xác nhận khối lượng giảng dạy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    body{background:#eef2f7}.modal-dialog{max-width:1500px}.step-list{position:relative}.step-list:before{content:"";position:absolute;left:15px;top:22px;bottom:22px;border-left:2px solid #d5deea}.step-icon{width:32px;height:32px;z-index:1}.pdf-view{height:520px;background:#525b65}.pdf-page{width:950px;min-height:700px}.pdf-table{font-size:.68rem}
+  </style>
+</head>
+<body>
+  <button class="btn btn-primary position-fixed top-0 start-0 m-3" data-bs-toggle="modal" data-bs-target="#signModal"><i class="bi bi-pen me-1"></i>Mở hồ sơ ký</button>
+
+  <div class="modal fade" id="signModal" tabindex="-1" aria-labelledby="signModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-xl-down modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header align-items-start">
+          <div>
+            <a href="#" class="small text-decoration-none"><i class="bi bi-arrow-left me-1"></i>Quay lại danh sách</a>
+            <h1 class="modal-title h4 mt-1" id="signModalLabel">LẬP VÀ KÝ XÁC NHẬN KHỐI LƯỢNG GIẢNG DẠY</h1>
+          </div>
+          <div class="d-flex align-items-center gap-2"><span class="badge text-bg-light border text-primary">Chờ người lập ký</span><button class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button></div>
+        </div>
+
+        <div class="modal-body bg-light">
+          <section class="card mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+              <strong class="text-primary"><span class="me-1">1.</span> THÔNG TIN ĐỢT KÝ</strong>
+              <small class="text-secondary">Tạo ngày 21/10/2025 • 12 lớp học phần</small>
+            </div>
+            <div class="card-body">
+              <div class="row g-3">
+                <div class="col-lg-6"><label class="form-label small text-secondary">Tên đợt</label><input class="form-control fw-semibold" value="ĐHCQ_2025-2026_HK2_Đợt09_21-10-2025_12-lớp" readonly></div>
+                <div class="col-sm-4 col-lg-2"><label class="form-label small text-secondary">Mã đợt</label><input class="form-control fw-semibold" value="DK09" readonly></div>
+                <div class="col-sm-4 col-lg-2"><label class="form-label small text-secondary">Năm học</label><input class="form-control fw-semibold" value="2025–2026" readonly></div>
+                <div class="col-sm-4 col-lg-2"><label class="form-label small text-secondary">Học kỳ</label><input class="form-control fw-semibold" value="Học kỳ 2" readonly></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="card mb-3">
+            <div class="card-header bg-white d-flex justify-content-between"><strong class="text-primary"><span class="me-1">2.</span> TIẾN TRÌNH KÝ XÁC NHẬN</strong><small class="text-secondary">Ký số theo đúng thứ tự</small></div>
+            <div class="card-body">
+              <div class="row g-4">
+                <div class="col-xl-2 border-end">
+                  <div class="step-list d-grid gap-3">
+                    <div class="d-flex gap-2"><span class="step-icon rounded-circle bg-success text-white d-flex align-items-center justify-content-center"><i class="bi bi-check-lg"></i></span><div><strong class="small">Chọn lớp</strong><small class="d-block text-secondary">Đã chọn 12 lớp học phần</small></div></div>
+                    <div class="d-flex gap-2"><span class="step-icon rounded-circle bg-success text-white d-flex align-items-center justify-content-center"><i class="bi bi-check-lg"></i></span><div><strong class="small">Kiểm tra danh sách</strong><small class="d-block text-secondary">Đã tạo hồ sơ PDF</small></div></div>
+                    <div class="d-flex gap-2"><span class="step-icon rounded-circle bg-primary text-white d-flex align-items-center justify-content-center">1</span><div><strong class="small text-primary">Người lập danh sách ký</strong><small class="d-block text-secondary">Đang chờ thực hiện</small></div></div>
+                    <div class="d-flex gap-2"><span class="step-icon rounded-circle bg-white border border-secondary text-secondary d-flex align-items-center justify-content-center">2</span><div><strong class="small">Đơn vị ký xác nhận</strong><small class="d-block text-secondary">Thực hiện sau bước 1</small></div></div>
+                  </div>
+                </div>
+
+                <div class="col-xl-10">
+                  <div class="row g-3 align-items-stretch">
+                    <div class="col-lg-6">
+                      <article class="card h-100 border-primary bg-primary-subtle">
+                        <div class="card-body">
+                          <div class="d-flex align-items-start gap-3">
+                            <span class="badge rounded-circle bg-primary p-2">1</span>
+                            <div class="flex-grow-1"><div class="d-flex justify-content-between gap-2"><strong>NGƯỜI LẬP DANH SÁCH KÝ</strong><span class="badge bg-white border border-primary text-primary">Chờ ký</span></div><div class="mt-2">Đào Quang Thắng <span class="text-secondary">• Người lập danh sách</span></div></div>
+                          </div>
+                          <div class="text-success mt-3"><i class="bi bi-shield-check me-1"></i>Chứng thư số hợp lệ đến 31/12/2026</div>
+                          <button class="btn btn-primary w-100 mt-3" id="creatorSign"><i class="bi bi-pen me-1"></i>Ký danh sách và chuyển đơn vị</button>
+                        </div>
+                      </article>
+                    </div>
+                    <div class="col-lg-6">
+                      <article class="card h-100 bg-body-secondary">
+                        <div class="card-body">
+                          <div class="d-flex align-items-start gap-3">
+                            <span class="badge rounded-circle bg-secondary p-2">2</span>
+                            <div class="flex-grow-1"><div class="d-flex justify-content-between gap-2"><strong>ĐƠN VỊ KÝ XÁC NHẬN</strong><span class="badge bg-white border text-secondary">Chờ người lập ký</span></div><div class="mt-2">Hoàng Vĩnh Phú <span class="text-secondary">• Người xác nhận đơn vị</span></div></div>
+                          </div>
+                          <div class="text-secondary mt-3"><i class="bi bi-lock-fill me-1"></i>Thực hiện sau khi hoàn thành bước trước</div>
+                          <button class="btn btn-secondary w-100 mt-3" id="unitSign" disabled><i class="bi bi-pen me-1"></i>Ký xác nhận đơn vị</button>
+                        </div>
+                      </article>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="alert alert-warning d-flex gap-2 mt-3 mb-0"><i class="bi bi-exclamation-triangle"></i><div>Danh sách lớp học phần được khóa sau chữ ký của người lập. Hồ sơ chỉ hoàn thành khi có đủ 02 chữ ký số.</div></div>
+            </div>
+          </section>
+
+          <section class="card overflow-hidden">
+            <div class="card-header text-bg-dark d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+              <div><strong><span class="me-1">3.</span> XEM TRỰC TIẾP FILE PDF</strong><small class="d-block text-light-emphasis">Danh_sach_KLGD_DHCQ_2025-2026_HK2_Dot09.pdf • 1 trang</small></div>
+              <div class="btn-group btn-group-sm"><button class="btn btn-outline-light" id="zoomOut"><i class="bi bi-dash"></i></button><button class="btn btn-outline-light disabled" id="zoomLabel">85%</button><button class="btn btn-outline-light" id="zoomIn"><i class="bi bi-plus"></i></button><button class="btn btn-outline-light" id="downloadPdf"><i class="bi bi-download me-1"></i>Tải PDF</button><button class="btn btn-outline-light" id="printPdf"><i class="bi bi-printer me-1"></i>In</button></div>
+            </div>
+            <div class="pdf-view overflow-auto p-4">
+              <div class="pdf-page bg-white shadow mx-auto p-4" id="pdfPage">
+                <div class="d-flex justify-content-between text-center fw-bold"><div>TRƯỜNG ĐẠI HỌC VINH<br><span class="small">PHÒNG ĐÀO TẠO</span></div><div>TH.KLGD.01/2026</div></div>
+                <h2 class="h5 text-center fw-bold mt-5 mb-1">BẢNG TỔNG HỢP LỚP HỌC PHẦN ĐÃ THỰC HIỆN</h2>
+                <h3 class="h6 text-center fw-bold">HỆ ĐẠI HỌC CHÍNH QUY NĂM HỌC 2025–2026 – HỌC KỲ 2</h3>
+                <p class="text-center fst-italic small">(Không bao gồm các học phần mời thỉnh giảng và đã được thanh toán tiền trực tiếp)</p>
+                <table class="table table-bordered pdf-table text-center align-middle mt-3"><thead><tr><th>TT</th><th>Tên lớp học phần</th><th>Khóa</th><th>Sĩ số</th><th>Số TC</th><th>Số tiết theo khung CT</th><th class="table-warning">Giờ dạy thực tế</th><th class="table-warning">Giờ quy chuẩn</th><th>Thời gian thực hiện</th><th>Ghi chú</th></tr></thead><tbody><tr><td>1</td><td class="text-start">Cơ sở dữ liệu – INF2001.01</td><td>63</td><td>48</td><td>3</td><td>45</td><td>45</td><td>45</td><td>15/08/2025–15/10/2025</td><td>Hệ số 1,0</td></tr><tr><td>2</td><td class="text-start">Phân tích thiết kế HTTT – INF3002.02</td><td>62</td><td>55</td><td>3</td><td>45</td><td>45</td><td>49,5</td><td>18/08/2025–20/10/2025</td><td>Hệ số 1,1</td></tr><tr><td>3</td><td class="text-start">Pháp luật đại cương – LAW1001.03</td><td>64</td><td>82</td><td>2</td><td>30</td><td>30</td><td>36</td><td>20/08/2025–18/10/2025</td><td>Hệ số 1,2</td></tr></tbody><tfoot><tr class="fw-bold"><td colspan="6">Tổng cộng</td><td>120</td><td>130,5</td><td colspan="2"></td></tr></tfoot></table>
+                <div class="row text-center fw-bold mt-5"><div class="col-6">TRƯỞNG PHÒNG</div><div class="col-6">NGƯỜI LẬP DANH SÁCH</div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Đóng</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3"><div class="toast" id="liveToast"><div class="toast-header"><i class="bi bi-info-circle-fill text-primary me-2"></i><strong class="me-auto">Thông báo</strong><button class="btn-close" data-bs-dismiss="toast"></button></div><div class="toast-body" id="toastBody"></div></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const signModal=bootstrap.Modal.getOrCreateInstance(document.getElementById('signModal'));signModal.show();
+    const toast=bootstrap.Toast.getOrCreateInstance(document.getElementById('liveToast'));const notify=t=>{toastBody.textContent=t;toast.show()};
+    let zoom=85;const applyZoom=()=>{zoomLabel.textContent=zoom+'%';pdfPage.style.transform=`scale(${zoom/100})`;pdfPage.style.transformOrigin='top center';pdfPage.parentElement.style.paddingBottom=(pdfPage.offsetHeight*(zoom/100-1)+24)+'px'};
+    zoomOut.onclick=()=>{zoom=Math.max(60,zoom-5);applyZoom()};zoomIn.onclick=()=>{zoom=Math.min(120,zoom+5);applyZoom()};downloadPdf.onclick=()=>notify('Chức năng tải PDF sẽ kết nối với tệp hồ sơ thực tế.');printPdf.onclick=()=>window.print();creatorSign.onclick=()=>notify('Đang kết nối dịch vụ ký số của người lập danh sách.');applyZoom();
+  </script>
+</body></html>

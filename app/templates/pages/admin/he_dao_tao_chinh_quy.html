@@ -5,11 +5,6 @@
 {% set active_menu = 'chinh_quy' %}
 
 {% block styles %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link
-  href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap"
-  rel="stylesheet">
 <link rel="stylesheet" href="/static/css/pages/admin/he_dao_tao_chinh_quy.css?v={{ CACHE_BUSTER() }}">
 {% endblock %}
 
@@ -35,10 +30,10 @@
             <p class="panel-subtitle">Xác nhận&nbsp;&middot;&nbsp;Ký&nbsp;&middot;&nbsp;Thanh toán</p>
           </div>
         </div>
-        <button type="button" class="panel-meta" onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html'">
+        <a class="panel-meta" href="/admin/quan-ly-nhom-lop-hoc-phan" data-spa-link>
           <span class="meta-label">Tổng học phần</span>
           <span class="meta-value" id="dashTongNhomLop">--</span>
-        </button>
+        </a>
       </div>
 
       <div class="funnel-track">
@@ -55,11 +50,10 @@
             </span>
             <span class="stage-label">Đã xác nhận</span>
           </div>
-          <button type="button" class="stage-value-btn"
-            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_xac_nhan'">
+          <a class="stage-value-btn" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=da_xac_nhan" data-spa-link>
             <span class="stage-value" id="dashDaXacNhan">--</span>
             <span class="stage-rate" id="dashRateXacNhan">--%</span>
-          </button>
+          </a>
           <div class="stage-bar">
             <div class="stage-bar-fill stage-bar-fill-confirm" id="dashBarXacNhan" style="width:0%"></div>
           </div>
@@ -85,11 +79,10 @@
             </span>
             <span class="stage-label">Đã ký</span>
           </div>
-          <button type="button" class="stage-value-btn"
-            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_ky'">
+          <a class="stage-value-btn" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=da_ky" data-spa-link>
             <span class="stage-value" id="dashDaKy">--</span>
             <span class="stage-rate" id="dashRateKy">--%</span>
-          </button>
+          </a>
           <div class="stage-bar">
             <div class="stage-bar-fill stage-bar-fill-sign" id="dashBarKy" style="width:0%"></div>
           </div>
@@ -115,11 +108,10 @@
             </span>
             <span class="stage-label">Đã thanh toán</span>
           </div>
-          <button type="button" class="stage-value-btn"
-            onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=da_thanh_toan'">
+          <a class="stage-value-btn" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=da_thanh_toan" data-spa-link>
             <span class="stage-value" id="dashDaThanhToan">--</span>
             <span class="stage-rate" id="dashRateThanhToan">--%</span>
-          </button>
+          </a>
           <div class="stage-bar">
             <div class="stage-bar-fill stage-bar-fill-pay" id="dashBarThanhToan" style="width:0%"></div>
           </div>
@@ -146,8 +138,7 @@
 
       <div class="action-grid">
 
-        <button type="button" class="action-item action-item-danger"
-          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_xac_nhan'">
+        <a class="action-item action-item-danger" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=chua_xac_nhan" data-spa-link>
           <span class="action-icon" aria-hidden="true">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" viewBox="0 0 24 24">
@@ -159,10 +150,9 @@
             <span class="action-label">Chưa xác nhận</span>
             <span class="action-value" id="dashChuaXacNhan">--</span>
           </span>
-        </button>
+        </a>
 
-        <button type="button" class="action-item action-item-warning"
-          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_ky'">
+        <a class="action-item action-item-warning" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=chua_ky" data-spa-link>
           <span class="action-icon" aria-hidden="true">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" viewBox="0 0 24 24">
@@ -177,10 +167,9 @@
             <span class="action-label">Chưa ký</span>
             <span class="action-value" id="dashChuaKy">--</span>
           </span>
-        </button>
+        </a>
 
-        <button type="button" class="action-item action-item-neutral"
-          onclick="window.location.href='/quan_ly_nhom_lop_hoc_phan.html?filter=chua_thanh_toan'">
+        <a class="action-item action-item-neutral" href="/admin/quan-ly-nhom-lop-hoc-phan?filter=chua_thanh_toan" data-spa-link>
           <span class="action-icon" aria-hidden="true">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
               stroke-linejoin="round" viewBox="0 0 24 24">
@@ -192,7 +181,7 @@
             <span class="action-label">Chưa thanh toán</span>
             <span class="action-value" id="dashChuaThanhToan">--</span>
           </span>
-        </button>
+        </a>
 
       </div>
     </section>

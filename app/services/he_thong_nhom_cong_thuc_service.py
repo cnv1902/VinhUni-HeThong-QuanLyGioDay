@@ -75,32 +75,33 @@ async def get_danh_sach(db: Session, redis_client):
     return columns_dict
 
 async def get_danh_sach_theo_he_va_trang_thai(db: Session, redis_client, id_he: Optional[int] = None, trang_thai: Optional[int] = None):
-    """Lọc danh sách nhóm công thức theo Hệ đào tạo và Trạng thái"""
-    # TODO: Add dynamic caching here if needed, bypassing for now to ensure freshness
-    columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_he_va_trang_thai(db, id_he, trang_thai)
-    hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    
-    columns_dict = []
-    for col in columns:
-        data = _build_response(col)
-        data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(col.DsMaHTHoc), hth_list)
-        columns_dict.append(data)
-        
-    return columns_dict
+    """Lọc danh sách nhóm công thức theo Hệ đào tạo và Trạng thái.
+    Tái sử dụng cache 'all' và filter trên RAM để tiết kiệm Redis.
+    """
+    full_list = await get_danh_sach(db, redis_client)
+
+    result = full_list
+    if id_he is not None:
+        result = [item for item in result if item.get('ID_He') == id_he]
+    if trang_thai is not None:
+        result = [item for item in result if item.get('TrangThai') == trang_thai]
+
+    return result
 
 async def get_danh_sach_theo_nam_tai_chinh(db: Session, redis_client, nam_tai_chinh: int, id_he: Optional[int] = None, trang_thai: Optional[int] = None):
-    """Lọc danh sách nhóm công thức theo ID của Năm Tài Chính"""
-    # 2. Truy vấn DB
-    columns = crud_he_thong_nhom_cong_thuc.get_danh_sach_theo_nam_tai_chinh(db, nam_tai_chinh, id_he, trang_thai)
-    hth_list = await get_hinh_thuc_hoc(db, redis_client)
-    
-    columns_dict = []
-    for col in columns:
-        data = _build_response(col)
-        data['Ds_TenHTHoc'] = await _map_danh_sach_hinh_thuc_hoc(str(col.DsMaHTHoc), hth_list)
-        columns_dict.append(data)
-        
-    return columns_dict
+    """Lọc danh sách nhóm công thức theo ID của Năm Tài Chính.
+    Tái sử dụng cache 'all' và filter trên RAM để tiết kiệm Redis.
+    """
+    full_list = await get_danh_sach(db, redis_client)
+
+    result = [item for item in full_list
+              if (item.get('TuNam') or 0) <= nam_tai_chinh <= (item.get('DenNam') or 9999)]
+    if id_he is not None:
+        result = [item for item in result if item.get('ID_He') == id_he]
+    if trang_thai is not None:
+        result = [item for item in result if item.get('TrangThai') == trang_thai]
+
+    return result
 
 async def create_nhom_cong_thuc(db: Session, redis_client, obj_in: NhomCongThucCreate):
     """Tạo mới nhóm công thức"""

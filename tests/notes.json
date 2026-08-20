@@ -1,0 +1,68 @@
+[
+  {
+    "id": "note-1787199675618",
+    "title": "Bóc tách giao diện",
+    "category": "Frontend",
+    "priority": "high",
+    "status": "in_progress",
+    "pinned": false,
+    "content": "",
+    "tasks": [
+      {
+        "id": "t1787199577816",
+        "text": "Chuyển giao diện typescripts của thầy Tấn qua html",
+        "done": true
+      },
+      {
+        "id": "t1787199645508",
+        "text": "Ghép vào 2 menu [Hệ thống/Phân quyền cập nhật, ...] và [Quản lý giờ dạy Đại học chính quy/Tổng hợp và ký xác nhận]",
+        "done": false
+      },
+      {
+        "id": "t1787199668410",
+        "text": "Kiểm thử giao diện, thêm khai báo db và route kết nối hoạt động chuyển hướng",
+        "done": false
+      }
+    ],
+    "created_at": "2026-08-20T04:21:15.618Z",
+    "updated_at": "2026-08-20T07:47:30.287Z"
+  },
+  {
+    "id": "note-1787199504152",
+    "title": "Phân quyền - Xác thực - Bảo mật",
+    "category": "Backend",
+    "priority": "medium",
+    "status": "todo",
+    "pinned": false,
+    "content": "",
+    "tasks": [
+      {
+        "id": "t1787199300905",
+        "text": "Thiết kế lại database - Có thể sử dụng luôn view nhưng cần xác định cấp 3 là chức năng con trong giao diện",
+        "done": false
+      },
+      {
+        "id": "t1787199345044",
+        "text": "Viết hàm depend xác thực quyền (\"DB cần có key tên quyền và depend xác thực theo key\")",
+        "done": false
+      },
+      {
+        "id": "t1787199399489",
+        "text": "Xóa bỏ khai báo xác thực hồ sơ id tại các khai báo api mà khai báo quyền cứng trong từng [curd, service, endpoint, ...]",
+        "done": false
+      },
+      {
+        "id": "t1787199485465",
+        "text": "* Có thể phải viết lại phân quyền mới vì không đồng nhất hệ thống phân quyền cũ hoặc tận dụng CN_ID thay vì key text gợi nhớ",
+        "done": false
+      },
+      {
+        "id": "t1787199503208",
+        "text": "Kiểm thử hệ thống",
+        "done": false
+      }
+    ],
+    "created_at": "2026-08-20T04:18:24.152Z",
+    "updated_at": "2026-08-20T07:47:26.543Z"
+  }
+]

@@ -9,3 +9,4 @@ pyrightconfig.json
 *.log
 documents/
 logs/
+test/congcanbodemo/obj

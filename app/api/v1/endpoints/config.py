@@ -27,11 +27,11 @@ async def get_danh_sach_cot_admin(MaBang: str, db: Session = Depends(get_db)):
     return await he_thong_dm_truong_duoc_su_dung_service.get_all_config_columns(db, MaBang)
 
 @router.get("/danh-sach-bang", response_model=List[dict])
-async def get_danh_sach_bang(db: Session = Depends(get_db)):
+async def get_danh_sach_bang(db: Session = Depends(get_db), redis_client = Depends(get_redis)):
     """
     Lấy danh sách các bảng (MaBang) đang được cấu hình trong hệ thống.
     """
-    return await he_thong_dm_truong_duoc_su_dung_service.get_danh_sach_bang(db)
+    return await he_thong_dm_truong_duoc_su_dung_service.get_danh_sach_bang(db, redis_client)
 
 @router.put("/danh-sach-cot/bulk-update")
 async def bulk_update_config_columns(

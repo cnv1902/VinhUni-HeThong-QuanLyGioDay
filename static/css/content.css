@@ -130,10 +130,8 @@ input:focus {
 }
 
 .chev {
-  transition: transform .15s;
+  transition: transform 0.15s;
 }
-
-
 
 /* Quick row above grid */
 .quick-row {
@@ -201,6 +199,6 @@ input:focus {
   color: var(--text-secondary);
 }
 
-.bulk-field>div {
+.bulk-field > div {
   min-width: 180px;
 }

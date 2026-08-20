@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     SECRET_KEY: str
     BACKEND_CORS_ORIGINS: list[str] = ["*"]
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8 
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 480 # 8 tiếng 
 
     class Config:
         env_file = ".env"

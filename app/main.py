@@ -33,5 +33,10 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Cấu hình UI Router
-from app.routes.ui import router as ui_router
+from app.routes.ui import router as ui_router, not_found_exception_handler, unauth_exception_handler, forbidden_exception_handler
 app.include_router(ui_router, tags=["UI"])
+
+# Đăng ký xử lý giao diện lỗi
+app.add_exception_handler(404, not_found_exception_handler)
+app.add_exception_handler(401, unauth_exception_handler)
+app.add_exception_handler(403, forbidden_exception_handler)

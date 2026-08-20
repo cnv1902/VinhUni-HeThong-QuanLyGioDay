@@ -106,7 +106,6 @@
 
 /* Toast */
 
-
 /* Table Config Modal */
 .modal-overlay {
   position: fixed;
@@ -266,7 +265,9 @@
   font-size: 13px;
   color: var(--text-primary);
   background-color: #fff;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .form-input:focus,

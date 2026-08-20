@@ -37,6 +37,7 @@ When instructed to write or modify backend logic for this project, you MUST stri
     1. Phải khai báo biến `CACHE_PREFIX` ở ngay đầu file (Ví dụ: `CACHE_PREFIX = "cache:hoc_ky:"`). Nếu API có tham số, phải nối chuỗi tạo Khóa Động (Dynamic Key) (Ví dụ: `f"{CACHE_PREFIX}{ma_hoc_ky}"`). Tuyệt đối không dùng Khóa Tĩnh (Static Key) cho dữ liệu động.
     2. Bất kỳ lệnh nào tương tác với Redis (`redis_client.get`, `setex`, `delete`) BẮT BUỘC phải được bọc trong khối `try...except Exception as e:` và in ra log lỗi bằng `logger.error` (chống sập API). Nếu Redis hỏng, hàm bắt buộc phải trôi tuột xuống phần dưới để gọi DB bình thường (Graceful Degradation).
     3. Tuyệt đối KHÔNG sử dụng `logger.info` để ghi log thành công (Ví dụ: Cache HIT, DB HIT) hay log thời gian thực thi trong tầng Service vì sẽ gây rác file log (noise). Chỉ ghi log ở mức độ ERROR.
+    4. **Luồng Cache-Aside chuẩn BẮT BUỘC:** Khi viết logic đọc dữ liệu, bạn phải tuân thủ đúng 5 bước: (1) `GET` từ Redis -> (2) Nếu có dữ liệu (Cache Hit), trả về (return) ngay lập tức và kết thúc hàm -> (3) Nếu không có (Cache Miss), gọi xuống DB -> (4) Xử lý logic và dùng `SETEX` để lưu kết quả vào Redis -> (5) Trả về dữ liệu. Tuyệt đối không gọi lệnh SET đè lại nếu đã có Cache Hit.
 
 ## 2. Quy trình viết mã Backend (Implementation Workflow)
 Mỗi khi nhận yêu cầu làm một chức năng Backend mới, bạn phải tuân thủ luồng sau:

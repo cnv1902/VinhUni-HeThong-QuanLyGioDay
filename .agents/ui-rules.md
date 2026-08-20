@@ -141,12 +141,6 @@ hover dòng/nút · focus bàn phím rõ ràng · dirty state · locked state ·
 dữ liệu sau khi lọc → hiện thông báo rõ ràng, không để bảng trắng trơn) · loading (khi có gọi API
 thật).
 
-## 8. Dữ liệu mẫu khi làm prototype (chưa nối API thật)
-
-Luôn sinh dữ liệu tiếng Việt đúng ngữ cảnh nghiệp vụ thật của trường đại học (tên môn học, tên
-khoa, mã lớp, học kỳ...), đủ số dòng để kiểm thử cuộn/lọc/sắp xếp (tối thiểu ~30 dòng). Không dùng
-placeholder vô nghĩa.
-
 ## 9. Kỹ thuật & tự kiểm tra trước khi giao (bắt buộc)
 
 - Nếu không được yêu cầu framework cụ thể: ưu tiên HTML/CSS/JS thuần, gọn nhẹ, không phụ thuộc
@@ -249,12 +243,20 @@ Thay vào đó, phải xử lý lỗi êm mượt và trả về mảng rỗng `
 Để tránh các lỗi UI kinh điển (như cắt xén Dropdown bởi Modal, lỗi hiển thị viền Focus lồng nhau), tất cả UI Component (như ComboBox, TagInput) bắt buộc phải tuân thủ:
 1. **Dropdown Menu Placement (Kiến trúc Portal)**: Khối HTML hiển thị danh sách xổ xuống (`.dropdown-menu`) tuyệt đối KHÔNG được nhét chung vào cấu trúc của input field hoặc cấu trúc của Modal nội dung (`.modal-body`). Phải dùng JS để **append trực tiếp Dropdown ra lớp phủ ngoài cùng của Modal** (như `.modal-overlay`), sau đó tính toán vị trí bằng `getBoundingClientRect()` dựa theo vị trí tuyệt đối của Input field trên màn hình. Nếu không có Modal, fallback append ra `document.body`.
 2. **Hiệu ứng Focus lồng nhau**: Nếu một Component phức tạp sử dụng cấu trúc Hộp ảo bao quanh Input thực bên trong (như TagInput: `div.form-input > input.tag-input-field`), bắt buộc phải:
-   - Dùng CSS pseudo-class `:focus-within` lên Hộp ảo để bắt hiệu ứng focus khi Input thực được click (`.form-input:focus-within { box-shadow: ... }`).
    - Tước bỏ toàn bộ hiệu ứng Focus/Outline/Ring mặc định của trình duyệt/Tailwind trên Input thực bằng `!important` (`.tag-input-field:focus { outline: none !important; box-shadow: none !important; }`).
 
-## 17. Đồng bộ Tài liệu Giao diện (Documentation Synchronization)
+## 17. Quy tắc Xử lý SPA (Single Page Application)
 
-Khi Agent thực hiện bất kỳ thay đổi nào (thêm, sửa, xóa, refactor code) trên các file mã nguồn Javascript (`.js`) thuộc UI Layer hoặc API Layer, Agent **BẮT BUỘC** phải tự động tìm và cập nhật song song nội dung thay đổi đó vào file tài liệu Markdown (`.md`) tương ứng trong thư mục `docs/frontend/` (ví dụ: `docs/frontend/components/` hoặc `docs/frontend/pages/`). 
+Vì hệ thống vận hành theo cơ chế SPA (chỉ nạp lại HTML vùng `#main-content`), mọi trang (page) và thành phần (component) bắt buộc tuân thủ quy trình sau để tránh rò rỉ bộ nhớ (memory leak) và lỗi nạp lại (re-declare):
 
-Việc sửa mã nguồn mà bỏ quên tài liệu sẽ khiến các Agent hoặc Lập trình viên khác khi tái sử dụng Component bị sai lệch logic (out-of-sync).
+1. **Quản lý Vòng đời Sự kiện (Event Lifecycle):** 
+   - Khi một trang gắn sự kiện toàn cục (như `window.addEventListener("ContextReady", ...)`), bắt buộc phải có cơ chế **dọn dẹp sự kiện**.
+   - Gán một hàm dọn dẹp vào biến `window.pageCleanup = () => { window.removeEventListener(...) }`. Router của SPA sẽ tự động gọi hàm này trước khi chuyển sang trang khác.
+   
+2. **Kế thừa Trạng thái toàn cục (Context/State):**
+   - Các sự kiện như `ContextReady` từ Navbar thường chỉ phát ra (emit) một lần duy nhất khi ứng dụng tải lần đầu. 
+   - Khi điều hướng SPA đến một trang phụ thuộc Context (như Học kỳ/Năm học), bên cạnh việc lắng nghe sự kiện, phải **kiểm tra ngay lập tức trạng thái hiện tại** (ví dụ: `if (typeof navbarState !== "undefined" && navbarState.selectedNamTaiChinh) { ... }`) để tự kích hoạt luồng tải dữ liệu nếu Context đã sẵn sàng từ trước.
 
+3. **Cấu trúc Nạp Script Tránh Xung Đột:**
+   - Các script thành phần (Component như DataTable, ComboBox) hoặc API (dùng `const`/`class`) chỉ được nạp **một lần duy nhất**. SPA Router đã có bộ đệm `_loadedScripts` để tự động bỏ qua nếu phát hiện script đã được tải.
+   - Trái lại, các file logic của trang (Page-level JS nằm trong `/js/pages/`) luôn được SPA nạp và chạy lại mỗi lần chuyển trang. Vì thế, **bắt buộc** phải bọc toàn bộ code của Page JS trong một **IIFE (Immediately Invoked Function Expression)** dạng `(function() { ... })();` để cô lập biến cục bộ, tránh xung đột biến khi trang được nạp lại nhiều lần.

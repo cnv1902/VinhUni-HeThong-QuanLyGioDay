@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import ValidationError
@@ -21,8 +21,21 @@ def get_db():
     finally:
         db.close()
 
+def get_token_from_request(request: Request) -> str:
+    # 1. Thử đọc từ Cookie (dùng cho truy cập UI / Website)
+    token = request.cookies.get("access_token")
+    if token:
+        return token
+        
+    # 2. Nếu không có ở Cookie, thử đọc từ Header Authorization (dùng cho API fetch / Postman)
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        return auth_header.split("Bearer ")[1]
+        
+    raise CredentialsException()
+
 def get_current_hs_id(
-    db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)
+    db: Session = Depends(get_db), token: str = Depends(get_token_from_request)
 ):
     try:
         payload = jwt.decode(

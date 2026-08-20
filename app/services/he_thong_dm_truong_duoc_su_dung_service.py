@@ -5,6 +5,7 @@ from app.schemas.he_thong_dm_truong_duoc_su_dung import TruongDuocSuDungResponse
 from app.core.logger import app_logger as logger
 
 CACHE_PREFIX = "cache:config:columns:"
+CACHE_PREFIX_BANG = "cache:config:bang:all"
 CACHE_TTL = 3600 * 24
 
 async def invalidate_columns_cache(redis_client, MaBang: str):
@@ -40,7 +41,7 @@ async def get_danh_sach_cot_theo_bang(db: Session, redis_client, MaBang: str):
         except Exception as e:
             logger.error(f"Lỗi lưu Cache Redis (Cột cấu hình {MaBang}): {e}")
             
-    return columns
+    return columns_dict
 
 async def get_all_config_columns(db: Session, MaBang: str):
     """
@@ -50,11 +51,27 @@ async def get_all_config_columns(db: Session, MaBang: str):
     columns = crud_he_thong_dm_truong_duoc_su_dung.get_all_config_columns(db, MaBang)
     return [TruongDuocSuDungResponse.model_validate(col) for col in columns]
 
-async def get_danh_sach_bang(db: Session):
+async def get_danh_sach_bang(db: Session, redis_client):
     """
-    Lấy danh sách các bảng đang cấu hình
+    Lấy danh sách các bảng đang cấu hình (có cache)
     """
-    return crud_he_thong_dm_truong_duoc_su_dung.get_danh_sach_bang(db)
+    if redis_client:
+        try:
+            cached_data = await redis_client.get(CACHE_PREFIX_BANG)
+            if cached_data:
+                return json.loads(cached_data)
+        except Exception as e:
+            logger.error(f"Lỗi lấy Cache Redis (Danh sách bảng): {e}")
+
+    result = crud_he_thong_dm_truong_duoc_su_dung.get_danh_sach_bang(db)
+
+    if redis_client:
+        try:
+            await redis_client.setex(CACHE_PREFIX_BANG, CACHE_TTL, json.dumps(result))
+        except Exception as e:
+            logger.error(f"Lỗi lưu Cache Redis (Danh sách bảng): {e}")
+
+    return result
 
 async def bulk_update_columns(db: Session, redis_client, payload):
     """

@@ -39,25 +39,39 @@
   font-size: 15px;
   font-weight: 600;
   margin: 0;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
 }
 
 .brand-text p {
   font-size: 11.5px;
   margin: 1px 0 0;
-  color: #B7C6D3;
+  color: #b7c6d3;
 }
 
 .topbar .who {
   display: flex;
   align-items: center;
+  position: relative;
+}
+
+.who-trigger {
+  display: flex;
+  align-items: center;
   gap: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  transition: background 0.2s;
+}
+
+.who-trigger:hover {
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .who-tag {
   font-size: 12px;
-  color: #C7D5E0;
-  border: 1px solid #2B4A66;
+  color: #c7d5e0;
+  border: 1px solid #2b4a66;
   padding: 4px 10px;
   border-radius: var(--radius);
 }
@@ -139,10 +153,56 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
 }
 
 .user-name {
   font-size: 14px;
   font-weight: 500;
+}
+
+/* User Dropdown */
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  min-width: 160px;
+  z-index: 100;
+  display: none;
+  overflow: hidden;
+}
+
+.user-dropdown.show {
+  display: block;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  color: #334155;
+  text-decoration: none;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f1f5f9;
+}
+
+.text-danger {
+  color: #e11d48;
+}
+
+.text-danger:hover {
+  background: #ffe4e6;
 }

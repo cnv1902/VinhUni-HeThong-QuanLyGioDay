@@ -179,7 +179,10 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             skipped_locked_count += 1
             continue
             
-        update_data: Dict[str, Any] = {"MaNhomLopHP": item.MaNhomLopHP}
+        update_data: Dict[str, Any] = {
+            "ID": db_item.ID,
+            "MaNhomLopHP": item.MaNhomLopHP
+        }
         cong_thuc_used = []
         is_siso_changed = False
 
@@ -367,7 +370,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
         "updated_rows": final_updates
     }
 
-async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payload: CQNhomLopBulkConfirmRequest, nam_tai_chinh: Optional[int]):
+async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payload: CQNhomLopBulkConfirmRequest, nam_tai_chinh: Optional[int], hs_id_str: str):
     """
     Xác nhận hàng loạt nhóm lớp học phần.
     """
@@ -375,7 +378,7 @@ async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payl
         raise BadRequestException(detail="Danh sách mã nhóm lớp học phần không được để trống.")
         
     try:
-        updated_count = curd_cq_nhom_lop_hoc_phan.bulk_confirm_nhom_lop_hoc_phan(db, payload.ma_nhom_lop_hp_list)
+        updated_count = curd_cq_nhom_lop_hoc_phan.bulk_confirm_nhom_lop_hoc_phan(db, payload.ma_nhom_lop_hp_list, hs_id_str)
     except Exception as e:
         logger.error(f"Lỗi khi xác nhận hàng loạt: {str(e)}")
         raise ConflictException(detail="Có lỗi xảy ra khi cập nhật dữ liệu vào cơ sở dữ liệu.")

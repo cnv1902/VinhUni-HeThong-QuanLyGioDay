@@ -2,31 +2,33 @@
   --navy-900: #003e7a;
   --navy-800: #0055a5;
   --navy-700: #1a6bb5;
-  --teal-600: #0E7C7B;
-  --teal-700: #0A5F5E;
-  --teal-50: #E6F4F3;
-  --bg-page: #EEF1F4;
-  --bg-panel: #FFFFFF;
-  --bg-subtle: #F4F6F8;
-  --bg-subtle-2: #EAEDF0;
-  --border: #DCE3E9;
-  --border-strong: #C3CDD5;
+  --teal-600: #0e7c7b;
+  --teal-700: #0a5f5e;
+  --teal-50: #e6f4f3;
+  --bg-page: #eef1f4;
+  --bg-panel: #ffffff;
+  --bg-subtle: #f4f6f8;
+  --bg-subtle-2: #eaedf0;
+  --border: #dce3e9;
+  --border-strong: #c3cdd5;
   --text-primary: #182430;
-  --text-secondary: #5B6B78;
-  --text-muted: #96A3AD;
-  --green-600: #1E7A4C;
-  --green-50: #E5F3EA;
-  --amber-600: #A8710D;
-  --amber-50: #FBF0DA;
-  --red-600: #B23A2E;
-  --red-50: #FBE8E5;
-  --blue-600: #2560A6;
-  --blue-50: #E6F0FA;
+  --text-secondary: #5b6b78;
+  --text-muted: #96a3ad;
+  --green-600: #1e7a4c;
+  --green-50: #e5f3ea;
+  --amber-600: #a8710d;
+  --amber-50: #fbf0da;
+  --red-600: #b23a2e;
+  --red-50: #fbe8e5;
+  --blue-600: #2560a6;
+  --blue-50: #e6f0fa;
   --radius: 6px;
-  --font-sans: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
-  --font-sans-v2: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-sans-v2:
+    "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
   --font-serif: "Times New Roman", Times, serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
 }
 
 * {
@@ -75,7 +77,6 @@ input {
   flex-direction: column;
   overflow: hidden;
 }
-
 
 ::-webkit-scrollbar {
   width: 8px;

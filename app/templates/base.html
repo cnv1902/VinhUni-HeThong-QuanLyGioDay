@@ -25,10 +25,10 @@
   <link rel="stylesheet" href="/static/css/footer.css?v={{ CACHE_BUSTER() }}">
   <link rel="stylesheet" href="/static/css/responsive.css?v={{ CACHE_BUSTER() }}">
   <script>window.API_PREFIX = "{{ API_PREFIX }}";</script>
-  {% block styles %}{% endblock %}
 </head>
 
 <body>
+  <div id="page-styles">{% block styles %}{% endblock %}</div>
   <div class="app">
     {% include 'layouts/navbar.html' %}
     <div class="app-body">
@@ -47,7 +47,10 @@
   <script src="/static/js/core/modal.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/components/toast.js?v={{ CACHE_BUSTER() }}"></script>
   <script src="/static/js/components/confirm_modal.js?v={{ CACHE_BUSTER() }}"></script>
-  {% block scripts %}{% endblock %}
+  <script src="/static/js/core/spa_router.js?v={{ CACHE_BUSTER() }}"></script>
+  <div id="page-scripts" style="display: none;">
+    {% block scripts %}{% endblock %}
+  </div>
 </body>
 
 </html>

@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CongCanBoDemo")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ff17cfaae20f2ae3a75d0887c4826af1599644ef")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+05fe48dd7d229a5bc4a4b8bb71bb02bf1605dd42")]
 [assembly: System.Reflection.AssemblyProductAttribute("CongCanBoDemo")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CongCanBoDemo")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

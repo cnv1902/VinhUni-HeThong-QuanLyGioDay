@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Quản lý đợt ký xác nhận khối lượng giảng dạy</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <style>
+    :root{--portal:#073b7a;--portal-2:#075fd8} body{background:#f6f8fb;color:#10254b;font-size:.9rem}.topbar{background:linear-gradient(90deg,var(--portal),#00519c)}.page-title,.section-title{color:#083b87}.metric-icon{width:48px;height:48px}.card,.table-responsive{border-color:#d9e3f1!important}.table{--bs-table-bg:transparent}.table th{white-space:nowrap;background:#f7f9fc;color:#15233d}.table td{vertical-align:middle}.course-table{min-width:1540px}.round-table{min-width:1240px}.course-name{min-width:250px}.note{min-width:190px}.selected-row{background:#f3f8ff}.nav-tabs .nav-link{color:#31415e}.nav-tabs .nav-link.active{color:#075fd8;font-weight:600}.badge-soft-success{color:#16833a;background:#e8f7ec}.badge-soft-primary{color:#075fd8;background:#e8f2ff}.badge-soft-warning{color:#c76800;background:#fff3df}.badge-soft-secondary{color:#586579;background:#edf0f4}.action-strip{background:#edf5ff}.btn-link{text-decoration:none}.sticky-tools{position:sticky;right:0}.compact-card .card-body{padding:.8rem 1rem}@media(max-width:768px){.page-title{font-size:1.15rem}.context-select{width:100%!important}.metric-icon{width:40px;height:40px}}
+  </style>
+</head>
+<body>
+  <header class="topbar text-white py-2 px-3 d-flex align-items-center gap-3">
+    <button class="btn btn-sm text-white" aria-label="Mở menu"><i class="bi bi-list fs-4"></i></button>
+    <strong class="fs-5">CỔNG THÔNG TIN CÁN BỘ</strong>
+    <div class="ms-auto d-flex align-items-center gap-3">
+      <i class="bi bi-bell fs-5"></i>
+      <i class="bi bi-person-circle fs-3"></i>
+      <div class="lh-sm d-none d-sm-block"><strong>Hoàng Vĩnh Phú</strong><small class="d-block">Phòng Đào tạo</small></div>
+      <i class="bi bi-chevron-down"></i>
+    </div>
+  </header>
+
+  <nav class="bg-white border-bottom px-3 py-2" aria-label="breadcrumb">
+    <ol class="breadcrumb mb-0 small">
+      <li class="breadcrumb-item"><a href="#"><i class="bi bi-house-door-fill me-1"></i>Trang chủ</a></li>
+      <li class="breadcrumb-item"><a href="#">Kê khai giờ dạy</a></li>
+      <li class="breadcrumb-item active">Ký xác nhận lớp học phần</li>
+    </ol>
+  </nav>
+
+  <main class="container-fluid px-3 py-3">
+    <div class="d-flex flex-column flex-xl-row align-items-xl-center justify-content-between gap-3 mb-3">
+      <h1 class="page-title h4 fw-bold mb-0">QUẢN LÝ ĐỢT KÝ XÁC NHẬN KHỐI LƯỢNG GIẢNG DẠY HỆ ĐẠI HỌC CHÍNH QUY</h1>
+      <div class="d-flex flex-column flex-md-row gap-2">
+        <select class="form-select context-select" style="width:210px"><option>Năm học 2025–2026</option><option>Năm học 2024–2025</option></select>
+        <select class="form-select context-select" style="width:165px"><option>Học kỳ 2</option><option>Học kỳ 1</option></select>       
+      </div>
+    </div>
+
+    <section class="row g-3 mb-3" aria-label="Thống kê nhanh">
+      <div class="col-sm-6 col-xl-3"><div class="card compact-card h-100 shadow-sm"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon rounded-circle bg-primary-subtle text-primary d-grid place-items-center d-flex justify-content-center align-items-center"><i class="bi bi-file-earmark-check fs-4"></i></span><div><span>Chờ ký</span><strong class="d-block fs-4">286 lớp</strong></div></div></div></div>
+      <div class="col-sm-6 col-xl-3"><div class="card compact-card h-100 shadow-sm"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon rounded-circle bg-success-subtle text-success d-flex justify-content-center align-items-center"><i class="bi bi-ui-checks fs-4"></i></span><div><span>Đã chọn</span><strong class="d-block fs-4"><span id="metricSelected">0</span> lớp</strong></div></div></div></div>
+      <div class="col-sm-6 col-xl-3"><div class="card compact-card h-100 shadow-sm"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon rounded-circle bg-warning-subtle text-warning d-flex justify-content-center align-items-center"><i class="bi bi-clock fs-4"></i></span><div class="flex-grow-1"><div class="d-flex justify-content-between"><span>Chờ người lập ký</span><strong>01</strong></div><div class="d-flex justify-content-between"><span>Chờ đơn vị ký</span><strong>02</strong></div></div></div></div></div>
+      <div class="col-sm-6 col-xl-3"><div class="card compact-card h-100 shadow-sm"><div class="card-body d-flex align-items-center gap-3"><span class="metric-icon rounded-circle bg-info-subtle text-primary d-flex justify-content-center align-items-center"><i class="bi bi-vector-pen fs-4"></i></span><div><span>Đã ký trong học kỳ</span><strong class="d-block fs-4">08 đợt / 1.324 lớp</strong></div></div></div></div>
+    </section>
+
+    <section class="card shadow-sm mb-3">
+      <div class="card-header bg-white d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 py-3">
+        <h2 class="section-title h6 fw-bold mb-0">LỚP HỌC PHẦN ĐÃ XÁC NHẬN, CHƯA KÝ</h2>
+        <div class="d-flex gap-2"><button class="btn btn-outline-primary btn-sm" data-bs-toggle="offcanvas" data-bs-target="#columns"><i class="bi bi-gear me-1"></i>Tùy chỉnh cột</button><button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#guideModal"><i class="bi bi-file-text me-1"></i>Xem hướng dẫn quy trình ký</button></div>
+      </div>
+      <div class="card-body p-0">
+        <ul class="nav nav-tabs px-3 pt-2" id="courseTabs">
+          <li class="nav-item"><button class="nav-link active" data-course-tab="waiting">Chờ ký (286)</button></li>
+          <li class="nav-item"><button class="nav-link" data-course-tab="selected">Đã chọn (<span id="tabSelected">0</span>)</button></li>
+          <li class="nav-item"><button class="nav-link" data-course-tab="assigned">Đã đưa vào đợt ký (34)</button></li>
+        </ul>
+        <div class="action-strip border-bottom px-3 py-2 d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2">
+          <strong class="text-primary">Đã chọn <span id="selectedCount">0</span> lớp học phần</strong>
+          <div class="d-flex flex-wrap gap-2"><button id="clearSelection" class="btn btn-link btn-sm">Bỏ chọn tất cả</button><button id="exportCsv" class="btn btn-outline-primary btn-sm"><i class="bi bi-download me-1"></i>Xuất danh sách</button><button id="createRound" class="btn btn-primary btn-sm" disabled data-bs-toggle="modal" data-bs-target="#roundModal">Lập đợt ký (<span id="buttonSelected">0</span>) <i class="bi bi-arrow-right ms-1"></i></button></div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-bordered table-hover table-sm course-table mb-0">
+            <thead class="text-center align-middle"><tr><th><input id="selectAll" class="form-check-input" type="checkbox"></th><th>TT</th><th>Tên lớp học phần</th><th data-col="cohort">Khóa</th><th data-col="size">Sĩ số</th><th data-col="credits">Số TC</th><th data-col="framework">Số tiết theo khung CT</th><th data-col="actual">Số giờ dạy thực tế</th><th data-col="converted">Số giờ quy chuẩn</th><th data-col="period">Thời gian thực hiện</th><th data-col="note">Ghi chú</th><th data-col="confirmer">Người xác nhận</th><th data-col="confirmedAt">Thời gian xác nhận</th><th>Trạng thái</th></tr></thead>
+            <tbody id="courseRows"></tbody>
+          </table>
+        </div>
+        <div class="px-3 py-2 d-flex justify-content-between align-items-center"><small id="courseInfo" class="text-secondary"></small><nav><ul class="pagination pagination-sm mb-0"><li class="page-item disabled"><button class="page-link">‹</button></li><li class="page-item active"><button class="page-link">1</button></li><li class="page-item"><button class="page-link">2</button></li><li class="page-item"><button class="page-link">3</button></li><li class="page-item"><button class="page-link">…</button></li><li class="page-item"><button class="page-link">36</button></li><li class="page-item"><button class="page-link">›</button></li></ul></nav></div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm">
+      <div class="card-header bg-white pt-3 pb-0"><h2 class="section-title h6 fw-bold">CÁC ĐỢT KÝ XÁC NHẬN</h2><ul class="nav nav-pills gap-1 mb-2" id="roundTabs"><li><button class="btn btn-primary btn-sm" data-round="all">Tất cả</button></li><li><button class="btn btn-outline-secondary btn-sm" data-round="creator">Chờ người lập ký</button></li><li><button class="btn btn-outline-secondary btn-sm" data-round="unit">Chờ đơn vị ký</button></li><li><button class="btn btn-outline-secondary btn-sm" data-round="done">Đã hoàn thành</button></li><li><button class="btn btn-outline-secondary btn-sm" data-round="error">Ký lỗi</button></li></ul></div>
+      <div class="table-responsive"><table class="table table-bordered table-hover table-sm round-table mb-0"><thead class="text-center align-middle"><tr><th>Mã đợt</th><th>Tên đợt ký</th><th>Số lớp</th><th>Người lập</th><th>Ký người lập</th><th>Người xác nhận đơn vị</th><th>Ký xác nhận đơn vị</th><th>Tệp tổng hợp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="roundRows"></tbody></table></div>
+      <div class="card-footer bg-white d-flex justify-content-between"><small id="roundInfo" class="text-secondary"></small><div class="btn-group btn-group-sm"><button class="btn btn-outline-secondary">‹</button><button class="btn btn-primary">1</button><button class="btn btn-outline-secondary">2</button><button class="btn btn-outline-secondary">3</button><button class="btn btn-outline-secondary">›</button></div></div>
+    </section>
+  </main>
+
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="columns"><div class="offcanvas-header"><h5 class="offcanvas-title">Tùy chỉnh cột hiển thị</h5><button class="btn-close" data-bs-dismiss="offcanvas"></button></div><div class="offcanvas-body" id="columnOptions"></div></div>
+  <div class="modal fade" id="guideModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Quy trình ký số hai bước</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><ol class="mb-0"><li class="mb-2">Chọn các lớp đã được xác nhận.</li><li class="mb-2">Lập danh sách tổng hợp và tạo tệp PDF.</li><li class="mb-2">Người lập danh sách ký số và chuyển đơn vị.</li><li>Người có thẩm quyền ký xác nhận đơn vị để hoàn tất hồ sơ.</li></ol></div></div></div></div>
+  <div class="modal fade" id="roundModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Lập đợt ký xác nhận</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="row g-3"><div class="col-md-8"><label class="form-label">Tên đợt ký</label><input id="roundName" class="form-control" value="ĐHCQ_2025-2026_HK2_Đợt09_20-08-2026"></div><div class="col-md-4"><label class="form-label">Số lớp</label><input id="roundCount" class="form-control" readonly></div><div class="col-md-6"><label class="form-label">Người lập danh sách</label><input class="form-control" value="Đào Quang Thắng" readonly></div><div class="col-md-6"><label class="form-label">Người xác nhận đơn vị</label><input class="form-control" value="Hoàng Vĩnh Phú" readonly></div></div><div class="alert alert-warning mt-3 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Sau khi người lập ký, danh sách lớp học phần sẽ được khóa và chuyển đến người xác nhận đơn vị.</div></div><div class="modal-footer"><button class="btn btn-outline-secondary" data-bs-dismiss="modal">Hủy</button><button id="confirmRound" class="btn btn-primary">Tạo đợt ký</button></div></div></div></div>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3"><div id="liveToast" class="toast" role="alert"><div class="toast-header"><i class="bi bi-check-circle-fill text-success me-2"></i><strong class="me-auto">Thông báo</strong><button class="btn-close" data-bs-dismiss="toast"></button></div><div id="toastBody" class="toast-body"></div></div></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const courses=[
+      [1,'Cơ sở dữ liệu – INF2001.01',63,48,3,45,45,'45','15/08/2025–15/10/2025','Hệ số 1,0; lớp dưới 50 SV','Vũ Đức Long','15/10/2025 14:32'],
+      [2,'Phân tích thiết kế HTTT – INF3002.02',62,55,3,45,45,'49,5','18/08/2025–20/10/2025','Hệ số lớp đông 1,1','Nguyễn Hữu Thắng','20/10/2025 09:15'],
+      [3,'Pháp luật đại cương – LAW1001.03',64,82,2,30,30,'36','20/08/2025–18/10/2025','Hệ số lớp đông 1,2','Hoàng Thị Lan','18/10/2025 16:40'],
+      [4,'Kinh tế vi mô – ECO2001.01',63,44,3,45,45,'45','17/08/2025–17/10/2025','Hệ số 1,0; lớp dưới 50 SV','Đỗ Thị Lan','17/10/2025 11:05'],
+      [5,'Kế toán tài chính 1 – ACC3001.02',62,60,3,45,45,'54','19/08/2025–21/10/2025','Hệ số lớp đông 1,2','Ngô Quỳnh Mai','21/10/2025 13:22'],
+      [6,'Tài chính doanh nghiệp – FIN3002.01',63,52,3,45,45,'49,5','16/08/2025–19/10/2025','Hệ số lớp đông 1,1','Vũ Đức Long','19/10/2025 19:47'],
+      [7,'Trí tuệ nhân tạo – IT4001.01',64,40,3,45,45,'45','18/08/2025–21/10/2025','Hệ số 1,0; lớp dưới 50 SV','Nguyễn Văn An','21/10/2025 15:10'],
+      [8,'Marketing căn bản – MAR2001.01',62,38,2,30,30,'30','14/08/2025–16/10/2025','Hệ số 1,0; lớp dưới 50 SV','Lê Thu Hương','16/10/2025 09:20'],
+      [9,'Thống kê ứng dụng – STA2001.01',63,45,3,45,45,'45','20/08/2025–22/10/2025','Hệ số 1,0; lớp dưới 50 SV','Phạm Minh Tuấn','22/10/2025 10:35'],
+      [10,'Quản trị nhân sự – HR3001.01',61,50,3,45,45,'49,5','17/08/2025–20/10/2025','Hệ số lớp đông 1,1','Trần Thị Hạnh','20/10/2025 11:50']
+    ];
+    const rounds=[
+      ['DK09','Đợt ký xác nhận số 09',12,'Đào Quang Thắng','Chờ ký','Hoàng Vĩnh Phú','Chưa đến lượt','Xem trước','Chờ người lập ký','creator','Tiếp tục ký'],
+      ['DK08','Đợt ký xác nhận số 08',274,'Đào Quang Thắng','08/10/2025 08:44','Hoàng Vĩnh Phú','08/10/2025 08:54','Tải tệp đủ 02 chữ ký','Đã hoàn thành','done','Xem chi tiết'],
+      ['DK07','Đợt ký xác nhận số 07',16,'Đào Quang Thắng','24/09/2025 17:19','Hoàng Vĩnh Phú','Chưa đến lượt','Xem trước','Chờ đơn vị ký','unit','Ký xác nhận']
+    ];
+    const selected=new Set(); let courseTab='waiting',roundTab='all';
+    const hidden=new Set(); const labels={cohort:'Khóa',size:'Sĩ số',credits:'Số TC',framework:'Số tiết theo khung CT',actual:'Số giờ dạy thực tế',converted:'Số giờ quy chuẩn',period:'Thời gian thực hiện',note:'Ghi chú',confirmer:'Người xác nhận',confirmedAt:'Thời gian xác nhận'};
+    function renderCourses(){
+      const rows=courseTab==='assigned'?[]:courseTab==='selected'?courses.filter(c=>selected.has(c[0])):courses;
+      courseRows.innerHTML=rows.length?rows.map(c=>`<tr class="${selected.has(c[0])?'selected-row':''}"><td class="text-center"><input class="form-check-input row-check" type="checkbox" data-id="${c[0]}" ${selected.has(c[0])?'checked':''}></td><td class="text-center">${c[0]}</td><td class="course-name fw-medium">${c[1]}</td><td data-col="cohort" class="text-center">${c[2]}</td><td data-col="size" class="text-center">${c[3]}</td><td data-col="credits" class="text-center">${c[4]}</td><td data-col="framework" class="text-center">${c[5]}</td><td data-col="actual" class="text-center">${c[6]}</td><td data-col="converted" class="text-center">${c[7]}</td><td data-col="period">${c[8]}</td><td data-col="note" class="note">${c[9]}</td><td data-col="confirmer">${c[10]}</td><td data-col="confirmedAt">${c[11]}</td><td class="text-center"><span class="badge badge-soft-success">Đã xác nhận</span></td></tr>`).join(''):`<tr><td colspan="14" class="text-center text-secondary py-4">Không có lớp học phần trong nhóm này.</td></tr>`;
+      hidden.forEach(k=>document.querySelectorAll(`[data-col="${k}"]`).forEach(e=>e.classList.add('d-none')));
+      document.querySelectorAll('.row-check').forEach(e=>e.addEventListener('change',()=>{e.checked?selected.add(+e.dataset.id):selected.delete(+e.dataset.id);renderCourses();updateSelection()}));
+      courseInfo.textContent=`Hiển thị 1–${rows.length} trong ${courseTab==='assigned'?34:286} lớp`;
+      selectAll.checked=selected.size===courses.length; selectAll.indeterminate=selected.size>0&&selected.size<courses.length;
+    }
+    function updateSelection(){['metricSelected','tabSelected','selectedCount','buttonSelected'].forEach(id=>document.getElementById(id).textContent=selected.size);createRound.disabled=!selected.size;roundCount.value=selected.size}
+    function renderRounds(){const data=roundTab==='all'?rounds:rounds.filter(r=>r[9]===roundTab);roundRows.innerHTML=data.map(r=>{const creator=r[4]==='Chờ ký'?'badge-soft-primary':'badge-soft-success',unit=r[6]==='Chưa đến lượt'?'badge-soft-secondary':'badge-soft-success',status=r[9]==='done'?'badge-soft-success':r[9]==='unit'?'badge-soft-warning':'badge-soft-primary';return `<tr><td class="text-center">${r[0]}</td><td>${r[1]}</td><td class="text-center">${r[2]}</td><td>${r[3]}</td><td class="text-center"><span class="badge ${creator}">${r[4]}</span></td><td>${r[5]}</td><td class="text-center"><span class="badge ${unit}">${r[6]}</span></td><td class="text-center"><button class="btn btn-link btn-sm file-action"><i class="bi ${r[7].startsWith('Tải')?'bi-download':'bi-search'}"></i> ${r[7]}</button></td><td class="text-center"><span class="badge ${status}">${r[8]}</span></td><td class="text-center"><button class="btn ${r[9]==='done'?'btn-outline-primary':'btn-primary'} btn-sm round-action">${r[10]}</button></td></tr>`}).join('');roundInfo.textContent=`Hiển thị 1–${data.length} trong 3 đợt`;document.querySelectorAll('.file-action,.round-action').forEach(b=>b.onclick=()=>notify('Đã ghi nhận thao tác: '+b.textContent.trim()+'.'))}
+    function notify(msg){toastBody.textContent=msg;bootstrap.Toast.getOrCreateInstance(liveToast).show()}
+    selectAll.onchange=()=>{selected.clear();if(selectAll.checked)courses.forEach(c=>selected.add(c[0]));renderCourses();updateSelection()};
+    clearSelection.onclick=()=>{selected.clear();renderCourses();updateSelection()};
+    document.querySelectorAll('[data-course-tab]').forEach(b=>b.onclick=()=>{courseTab=b.dataset.courseTab;document.querySelectorAll('[data-course-tab]').forEach(x=>x.classList.toggle('active',x===b));renderCourses()});
+    document.querySelectorAll('[data-round]').forEach(b=>b.onclick=()=>{roundTab=b.dataset.round;document.querySelectorAll('[data-round]').forEach(x=>{x.className='btn btn-sm '+(x===b?'btn-primary':'btn-outline-secondary')});renderRounds()});
+    exportCsv.onclick=()=>{const data=courses.filter(c=>selected.has(c[0]));if(!data.length)return notify('Vui lòng chọn ít nhất một lớp học phần.');const csv=['TT,Tên lớp học phần,Khóa,Sĩ số,Số TC,Giờ thực tế,Giờ quy chuẩn,Người xác nhận',...data.map(c=>[c[0],c[1],c[2],c[3],c[4],c[6],c[7],c[10]].map(v=>'"'+v+'"').join(','))].join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));a.download='danh-sach-lop-cho-ky.csv';a.click();URL.revokeObjectURL(a.href);notify('Đã xuất danh sách lớp học phần được chọn.')};
+    confirmRound.onclick=()=>{bootstrap.Modal.getInstance(roundModal).hide();notify('Đã tạo đợt ký và chuyển sang bước ký của người lập danh sách.')};
+    columnOptions.innerHTML=Object.entries(labels).map(([k,v])=>`<div class="form-check mb-2"><input class="form-check-input column-toggle" type="checkbox" checked data-key="${k}" id="col-${k}"><label class="form-check-label" for="col-${k}">${v}</label></div>`).join('');
+    document.querySelectorAll('.column-toggle').forEach(e=>e.onchange=()=>{e.checked?hidden.delete(e.dataset.key):hidden.add(e.dataset.key);renderCourses()});
+    renderCourses();renderRounds();updateSelection();
+  </script>
+</body>
+</html>

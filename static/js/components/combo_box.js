@@ -10,13 +10,13 @@ class ComboBox {
     // options: { data: [{id: 1, text: "Kỳ 1"}], fieldName: "TuMaHocKy", placeholder: "Chọn...", defaultValue: 1 }
     this.options = options || {};
     this.data = this.options.data || [];
-    this.fieldName = this.options.fieldName || 'ComboBoxHidden';
-    
+    this.fieldName = this.options.fieldName || "ComboBoxHidden";
+
     this.selectedId = this.options.defaultValue || null;
 
     this.renderInitialUI();
     this.bindEvents();
-    
+
     if (this.selectedId) {
       this.setValue(this.selectedId);
     }
@@ -25,44 +25,44 @@ class ComboBox {
   renderInitialUI() {
     this.container.innerHTML = `
       <div style="position: relative; width: 100%;">
-        <input type="text" class="form-input combobox-input" placeholder="${this.options.placeholder || 'Chọn...'}" autocomplete="off">
+        <input type="text" class="form-input combobox-input" placeholder="${this.options.placeholder || "Chọn..."}" autocomplete="off">
         <input type="hidden" name="${this.fieldName}" class="combobox-hidden">
       </div>
     `;
-    this.inputField = this.container.querySelector('.combobox-input');
-    this.hiddenInput = this.container.querySelector('.combobox-hidden');
-    
+    this.inputField = this.container.querySelector(".combobox-input");
+    this.hiddenInput = this.container.querySelector(".combobox-hidden");
+
     // Tạo dropdown rời (chưa append)
     if (!this.dropdownMenu) {
-      this.dropdownMenu = document.createElement('div');
-      this.dropdownMenu.className = 'tag-dropdown-menu combobox-dropdown';
-      this.dropdownMenu.style.display = 'none';
+      this.dropdownMenu = document.createElement("div");
+      this.dropdownMenu.className = "tag-dropdown-menu combobox-dropdown";
+      this.dropdownMenu.style.display = "none";
       // Tránh việc nhấp vào menu làm đóng modal
-      this.dropdownMenu.addEventListener('click', (e) => e.stopPropagation());
+      this.dropdownMenu.addEventListener("click", (e) => e.stopPropagation());
     }
   }
 
   bindEvents() {
     // Focus or click: hiển thị dropdown (lọc theo nội dung hiện tại hoặc hiện tất)
-    this.inputField.addEventListener('focus', () => this.showDropdown());
-    this.inputField.addEventListener('click', () => this.showDropdown());
+    this.inputField.addEventListener("focus", () => this.showDropdown());
+    this.inputField.addEventListener("click", () => this.showDropdown());
 
     // Nhập liệu: hiển thị & lọc
-    this.inputField.addEventListener('input', (e) => {
+    this.inputField.addEventListener("input", (e) => {
       this.showDropdown(e.target.value);
       // Nếu xóa trắng thì xóa selection
-      if (e.target.value.trim() === '') {
+      if (e.target.value.trim() === "") {
         this.selectedId = null;
-        this.hiddenInput.value = '';
+        this.hiddenInput.value = "";
       }
     });
 
     // Bắt phím Enter
-    this.inputField.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
+    this.inputField.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
         e.preventDefault();
-        const firstItem = this.dropdownMenu.querySelector('.tag-dropdown-item');
-        if (firstItem && this.dropdownMenu.style.display !== 'none') {
+        const firstItem = this.dropdownMenu.querySelector(".tag-dropdown-item");
+        if (firstItem && this.dropdownMenu.style.display !== "none") {
           firstItem.click();
         }
       }
@@ -70,45 +70,60 @@ class ComboBox {
 
     // Click ngoài và cuộn chuột
     const handleOutsideClickOrScroll = (e) => {
-      if (e.type === 'click') {
-        if (!this.container.contains(e.target) && !this.dropdownMenu.contains(e.target)) {
+      if (e.type === "click") {
+        if (
+          !this.container.contains(e.target) &&
+          !this.dropdownMenu.contains(e.target)
+        ) {
           this.hideDropdown();
           if (this.selectedId) {
-            const matched = this.data.find(d => d.id == this.selectedId);
+            const matched = this.data.find((d) => d.id == this.selectedId);
             if (matched && this.inputField.value !== matched.text) {
               this.inputField.value = matched.text;
             }
           }
         }
-      } else if (e.type === 'scroll' && e.target.nodeType === 1 && !this.dropdownMenu.contains(e.target)) {
+      } else if (
+        e.type === "scroll" &&
+        e.target.nodeType === 1 &&
+        !this.dropdownMenu.contains(e.target)
+      ) {
         this.hideDropdown();
       }
     };
 
-    document.addEventListener('click', handleOutsideClickOrScroll);
-    document.addEventListener('scroll', handleOutsideClickOrScroll, true);
+    document.addEventListener("click", handleOutsideClickOrScroll);
+    document.addEventListener("scroll", handleOutsideClickOrScroll, true);
   }
 
-  showDropdown(query = '') {
+  showDropdown(query = "") {
     const q = query.toLowerCase().trim();
     let available = this.data;
-    
+
     if (q) {
-      available = this.data.filter(item => item.text.toLowerCase().includes(q));
+      available = this.data.filter((item) =>
+        item.text.toLowerCase().includes(q),
+      );
     }
 
     if (available.length === 0) {
       this.dropdownMenu.innerHTML = `<div class="tag-dropdown-item" style="color: var(--text-muted); cursor: default;">Không tìm thấy kết quả</div>`;
     } else {
-      this.dropdownMenu.innerHTML = available.map(item => `
-        <div class="tag-dropdown-item ${item.id == this.selectedId ? 'selected' : ''}" data-id="${item.id}" data-text="${item.text}">
+      this.dropdownMenu.innerHTML = available
+        .map(
+          (item) => `
+        <div class="tag-dropdown-item ${item.id == this.selectedId ? "selected" : ""}" data-id="${item.id}" data-text="${item.text}">
           ${item.text}
         </div>
-      `).join('');
+      `,
+        )
+        .join("");
 
-      const items = this.dropdownMenu.querySelectorAll('.tag-dropdown-item[data-id]');
-      items.forEach(el => {
-        el.addEventListener('click', (e) => {
+      const items = this.dropdownMenu.querySelectorAll(
+        ".tag-dropdown-item[data-id]",
+      );
+      items.forEach((el) => {
+        el.addEventListener("click", (e) => {
           e.stopPropagation();
           this.setValue(el.dataset.id);
           this.hideDropdown();
@@ -118,7 +133,9 @@ class ComboBox {
 
     // Đưa ra ngoài overlay để tránh bị scroll và đè z-index
     // 1. Phải append vào DOM TRƯỚC thì mới đo được offsetHeight thực tế
-    const modalOverlay = this.container.closest('.modal-overlay') || this.container.closest('.drawer-overlay');
+    const modalOverlay =
+      this.container.closest(".modal-overlay") ||
+      this.container.closest(".drawer-overlay");
     if (modalOverlay) {
       modalOverlay.appendChild(this.dropdownMenu);
     } else {
@@ -126,14 +143,14 @@ class ComboBox {
     }
 
     // 2. Đặt visibility: hidden trước khi block để tránh nháy hình
-    this.dropdownMenu.style.visibility = 'hidden';
-    this.dropdownMenu.style.display = 'block';
-    
+    this.dropdownMenu.style.visibility = "hidden";
+    this.dropdownMenu.style.display = "block";
+
     // 3. Đo đạc tọa độ và kích thước
     const rect = this.inputField.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const menuHeight = this.dropdownMenu.offsetHeight;
-    const shouldDropup = (spaceBelow < menuHeight && rect.top > menuHeight);
+    const shouldDropup = spaceBelow < menuHeight && rect.top > menuHeight;
 
     // 4. Định vị (Positioning)
     if (modalOverlay) {
@@ -151,25 +168,25 @@ class ComboBox {
       }
       this.dropdownMenu.style.left = `${rect.left + window.scrollX}px`;
     }
-    
+
     this.dropdownMenu.style.width = `${rect.width}px`;
-    this.dropdownMenu.style.visibility = 'visible';
+    this.dropdownMenu.style.visibility = "visible";
   }
 
   hideDropdown() {
-    this.dropdownMenu.style.display = 'none';
+    this.dropdownMenu.style.display = "none";
   }
 
   setValue(id) {
-    const item = this.data.find(d => d.id == id);
+    const item = this.data.find((d) => d.id == id);
     if (item) {
       this.selectedId = item.id;
       this.inputField.value = item.text;
       this.hiddenInput.value = item.id;
     } else {
       this.selectedId = null;
-      this.inputField.value = '';
-      this.hiddenInput.value = '';
+      this.inputField.value = "";
+      this.hiddenInput.value = "";
     }
   }
 
@@ -179,7 +196,7 @@ class ComboBox {
 
   clear() {
     this.selectedId = null;
-    this.inputField.value = '';
-    this.hiddenInput.value = '';
+    this.inputField.value = "";
+    this.hiddenInput.value = "";
   }
 }
