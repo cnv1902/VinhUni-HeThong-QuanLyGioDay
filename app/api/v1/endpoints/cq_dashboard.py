@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_dashboard_stats(
     db: Session = Depends(get_db), 
     redis_client = Depends(get_redis), 
-    nam_tai_chinh: Optional[int] = None
+    nam_tai_chinh: Optional[str] = None
 ):
     """
     Lấy số liệu thống kê tổng quan cho Dashboard Hệ Đào tạo Chính quy

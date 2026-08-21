@@ -56,14 +56,29 @@ const phanQuyenXacNhanApi = {
    */
   async getDanhSachDonVi() {
     try {
-      // TODO: Bỏ comment dưới đây khi API backend đã sẵn sàng
-      // const res = await fetch(`${window.API_PREFIX}/phan-quyen-xac-nhan/don-vi`, { credentials: 'same-origin' });
-      // if (!res.ok) throw new Error('Lỗi lấy danh sách đơn vị');
-      // return await res.json();
-
-      return []; // Placeholder
+      const res = await fetch("/api/v1/don-vi/", { credentials: "same-origin" });
+      if (!res.ok) throw new Error("Lỗi lấy danh sách đơn vị");
+      const data = await res.json();
+      return data.map((d) => ({ id: d.MaDonVi, text: d.TenDonVi || d.MaDonVi }));
     } catch (err) {
       console.error("[phanQuyenXacNhanApi] getDanhSachDonVi:", err);
+      return [];
+    }
+  },
+
+  /**
+   * Lấy danh sách Hệ đào tạo (Load động từ DB)
+   * @returns {Promise<Array>} Mảng các Hệ đào tạo
+   */
+  async getHeDaoTao() {
+    try {
+      const response = await fetch("/api/v1/he-dao-tao/", {
+        credentials: "same-origin",
+      });
+      if (!response.ok) throw new Error("Lỗi lấy hệ đào tạo");
+      return await response.json();
+    } catch (error) {
+      console.error("[phanQuyenXacNhanApi] getHeDaoTao:", error);
       return [];
     }
   },
@@ -76,12 +91,17 @@ const phanQuyenXacNhanApi = {
   async getDanhSachCanBo(idDonVi) {
     try {
       if (!idDonVi) return [];
-      // TODO: Bỏ comment dưới đây khi API backend đã sẵn sàng
-      // const res = await fetch(`${window.API_PREFIX}/phan-quyen-xac-nhan/can-bo?id_don_vi=${idDonVi}`, { credentials: 'same-origin' });
-      // if (!res.ok) throw new Error('Lỗi lấy danh sách cán bộ');
-      // return await res.json();
-
-      return []; // Placeholder
+      const res = await fetch(
+        `/api/v1/can-bo-giang-day/danh-sach-can-bo-theo-don-vi?ma_don_vi=${encodeURIComponent(idDonVi)}`,
+        { credentials: "same-origin" },
+      );
+      if (!res.ok) throw new Error("Lỗi lấy danh sách cán bộ");
+      const data = await res.json();
+      return data.map((cb) => ({
+        id: cb.HS_ID,
+        text: cb.ho_ten || `${cb.HS_Ho || ""} ${cb.HS_Ten || ""}`.trim(),
+        don_vi: cb.DV_Ten || "",
+      }));
     } catch (err) {
       console.error("[phanQuyenXacNhanApi] getDanhSachCanBo:", err);
       return [];

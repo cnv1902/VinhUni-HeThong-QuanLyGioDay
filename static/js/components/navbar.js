@@ -14,18 +14,17 @@ const elUserName = document.querySelector(".who .user-name");
 // 2. DATA PROCESSING & HTML RENDERING
 // ==========================================
 /**
- * Trích xuất danh sách Năm tài chính duy nhất (lấy 4 số cuối)
+ * Trích xuất danh sách Năm tài chính duy nhất (giữ nguyên chính xác, không cắt ngắn)
  */
 function renderNamTaiChinhOptions(data) {
   if (!selNamTaiChinh) return;
 
-  // Trích xuất 4 ký tự cuối của NamTaiChinh và loại bỏ trùng lặp
+  // Giữ nguyên giá trị NamTaiChinh chính xác và loại bỏ trùng lặp
   const years = [
     ...new Set(
       data.map((item) => {
         if (!item.NamTaiChinh) return null;
-        const ntc = String(item.NamTaiChinh).trim();
-        return ntc.length >= 4 ? ntc.slice(-4) : ntc;
+        return String(item.NamTaiChinh).trim();
       }),
     ),
   ].filter(Boolean);
@@ -93,11 +92,14 @@ async function initNavbar() {
   try {
     // 1. Tải thông tin Cán bộ
     apiNavbar.getCurrentUserCbgd().then((userInfo) => {
-      if (userInfo && userInfo.HoCB && userInfo.TenCB) {
-        const fullName = `${userInfo.HoCB} ${userInfo.TenCB}`;
-        if (elUserName) elUserName.textContent = fullName;
-        if (elAvatar)
-          elAvatar.textContent = userInfo.TenCB.charAt(0).toUpperCase();
+      if (userInfo) {
+        const fullName =
+          userInfo.ho_ten ||
+          `${userInfo.HS_Ho || ""} ${userInfo.HS_Ten || ""}`.trim();
+        const ten = (userInfo.HS_Ten || "").trim();
+
+        if (elUserName && fullName) elUserName.textContent = fullName;
+        if (elAvatar && ten) elAvatar.textContent = ten.charAt(0).toUpperCase();
       }
     });
 

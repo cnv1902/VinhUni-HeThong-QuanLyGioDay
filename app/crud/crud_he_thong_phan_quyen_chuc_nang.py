@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from app.models.view_HETHONG_PHANQUYEN_ChucNang import ViewHeThongPhanQuyenChucNang
+from app.models.view_he_thong_phan_quyen_chuc_nang import ViewHeThongPhanQuyenChucNang
 
 def get_danh_sach_theo_hs_id(db: Session, hs_id: int):
     return (

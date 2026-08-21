@@ -31,14 +31,15 @@ async def get_all_hoc_ky(db: Session, redis_client):
             logger.error(f"Lỗi lấy Cache Redis Năm tài chính): {e}")
 
     columns = curd_hoc_ky.get_danh_sach_hoc_ky(db)
-    columns_dict = []
-    for col in columns:
-        data = HocKyResponse.model_validate(col).model_dump()
 
-        if data.get("NamTaiChinh") is not None:
-            data["NamTaiChinh"] = str(data["NamTaiChinh"])[-4:]
-
-        columns_dict.append(data)
+    columns_dict = [
+        {
+            "NamTaiChinh": str(nam).strip(),
+            "MaHocKy": None
+        }
+        for nam in columns
+        if nam is not None and str(nam).strip()
+    ]
     
     if redis_client:
         try:

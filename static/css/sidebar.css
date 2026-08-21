@@ -64,7 +64,10 @@
   cursor: pointer;
   z-index: 11;
   color: #ffffff;
-  transition: right 0.3s, background-color 0.2s, color 0.2s;
+  transition:
+    right 0.3s,
+    background-color 0.2s,
+    color 0.2s;
   padding: 0;
 }
 
@@ -103,7 +106,9 @@
   text-decoration: none;
   font-size: 14px;
   border-radius: 6px;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 .sidebar-menu a:hover {
@@ -113,7 +118,6 @@
 .sidebar-menu a.active {
   background-color: var(--teal-50);
   color: var(--teal-700);
-  font-weight: 500;
 }
 
 .menu-item-wrap {
@@ -180,5 +184,4 @@
 .sidebar-submenu a.active {
   background-color: var(--teal-50);
   color: var(--teal-700);
-  font-weight: 500;
 }

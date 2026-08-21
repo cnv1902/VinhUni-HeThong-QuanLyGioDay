@@ -13,7 +13,7 @@ router = APIRouter()
 async def get_danh_sach_nhom_lop_hoc_phan_theo_nam_tai_chinh(
     db: Session = Depends(get_db), 
     redis_client = Depends(get_redis), 
-    nam_tai_chinh: Optional[int] = None,
+    nam_tai_chinh: Optional[str] = None,
     trang_thai_loc: Optional[str] = None
 ):
     """
@@ -34,7 +34,7 @@ async def bulk_update_nhom_lop_hoc_phan(
 @router.post("/xac-nhan-hang-loat")
 async def bulk_confirm_nhom_lop_hoc_phan(
     obj_in: CQNhomLopBulkConfirmRequest,
-    nam_tai_chinh: Optional[int],
+    nam_tai_chinh: Optional[str] = None,
     hs_id: int = Depends(get_current_hs_id),
     db: Session = Depends(get_db), 
     redis_client = Depends(get_redis)

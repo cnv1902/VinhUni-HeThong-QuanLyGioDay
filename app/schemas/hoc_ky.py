@@ -1,10 +1,10 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
-class HocKyBase(BaseModel):
+class HocKyBase(BaseModel): 
     NamTaiChinh: Optional[str] = None
 
 class HocKyResponse(HocKyBase):
-    MaHocKy: int
+    MaHocKy: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)

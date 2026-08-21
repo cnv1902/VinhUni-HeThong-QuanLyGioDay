@@ -6,149 +6,54 @@
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. WRAPPER TỔNG THỂ
-   -------------------------------------------------------------------------- */
-.pq-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px 24px 24px;
-}
-
-/* --------------------------------------------------------------------------
-   2. WORKSPACE — 2 cột: Hệ đào tạo | Cấu hình phân quyền
-   -------------------------------------------------------------------------- */
-.pq-workspace {
-  display: grid;
-  grid-template-columns: 200px 1fr;
-  gap: 14px;
-  align-items: start;
-}
-
-/* --------------------------------------------------------------------------
-   3. PANEL CHUNG — khung viền cơ bản
-   -------------------------------------------------------------------------- */
-.pq-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-
-.pq-panel-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.pq-panel-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-secondary);
-  letter-spacing: .04em;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-/* --------------------------------------------------------------------------
-   4. PANEL HỆ ĐÀO TẠO (cột trái)
-   -------------------------------------------------------------------------- */
-.pq-systems {
-  overflow: hidden;
-}
-
-.pq-system-btn {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding: 10px 14px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  color: var(--text-primary);
-  border-bottom: 1px solid var(--border);
-  transition: background .1s;
-}
-
-.pq-system-btn:last-child {
-  border-bottom: none;
-}
-
-.pq-system-btn:hover {
-  background: var(--bg-subtle);
-}
-
-.pq-system-btn.active {
-  background: var(--brand-800);
-  color: #fff;
-}
-
-.pq-system-btn.active .pq-system-icon {
-  color: #fff;
-}
-
-.pq-system-icon {
-  color: var(--brand-800);
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-}
-
-.pq-system-label {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.3;
-}
-
-/* --------------------------------------------------------------------------
-   5. PANEL CẤU HÌNH PHÂN QUYỀN (cột phải)
+   1. PANEL CẤU HÌNH PHÂN QUYỀN (trong Modal)
    -------------------------------------------------------------------------- */
 .pq-config-body {
-  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 26px;
+}
+
+.pq-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 /* Nhóm trường trong form */
 .pq-section-label {
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--text-muted);
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  margin: 0 0 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  margin: 0 0 6px 0;
+  display: block;
 }
 
 /* Grid form hàng 2 cột */
 .pq-form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px 20px;
+  gap: 12px 16px;
 }
 
 .pq-form-row-3 {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px 20px;
+  gap: 12px 16px;
 }
 
 /* Field label + control */
 .pq-field {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .pq-field-label {
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
+  display: block;
+  margin-bottom: 6px;
 }
 
 .pq-field-help {
@@ -173,7 +78,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   6. GRID 4 CARD QUYỀN THAO TÁC
+   2. GRID 4 CARD QUYỀN THAO TÁC
    -------------------------------------------------------------------------- */
 .pq-rights-grid {
   display: grid;
@@ -185,26 +90,32 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 12px;
+  background: var(--bg-panel);
   cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: border-color .15s, background .15s;
+  gap: 6px;
+  transition: all 0.18s ease-in-out;
   user-select: none;
 }
 
 .pq-right-card:hover {
   background: var(--bg-subtle);
+  border-color: #93c5fd;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.06);
 }
 
 .pq-right-card.checked {
-  border-color: var(--brand-800);
-  background: #EBF2FD;
+  border-color: #60a5fa;
+  background: #f0f7ff;
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.16),
+    0 2px 8px rgba(37, 99, 235, 0.08);
 }
 
 .pq-right-card-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
 }
 
@@ -213,38 +124,42 @@
   height: 16px;
   accent-color: var(--brand-800);
   flex: 0 0 auto;
-  margin-top: 1px;
+  margin: 0;
   cursor: pointer;
 }
 
 .pq-right-card-name {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
   line-height: 1.35;
 }
 
 .pq-right-card-desc {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--text-muted);
   line-height: 1.4;
+  margin: 0;
 }
 
 /* --------------------------------------------------------------------------
-   7. PHẠM VI LỚP HỌC PHẦN (Radio + bảng người cập nhật)
+   3. PHẠM VI LỚP HỌC PHẦN (Radio + bảng người cập nhật)
    -------------------------------------------------------------------------- */
 .pq-scope-radios {
   display: flex;
+  margin-top: 15px;
   gap: 24px;
-  margin-bottom: 12px;
+  align-items: center;
 }
 
 .pq-scope-radio-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .pq-scope-radio-label input[type="radio"] {
@@ -252,19 +167,20 @@
   height: 16px;
   accent-color: var(--brand-800);
   cursor: pointer;
+  margin: 0;
 }
 
 /* Thanh tìm kiếm nhỏ trong bảng phạm vi */
 .pq-scope-search {
   position: relative;
-  width: 300px;
+  width: 320px;
   margin-bottom: 8px;
 }
 
 .pq-scope-search svg {
   position: absolute;
   left: 9px;
-  top: 8px;
+  top: 9px;
   width: 14px;
   height: 14px;
   color: var(--text-muted);
@@ -274,10 +190,12 @@
   width: 100%;
   height: 32px;
   padding-left: 30px;
+  padding-right: 10px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
   background: var(--bg-panel);
   color: var(--text-primary);
+  font-size: 13px;
 }
 
 .pq-scope-search input:focus {
@@ -286,13 +204,68 @@
   box-shadow: 0 0 0 3px var(--teal-50);
 }
 
-/* Bảng người cập nhật lớp (inline, không dùng DataTable component) */
+/* Dropdown gợi ý tìm kiếm cán bộ */
+.pq-scope-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  max-height: 180px;
+  overflow-y: auto;
+  z-index: 1050;
+}
+
+.pq-scope-item {
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+  transition: background 0.12s ease;
+}
+
+.pq-scope-item:last-child {
+  border-bottom: none;
+}
+
+.pq-scope-item:hover,
+.pq-scope-item.active {
+  background: var(--bg-subtle);
+  color: var(--brand-800);
+}
+
+.btn-remove-scope {
+  background: none;
+  border: none;
+  color: var(--red-600);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s ease;
+}
+
+.btn-remove-scope:hover {
+  background: #fee2e2;
+}
+
+/* Bảng người cập nhật lớp (inline) */
 .pq-scope-table-wrap {
   border: 1px solid var(--border);
+  margin-top: 15px;
   border-radius: 6px;
   overflow: hidden;
-  max-height: 220px;
-  overflow-y: auto;
 }
 
 .pq-scope-table {
@@ -313,9 +286,6 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--text-secondary);
-  position: sticky;
-  top: 0;
-  z-index: 1;
 }
 
 .pq-scope-table td:first-child,
@@ -329,6 +299,7 @@
   height: 15px;
   accent-color: var(--brand-800);
   cursor: pointer;
+  margin: 0;
 }
 
 .pq-scope-table tr:last-child td {
@@ -342,7 +313,8 @@
 .pq-scope-count {
   font-size: 12px;
   color: var(--text-secondary);
-  margin-top: 6px;
+  margin-top: 15px;
+  margin-bottom: 0;
 }
 
 /* Thông báo rỗng */
@@ -354,48 +326,7 @@
 }
 
 /* --------------------------------------------------------------------------
-   8. THANH HÀNH ĐỘNG FORM (Hủy / Xem trước / Lưu)
-   -------------------------------------------------------------------------- */
-.pq-actions {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 8px;
-  padding-top: 4px;
-  border-top: 1px solid var(--border);
-}
-
-/* --------------------------------------------------------------------------
-   9. PANEL BẢNG DANH SÁCH PHÂN QUYỀN HIỆN TẠI
-   -------------------------------------------------------------------------- */
-.pq-current-panel {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.pq-current-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--border);
-}
-
-.pq-current-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Bảng DataTable nằm trong panel — không cần padding xung quanh */
-.pq-current-panel .table-wrap {
-  padding: 0;
-}
-
-/* --------------------------------------------------------------------------
-   10. BADGE TRẠNG THÁI
+   8. BADGE TRẠNG THÁI
    -------------------------------------------------------------------------- */
 .badge-pq {
   display: inline-block;
@@ -410,7 +341,7 @@
 .badge-pq-active {
   background: var(--green-50);
   color: var(--green-600);
-  border-color: #B2DFC6;
+  border-color: #b2dfc6;
 }
 
 .badge-pq-expired {
@@ -422,7 +353,7 @@
 .badge-pq-paused {
   background: var(--amber-50);
   color: var(--amber-600);
-  border-color: #F5CFA0;
+  border-color: #f5cfa0;
 }
 
 /* Cột quyền Yes/No trong bảng */
@@ -438,34 +369,9 @@
 }
 
 /* --------------------------------------------------------------------------
-   11. RESPONSIVE
+   9. RESPONSIVE
    -------------------------------------------------------------------------- */
-@media (max-width: 1100px) {
-  .pq-workspace {
-    grid-template-columns: 180px 1fr;
-  }
-
-  .pq-rights-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media (max-width: 760px) {
-  .pq-workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .pq-systems {
-    display: flex;
-    overflow-x: auto;
-  }
-
-  .pq-system-btn {
-    min-width: 140px;
-    border-bottom: none;
-    border-right: 1px solid var(--border);
-  }
-
   .pq-form-row,
   .pq-form-row-3 {
     grid-template-columns: 1fr;
@@ -473,9 +379,5 @@
 
   .pq-rights-grid {
     grid-template-columns: 1fr 1fr;
-  }
-
-  .pq-page {
-    padding: 12px;
   }
 }

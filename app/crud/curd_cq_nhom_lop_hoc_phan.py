@@ -40,7 +40,7 @@ def get_danh_sach(db: Session):
     
     return results
 
-def get_danh_sach_theo_nam_tai_chinh(db: Session, nam_tai_chinh: Optional[int] = None):
+def get_danh_sach_theo_nam_tai_chinh(db: Session, nam_tai_chinh: Optional[str] = None):
     da_thanh_toan_subq = (
         db.query(CQKeKhai.MaNhomLopHP)
         .filter(CQKeKhai.XacNhanThanhToan == True)
@@ -58,7 +58,7 @@ def get_danh_sach_theo_nam_tai_chinh(db: Session, nam_tai_chinh: Optional[int] =
         .outerjoin(HinhThucHoc, CQNhomLopHocPhan.MaHTHoc == HinhThucHoc.MaHTHoc)
         .outerjoin(HinhThucDay, CQNhomLopHocPhan.MaHTDay == HinhThucDay.MaHTDay)
         .outerjoin(da_thanh_toan_subq, CQNhomLopHocPhan.MaNhomLopHP == da_thanh_toan_subq.c.MaNhomLopHP)
-    ).filter(CQNhomLopHocPhan.NamTaiChinh == nam_tai_chinh).all()
+    ).filter(CQNhomLopHocPhan.HocKy.contains(nam_tai_chinh)).all()
 
     results = []
     for cq_obj, ten_ht_hoc, ten_ht_day, trang_thai_thanh_toan in query:

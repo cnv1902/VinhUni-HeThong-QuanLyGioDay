@@ -24,7 +24,14 @@ CACHE_TTL = 3600
 def is_true_like(value) -> bool:
     return str(value or "").strip().lower() in {"true", "1"}
 
-async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, nam_tai_chinh: Optional[int] = None):
+def extract_nam_from_hoc_ky(db_item) -> int:
+    """Lấy 4 ký tự cuối (Right 4) của cột HocKy để so sánh với khoảng [TuNam, DenNam]"""
+    hoc_ky = str(getattr(db_item, "HocKy", "") or "").strip()
+    if len(hoc_ky) >= 4 and hoc_ky[-4:].isdigit():
+        return int(hoc_ky[-4:])
+    return 0
+
+async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, nam_tai_chinh: Optional[str] = None):
     """
     Xóa cache nhóm lớp học phần (Gọi hàm này sau khi thêm/sửa/xóa nhóm lớp học phần)
     """
@@ -39,7 +46,7 @@ async def invalidate_cq_nhom_lop_hoc_phan_cache(redis_client, nam_tai_chinh: Opt
         except Exception as e:
             logger.error(f"Lỗi xóa Cache Redis (Nhóm lớp): {e}")
 
-async def get_danh_sach_nhom_lop_hoc_phan_theo_nam_tai_chinh(db: Session, redis_client, nam_tai_chinh: Optional[int] = None, trang_thai_loc: Optional[str] = None):
+async def get_danh_sach_nhom_lop_hoc_phan_theo_nam_tai_chinh(db: Session, redis_client, nam_tai_chinh: Optional[str] = None, trang_thai_loc: Optional[str] = None):
     """
     Lấy danh sách các nhóm lớp học phần hệ chính quy.
     """
@@ -146,7 +153,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
             if "MaHTDay" in allowed_fields and "MaHTDay" in item.updates
             else getattr(db_item, "MaHTDay")
         )
-        nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
+        nam_hoc_phan = extract_nam_from_hoc_ky(db_item)
         if hinh_thuc_hoc is not None:
 
             for nhom_ct in nhom_cong_thuc_list:
@@ -155,7 +162,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                 den_nam = nhom_ct.get("DenNam") or 9999
                 
                 if check_id_in_string_list(str(hinh_thuc_hoc), str(ds_ma)):
-                    if tu_nam <= nam_tai_chinh <= den_nam:
+                    if tu_nam <= nam_hoc_phan <= den_nam:
                         unique_nhom_ct_ids.add(int(nhom_ct.get("ID_Nhom_CT")))
                         break
                     
@@ -267,7 +274,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
 
             update_data["TenHTDay"] = ten_ht_day_map.get(hinh_thuc_day)
 
-        nam_tai_chinh = int(getattr(db_item, "NamTaiChinh") or 0)
+        nam_hoc_phan = extract_nam_from_hoc_ky(db_item)
         id_he_dao_tao = getattr(db_item, "HeSo_HeDaoTao")
         if id_he_dao_tao is not None:
             id_he_dao_tao = int(id_he_dao_tao)
@@ -287,7 +294,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
                         continue
                 
                 if check_id_in_string_list(str(hinh_thuc_hoc), str(ds_ma)):
-                    if tu_nam <= nam_tai_chinh <= den_nam:
+                    if tu_nam <= nam_hoc_phan <= den_nam:
                         id_nhom_ct = int(nhom_ct.get("ID_Nhom_CT"))
                         cong_thuc_used.append(
                             f"Nhóm CT: {nhom_ct.get('TenNhom') or nhom_ct.get('TenNhom_CT') or id_nhom_ct}"
@@ -370,7 +377,7 @@ async def bulk_update(db: Session, redis_client, payload: CQNhomLopBulkUpdate):
         "updated_rows": final_updates
     }
 
-async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payload: CQNhomLopBulkConfirmRequest, nam_tai_chinh: Optional[int], hs_id_str: str):
+async def bulk_confirm_nhom_lop_hoc_phan_service(db: Session, redis_client, payload: CQNhomLopBulkConfirmRequest, nam_tai_chinh: Optional[str], hs_id_str: str):
     """
     Xác nhận hàng loạt nhóm lớp học phần.
     """

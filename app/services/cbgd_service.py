@@ -1,8 +1,8 @@
 import logging
 import json
 from sqlalchemy.orm import Session
-from app.crud import cbgd as crud_cbgd
-from app.schemas.cbgd import CbgdResponse
+from app.crud import crud_cbgd
+from app.schemas.cbgd import CbgdResponse, CbgdDonViResponse
 
 logger = logging.getLogger(__name__)
 
@@ -23,21 +23,17 @@ async def get_cbgd_info_by_hs_id(db: Session, redis_client, hs_id: int) -> CbgdR
     cbgd = crud_cbgd.get_cbgd_by_hs_id(db, hs_id)
     if not cbgd:
         return None
-    
-    ho_cb = str(cbgd.HoCB) if cbgd.HoCB else ""
-    ten_cb = str(cbgd.TenCB) if cbgd.TenCB else ""
-    ho_ten = f"{ho_cb} {ten_cb}".strip()
-    
-    response = CbgdResponse(
-        HoCB=str(cbgd.HoCB) if cbgd.HoCB else None,
-        TenCB=str(cbgd.TenCB) if cbgd.TenCB else None,
-        ho_ten=ho_ten
-    )
-    
+
+    response = CbgdResponse.model_validate(cbgd)
+
     if redis_client:
         try:
             await redis_client.setex(cache_key, CACHE_TTL, json.dumps(response.model_dump()))
         except Exception as e:
             logger.error(f"Lỗi lưu Cache Redis (CBGD): {e}")
-            
+
     return response
+
+def get_cbgd_by_ma_don_vi(db: Session, ma_don_vi: str) -> list[dict]:
+    items = crud_cbgd.get_cbgd_by_ma_don_vi(db, ma_don_vi=ma_don_vi)
+    return [CbgdDonViResponse.model_validate(item).model_dump() for item in items]

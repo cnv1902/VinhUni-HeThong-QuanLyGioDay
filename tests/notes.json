@@ -1,9 +1,21 @@
 [
   {
+    "id": "note-1787286059938",
+    "title": "Note hỏi",
+    "category": "Chung",
+    "priority": "urgent",
+    "status": "in_progress",
+    "pinned": true,
+    "content": "Học kỳ có ký tự b lấy right 4 không đúng nên công thức áp dụng sẽ sai\nTrong nhóm học phần thì lấy trước hoặc lấy sau nếu không sẽ hiển thị 2 năm liên tiếp ở năm 2022",
+    "tasks": [],
+    "created_at": "2026-08-21T04:20:59.937Z",
+    "updated_at": "2026-08-21T04:32:54.733Z"
+  },
+  {
     "id": "note-1787199675618",
     "title": "Bóc tách giao diện",
     "category": "Frontend",
-    "priority": "high",
+    "priority": "urgent",
     "status": "in_progress",
     "pinned": false,
     "content": "",
@@ -25,7 +37,7 @@
       }
     ],
     "created_at": "2026-08-20T04:21:15.618Z",
-    "updated_at": "2026-08-20T07:47:30.287Z"
+    "updated_at": "2026-08-21T04:32:50.909Z"
   },
   {
     "id": "note-1787199504152",

@@ -8,7 +8,7 @@ from app.schemas.cq_dashboard import CQDashboardStatsResponse
 CACHE_PREFIX = "cache:cq_dashboard:"
 CACHE_TTL = 3600
 
-async def get_dashboard_stats(db: Session, redis_client, nam_tai_chinh: Optional[int] = None) -> CQDashboardStatsResponse:
+async def get_dashboard_stats(db: Session, redis_client, nam_tai_chinh: Optional[str] = None) -> CQDashboardStatsResponse:
     """
     Lấy dữ liệu tổng hợp cho Dashboard Chính quy.
     """

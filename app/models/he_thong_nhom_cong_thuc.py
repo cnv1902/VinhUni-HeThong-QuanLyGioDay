@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, NVARCHAR, Boolean, ForeignKey
+from app.models.he_thong_dm_he_dao_tao import HeThongDMHeDaoTao
 from app.models.he_thong_truong_hop_cong_thuc import HeThongTruongHopCongThuc
 from sqlalchemy.orm import relationship
 from app.models.base import Base

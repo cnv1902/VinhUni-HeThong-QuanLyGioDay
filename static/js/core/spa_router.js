@@ -138,16 +138,7 @@ const SpaRouter = {
         oldStylesToRemove.forEach((link) => link.remove());
       }
 
-      // 3. Nạp scripts tuần tự
-      const oldScriptsContainer = document.getElementById("page-scripts");
-      const newScriptsContainer = doc.getElementById("page-scripts");
-
-      if (oldScriptsContainer && newScriptsContainer) {
-        oldScriptsContainer.innerHTML = newScriptsContainer.innerHTML;
-        await this.executeScripts(oldScriptsContainer);
-      }
-
-      // Cập nhật URL
+      // 3. Cập nhật URL trước khi nạp script (để trang con đọc đúng window.location.search)
       if (pushHistory) {
         window.history.pushState(null, "", url);
       }
@@ -155,6 +146,15 @@ const SpaRouter = {
 
       // Cập nhật trạng thái active trên Sidebar
       this.updateSidebarActiveState(url);
+
+      // 4. Nạp scripts tuần tự
+      const oldScriptsContainer = document.getElementById("page-scripts");
+      const newScriptsContainer = doc.getElementById("page-scripts");
+
+      if (oldScriptsContainer && newScriptsContainer) {
+        oldScriptsContainer.innerHTML = newScriptsContainer.innerHTML;
+        await this.executeScripts(oldScriptsContainer);
+      }
     } catch (error) {
       console.warn("[SPA] Không thể điều hướng đến:", url, error.message);
       if (typeof showToast === "function") {

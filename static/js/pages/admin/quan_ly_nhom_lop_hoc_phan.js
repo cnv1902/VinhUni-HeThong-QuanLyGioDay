@@ -431,21 +431,29 @@
       }
     }
 
-    // Tính tổng theo các trạng thái ưu tiên
+    // Tính tổng theo đúng chuẩn quy trình (Phễu tiến độ: Xác nhận -> Ký -> Thanh toán)
     let sumPaid = 0;
     let sumUnpaid = 0;
     let sumUnsigned = 0;
     let sumUnconfirmed = 0;
 
     rows.forEach((r) => {
-      if (isTrueLike(r["TrangThaiThanhToan"])) {
-        sumPaid++;
-      } else if (Number(r.ID_LanTongHopFile || 0) > 0) {
-        sumUnpaid++;
-      } else if (isTrueLike(r["XacNhan"])) {
-        sumUnsigned++;
-      } else {
+      const isConfirmed = isTrueLike(r["XacNhan"]);
+      const idLanTongHop = Number(r.ID_LanTongHopFile || 0);
+      const isPaid = isTrueLike(r["TrangThaiThanhToan"]);
+
+      if (!isConfirmed) {
         sumUnconfirmed++;
+      } else {
+        if (idLanTongHop === 0) {
+          sumUnsigned++;
+        } else {
+          if (isPaid) {
+            sumPaid++;
+          } else {
+            sumUnpaid++;
+          }
+        }
       }
     });
 

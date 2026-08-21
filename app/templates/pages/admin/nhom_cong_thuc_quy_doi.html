@@ -39,16 +39,8 @@
 
 <div class="quick-row" style="display: flex; justify-content: space-between; align-items: center;">
   <div class="quick-actions-left" style="display: flex; gap: 12px; align-items: center;">
-    <select id="filterHeDaoTao" class="form-input" style="width: 200px; height: 32px; padding: 0 10px; margin-bottom: 0;">
-      <option value="">-- Tất cả hệ đào tạo --</option>
-    </select>
-
-    <select id="filterTrangThai" class="form-input"
-      style="width: 180px; height: 32px; padding: 0 10px; margin-bottom: 0;">
-      <option value="">-- Tất cả trạng thái --</option>
-      <option value="1" selected>Đang áp dụng</option>
-      <option value="0">Ngưng áp dụng</option>
-    </select>
+    <div id="filterHeDaoTaoContainer" style="width: 200px;"></div>
+    <div id="filterTrangThaiContainer" style="width: 180px;"></div>
   </div>
 
   <div class="search-box">

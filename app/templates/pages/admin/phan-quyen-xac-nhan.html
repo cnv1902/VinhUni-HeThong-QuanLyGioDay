@@ -1,240 +1,241 @@
-{% extends 'base.html' %}
-
-{% block title %}Phân Quyền Xác Nhận Khối Lượng Giảng Dạy{% endblock %}
-
-{% set active_menu = 'phan_quyen_xac_nhan' %}
-
-{% block styles %}
-<link rel="stylesheet" href="/static/css/pages/admin/phan_quyen_xac_nhan.css?v={{ CACHE_BUSTER() }}">
-{% endblock %}
-
-{% block content %}
-<div class="pq-page">
-
-  <!-- KHỐI 1: WORKSPACE -->
-  <div class="pq-workspace">
-
-    <!-- Cột trái: Chọn Hệ đào tạo -->
-    <div class="pq-panel pq-systems">
-      <div class="pq-panel-header">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
-        </svg>
-        <h3 class="pq-panel-title">Hệ đào tạo</h3>
-      </div>
-      <button type="button" class="pq-system-btn" data-he-id="1">
-        <span class="pq-system-icon" aria-hidden="true"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></span>
-        <span class="pq-system-label">Đại học chính quy</span>
-      </button>
-      <button type="button" class="pq-system-btn" data-he-id="2">
-        <span class="pq-system-icon" aria-hidden="true"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></span>
-        <span class="pq-system-label">Sau đại học</span>
-      </button>
-      <button type="button" class="pq-system-btn" data-he-id="3">
-        <span class="pq-system-icon" aria-hidden="true"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span>
-        <span class="pq-system-label">Vừa làm vừa học</span>
-      </button>
-      <button type="button" class="pq-system-btn" data-he-id="4">
-        <span class="pq-system-icon" aria-hidden="true"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/></svg></span>
-        <span class="pq-system-label">Đào tạo từ xa</span>
-      </button>
-      <button type="button" class="pq-system-btn" data-he-id="5">
-        <span class="pq-system-icon" aria-hidden="true"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></span>
-        <span class="pq-system-label">THPT Chuyên</span>
-      </button>
-    </div>
-
-    <!-- Cột phải: Cấu hình phân quyền -->
-    <div class="pq-panel">
-      <div class="pq-panel-header">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <h3 class="pq-panel-title">Cấu hình phân quyền</h3>
-      </div>
-
-      <div class="pq-config-body">
-
-        <!-- NHÓM 1: THÔNG TIN CƠ BẢN -->
-        <div>
-          <p class="pq-section-label">Thông tin cơ bản</p>
-          <div class="pq-form-row">
-            <div class="pq-field">
-              <label class="pq-field-label">Đơn vị</label>
-              <!-- ComboBox Đơn vị — JS nạp dữ liệu từ phanQuyenXacNhanApi.getDanhSachDonVi() -->
-              <div id="pq-combo-don-vi"></div>
-            </div>
-            <div class="pq-field">
-              <label class="pq-field-label">Cán bộ được phân quyền</label>
-              <!-- ComboBox Cán bộ — JS nạp lại khi đơn vị thay đổi -->
-              <div id="pq-combo-can-bo"></div>
-            </div>
-          </div>
-          <div class="pq-form-row-3" style="margin-top:12px">
-            <div class="pq-field">
-              <label class="pq-field-label" for="pq-hieuluc-tu">Hiệu lực từ ngày</label>
-              <input type="date" id="pq-hieuluc-tu" name="hieu_luc_tu">
-            </div>
-            <div class="pq-field">
-              <label class="pq-field-label" for="pq-hieuluc-den">Hiệu lực đến ngày</label>
-              <input type="date" id="pq-hieuluc-den" name="hieu_luc_den">
-              <span class="pq-field-help">Để trống = không giới hạn</span>
-            </div>
-            <div class="pq-field">
-              <label class="pq-field-label">Trạng thái</label>
-              <!-- ComboBox Trạng thái — dữ liệu tĩnh: Đang hiệu lực / Tạm ngừng -->
-              <div id="pq-combo-trang-thai"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- NHÓM 2: QUYỀN THAO TÁC -->
-        <div>
-          <p class="pq-section-label">Quyền thao tác</p>
-          <div class="pq-rights-grid">
-            <label class="pq-right-card checked" for="pq-quyen-cap-nhat">
-              <div class="pq-right-card-header">
-                <input type="checkbox" id="pq-quyen-cap-nhat" name="quyen" value="cap_nhat_lop" checked>
-                <span class="pq-right-card-name">Cập nhật lớp</span>
-              </div>
-              <p class="pq-right-card-desc">Chỉnh sửa thông tin lớp học phần (số tiết, phòng học, giảng viên…)</p>
-            </label>
-            <label class="pq-right-card checked" for="pq-quyen-xac-nhan">
-              <div class="pq-right-card-header">
-                <input type="checkbox" id="pq-quyen-xac-nhan" name="quyen" value="xac_nhan" checked>
-                <span class="pq-right-card-name">Xác nhận</span>
-              </div>
-              <p class="pq-right-card-desc">Xác nhận khối lượng giảng dạy của giảng viên</p>
-            </label>
-            <label class="pq-right-card checked" for="pq-quyen-lap-ds">
-              <div class="pq-right-card-header">
-                <input type="checkbox" id="pq-quyen-lap-ds" name="quyen" value="lap_danh_sach" checked>
-                <span class="pq-right-card-name">Lập danh sách</span>
-              </div>
-              <p class="pq-right-card-desc">Lập và chỉnh sửa danh sách thanh toán khối lượng</p>
-            </label>
-            <label class="pq-right-card" for="pq-quyen-ky">
-              <div class="pq-right-card-header">
-                <input type="checkbox" id="pq-quyen-ky" name="quyen" value="ky_xac_nhan">
-                <span class="pq-right-card-name">Ký xác nhận đơn vị</span>
-              </div>
-              <p class="pq-right-card-desc">Ký xác nhận thanh toán ở cấp đơn vị (cần thẩm quyền)</p>
-            </label>
-          </div>
-        </div>
-
-        <!-- NHÓM 3: PHẠM VI LỚP HỌC PHẦN -->
-        <div>
-          <p class="pq-section-label">Phạm vi lớp học phần áp dụng</p>
-          <div class="pq-scope-radios">
-            <label class="pq-scope-radio-label">
-              <input type="radio" id="pq-scope-all" name="pq_scope" value="all" checked>
-              Tất cả lớp học phần của hệ đào tạo
-            </label>
-            <label class="pq-scope-radio-label">
-              <input type="radio" id="pq-scope-people" name="pq_scope" value="people">
-              Chỉ lớp của người cập nhật được chọn dưới đây
-            </label>
-          </div>
-
-          <div id="pq-scope-people-area" hidden>
-            <div class="pq-scope-search">
-              <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-              </svg>
-              <input type="text" id="pq-scope-search-input" placeholder="Tìm theo tên, đơn vị..." aria-label="Tìm kiếm người cập nhật lớp">
-            </div>
-            <div class="pq-scope-table-wrap">
-              <table class="pq-scope-table">
-                <thead>
-                  <tr>
-                    <th><input type="checkbox" id="pq-scope-check-all" aria-label="Chọn tất cả"></th>
-                    <th>Họ và tên</th>
-                    <th>Đơn vị / Bộ môn</th>
-                  </tr>
-                </thead>
-                <tbody id="pq-scope-tbody">
-                  <tr><td colspan="3" class="pq-scope-empty">Đang tải dữ liệu...</td></tr>
-                </tbody>
-              </table>
-            </div>
-            <p id="pq-scope-count" class="pq-scope-count">Đã chọn 0/0 người cập nhật lớp</p>
-          </div>
-        </div>
-
-        <!-- HÀNH ĐỘNG FORM -->
-        <div class="pq-actions">
-          <button type="button" id="btn-pq-huy" class="btn">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-            Hủy bỏ
-          </button>
-          <button type="button" id="btn-pq-xem-truoc" class="btn btn-teal">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-            </svg>
-            Xem trước phạm vi
-          </button>
-          <button type="button" id="btn-pq-luu" class="btn btn-primary">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
-            </svg>
-            Lưu phân quyền
-          </button>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-  <!-- /KHỐI 1 -->
-
-
-  <!-- KHỐI 2: DANH SÁCH PHÂN QUYỀN HIỆN TẠI -->
-  <div class="pq-current-panel">
-    <div class="pq-current-header">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-        <h3 class="pq-panel-title">Danh sách phân quyền hiện tại</h3>
-      </div>
-      <div class="pq-current-toolbar">
-        <div class="search-box" style="flex:0 1 280px;">
-          <svg fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-          <input type="text" id="pq-main-search" placeholder="Tìm theo tên, đơn vị..." aria-label="Tìm kiếm danh sách phân quyền"
-            oninput="if(typeof pqDataTable !== 'undefined' && pqDataTable) pqDataTable.setSearch(this.value)">
-        </div>
-        <button type="button" class="btn btn-teal" title="Xuất danh sách phân quyền ra Excel"
-          onclick="if(typeof showToast !== 'undefined') showToast('Chức năng xuất Excel sẽ được triển khai sau.')">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Xuất Excel
-        </button>
-      </div>
-    </div>
-
-    <!-- DataTable component — cấu hình cột & dữ liệu nạp từ JS -->
-    <div class="table-wrap">
-      <table id="pq-main-table">
-        <thead></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div id="pq-pagination"></div>
-  </div>
-  <!-- /KHỐI 2 -->
-
+{% extends 'base.html' %} {% from 'components/modal_macro.html' import
+render_modal %} {% block title %}Phân Quyền Xác Nhận Khối Lượng Giảng Dạy{%
+endblock %} {% set active_menu = 'phan_quyen_xac_nhan' %} {% block styles %}
+<link
+  rel="stylesheet"
+  href="/static/css/pages/admin/phan_quyen_xac_nhan.css?v={{ CACHE_BUSTER() }}"
+/>
+{% endblock %} {% block content %}
+<div class="toolbar">
+  <button class="btn btn-primary" id="btn-tao-moi">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+    Tạo phân quyền mới
+  </button>
+  <div class="spacer"></div>
+  <button
+    class="btn btn-teal"
+    id="btnExport"
+    title="Xuất danh sách phân quyền ra Excel"
+    onclick="
+      if (typeof showToast !== 'undefined')
+        showToast('Chức năng xuất Excel sẽ được triển khai sau.');
+    "
+  >
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+    Xuất Excel
+  </button>
 </div>
-{% endblock %}
 
-{% block scripts %}
+<div
+  class="quick-row"
+  style="display: flex; justify-content: space-between; align-items: center"
+>
+  <div
+    class="quick-actions-left"
+    style="display: flex; gap: 12px; align-items: center"
+  >
+    <div id="filterHeDaoTaoContainer" style="width: 250px"></div>
+  </div>
+
+  <div class="search-box">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M21 21l-4.3-4.3" />
+    </svg>
+    <input
+      type="text"
+      id="pq-main-search"
+      class="text-input"
+      placeholder="Tìm theo tên, đơn vị..."
+      aria-label="Tìm kiếm danh sách phân quyền"
+      oninput="
+        if (typeof pqDataTable !== 'undefined' && pqDataTable)
+          pqDataTable.setSearch(this.value);
+      "
+    />
+  </div>
+</div>
+
+{% set table_id = 'pq-main-table' %} {% include 'components/table.html' %}
+
+<!-- Modal Tạo phân quyền mới -->
+{% call render_modal('modalPhanQuyen', 'Cấu hình phân quyền', 'formPhanQuyen',
+'lg') %}
+<div class="pq-config-body">
+  <!-- THÔNG TIN CƠ BẢN -->
+  <div class="pq-form-row">
+    <div class="pq-field" style="grid-column: span 2">
+      <label class="pq-field-label"
+        >Hệ đào tạo <span style="color: var(--red-600)">*</span></label
+      >
+      <div id="pq-combo-he-dao-tao"></div>
+    </div>
+    <div class="pq-field">
+      <label class="pq-field-label">Đơn vị</label>
+      <div id="pq-combo-don-vi"></div>
+    </div>
+    <div class="pq-field">
+      <label class="pq-field-label">Cán bộ được phân quyền</label>
+      <div id="pq-combo-can-bo"></div>
+    </div>
+  </div>
+
+  <!-- QUYỀN THAO TÁC -->
+  <div>
+    <label class="pq-field-label">Quyền thao tác</label>
+    <div class="pq-rights-grid">
+      <label class="pq-right-card checked" for="pq-quyen-cap-nhat">
+        <div class="pq-right-card-header">
+          <input
+            type="checkbox"
+            id="pq-quyen-cap-nhat"
+            name="quyen"
+            value="cap_nhat_lop"
+            checked
+          />
+          <span class="pq-right-card-name">Cập nhật lớp</span>
+        </div>
+        <p class="pq-right-card-desc">
+          Chỉnh sửa thông tin lớp học phần (số tiết, phòng học, giảng viên…)
+        </p>
+      </label>
+      <label class="pq-right-card checked" for="pq-quyen-xac-nhan">
+        <div class="pq-right-card-header">
+          <input
+            type="checkbox"
+            id="pq-quyen-xac-nhan"
+            name="quyen"
+            value="xac_nhan"
+            checked
+          />
+          <span class="pq-right-card-name">Xác nhận</span>
+        </div>
+        <p class="pq-right-card-desc">
+          Xác nhận khối lượng giảng dạy của giảng viên
+        </p>
+      </label>
+      <label class="pq-right-card checked" for="pq-quyen-lap-ds">
+        <div class="pq-right-card-header">
+          <input
+            type="checkbox"
+            id="pq-quyen-lap-ds"
+            name="quyen"
+            value="lap_danh_sach"
+            checked
+          />
+          <span class="pq-right-card-name">Lập danh sách</span>
+        </div>
+        <p class="pq-right-card-desc">
+          Lập và chỉnh sửa danh sách thanh toán khối lượng
+        </p>
+      </label>
+      <label class="pq-right-card" for="pq-quyen-ky">
+        <div class="pq-right-card-header">
+          <input
+            type="checkbox"
+            id="pq-quyen-ky"
+            name="quyen"
+            value="ky_xac_nhan"
+          />
+          <span class="pq-right-card-name">Ký xác nhận đơn vị</span>
+        </div>
+        <p class="pq-right-card-desc">
+          Ký xác nhận thanh toán ở cấp đơn vị (cần thẩm quyền)
+        </p>
+      </label>
+    </div>
+  </div>
+
+  <!-- PHẠM VI LỚP HỌC PHẦN -->
+  <div>
+    <label class="pq-field-label">Phạm vi lớp học phần áp dụng</label>
+    <div class="pq-scope-radios">
+      <label class="pq-scope-radio-label">
+        <input
+          type="radio"
+          id="pq-scope-all"
+          name="pq_scope"
+          value="all"
+          checked
+        />
+        Tất cả lớp học phần của hệ đào tạo
+      </label>
+      <label class="pq-scope-radio-label">
+        <input
+          type="radio"
+          id="pq-scope-people"
+          name="pq_scope"
+          value="people"
+        />
+        Chỉ lớp của người cập nhật được chọn dưới đây
+      </label>
+    </div>
+
+    <div id="pq-scope-people-area" hidden style="margin-top: 20px">
+      <div class="pq-scope-search">
+        <svg
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input
+          type="text"
+          id="pq-scope-search-input"
+          placeholder="Tìm theo tên cán bộ để thêm..."
+          aria-label="Tìm kiếm người cập nhật lớp"
+          autocomplete="off"
+        />
+        <div
+          id="pq-scope-suggestions"
+          class="pq-scope-dropdown"
+          style="display: none"
+        ></div>
+      </div>
+      <div class="pq-scope-table-wrap">
+        <table class="pq-scope-table">
+          <thead>
+            <tr>
+              <th style="width: 45px; text-align: center">STT</th>
+              <th>Họ và tên</th>
+              <th>Họ tên / Đơn vị</th>
+              <th style="width: 50px; text-align: center">Xóa</th>
+            </tr>
+          </thead>
+          <tbody id="pq-scope-tbody">
+            <tr>
+              <td colspan="4" class="pq-scope-empty">
+                Chưa có người cập nhật nào được chọn. Hãy tìm kiếm ở trên để
+                thêm.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p id="pq-scope-count" class="pq-scope-count">
+        Đã chọn 0 người cập nhật lớp
+      </p>
+    </div>
+  </div>
+</div>
+{% endcall %} {% endblock %} {% block scripts %}
 <script src="/static/js/components/combo_box.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/components/datatable.js?v={{ CACHE_BUSTER() }}"></script>
 <script src="/static/js/api/admin/phanQuyenXacNhanApi.js?v={{ CACHE_BUSTER() }}"></script>

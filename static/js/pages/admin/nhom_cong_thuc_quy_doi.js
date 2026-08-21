@@ -6,6 +6,8 @@
   let formModal = null;
   let tagHinhThucHoc = null;
   let cbHeDaoTao = null;
+  let cbFilterHeDaoTao = null;
+  let cbFilterTrangThai = null;
   let editingId = null; // null = Thêm mới, có giá trị = Sửa
 
   // Biến cho Drawer Cấu hình
@@ -94,31 +96,36 @@
       const listHe = await apiCongThuc.getHeDaoTao();
       const heData = listHe.map((he) => ({ id: he.ID_He, text: he.Ten_He }));
 
-      // Đổ dữ liệu vào ô lọc ngoài Grid
-      const filterHeDaoTaoEl = document.getElementById("filterHeDaoTao");
-      if (filterHeDaoTaoEl) {
-        listHe.forEach((he) => {
-          const option = document.createElement("option");
-          option.value = he.ID_He;
-          option.textContent = he.Ten_He;
-          if (he.ID_He === 1) option.selected = true; // Mặc định ID = 1
-          filterHeDaoTaoEl.appendChild(option);
-        });
-
-        // Bắt sự kiện lọc thay đổi
-        filterHeDaoTaoEl.addEventListener("change", () => {
-          loadTableData();
-        });
-      }
-
-      const filterTrangThaiEl = document.getElementById("filterTrangThai");
-      if (filterTrangThaiEl) {
-        filterTrangThaiEl.addEventListener("change", () => {
-          loadTableData();
-        });
-      }
-
+      // Đổ dữ liệu vào ComboBox lọc ngoài Grid
       if (typeof ComboBox !== "undefined") {
+        cbFilterHeDaoTao = new ComboBox("#filterHeDaoTaoContainer", {
+          data: [{ id: "", text: "Tất cả hệ đào tạo" }, ...heData],
+          defaultValue: 1, // Mặc định ID = 1
+          fieldName: "filterHeDaoTao",
+          placeholder: "Chọn Hệ đào tạo...",
+        });
+        const origSetHe = cbFilterHeDaoTao.setValue.bind(cbFilterHeDaoTao);
+        cbFilterHeDaoTao.setValue = (val) => {
+          origSetHe(val);
+          loadTableData();
+        };
+
+        cbFilterTrangThai = new ComboBox("#filterTrangThaiContainer", {
+          data: [
+            { id: "", text: "Tất cả trạng thái" },
+            { id: "1", text: "Đang áp dụng" },
+            { id: "0", text: "Ngưng áp dụng" },
+          ],
+          defaultValue: "1",
+          fieldName: "filterTrangThai",
+          placeholder: "Chọn trạng thái...",
+        });
+        const origSetTT = cbFilterTrangThai.setValue.bind(cbFilterTrangThai);
+        cbFilterTrangThai.setValue = (val) => {
+          origSetTT(val);
+          loadTableData();
+        };
+
         cbHeDaoTao = new ComboBox("#heDaoTaoContainer", {
           data: heData,
           fieldName: "ID_He",
@@ -218,11 +225,10 @@
           '<tr><td colspan="100%" style="text-align:center; padding: 20px;">Đang tải dữ liệu...</td></tr>';
       }
 
-      const filterHeDaoTao = document.getElementById("filterHeDaoTao");
-      const filterTrangThai = document.getElementById("filterTrangThai");
-
-      const id_he = filterHeDaoTao ? filterHeDaoTao.value : null;
-      const trang_thai = filterTrangThai ? filterTrangThai.value : null;
+      const id_he = cbFilterHeDaoTao ? cbFilterHeDaoTao.getValue() : null;
+      const trang_thai = cbFilterTrangThai
+        ? cbFilterTrangThai.getValue()
+        : null;
 
       const data = await apiCongThuc.getCongThucData(id_he, trang_thai);
       if (myTable) {
@@ -319,7 +325,14 @@
           // Xóa form cũ nếu cần
           document.getElementById("formNhomCongThuc").reset();
           if (tagHinhThucHoc) tagHinhThucHoc.clear();
-          if (cbHeDaoTao) cbHeDaoTao.clear();
+          if (cbHeDaoTao) {
+            const currentFilterHe = cbFilterHeDaoTao?.getValue();
+            if (currentFilterHe) {
+              cbHeDaoTao.setValue(currentFilterHe);
+            } else {
+              cbHeDaoTao.clear();
+            }
+          }
 
           // Mặc định ô Từ năm là năm hiện tại
           const inputTuNam = document.getElementById("TuNam");
@@ -396,8 +409,7 @@
                 if (typeof showToast !== "undefined")
                   showToast("Đã xóa nhóm công thức thành công!", "success");
                 // Reload table
-                const currentCtx = sessionStorage.getItem("CTX_HOC_KY_NAM_HOC");
-                if (currentCtx) loadTableData(currentCtx);
+                await loadTableData();
               } catch (err) {
                 if (typeof showToast !== "undefined")
                   showToast(
